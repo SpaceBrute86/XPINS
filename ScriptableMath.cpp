@@ -5,8 +5,8 @@
 //  Copyright (c) 2013 Robbie Markwick. All rights reserved.
 //
 
-#include "ScriptableScriptableMath.h"
-#include <ScriptableMath.h>
+#include "ScriptableMath.h"
+#include <math.h>
 
 ScriptableMath::Vector::Vector(float x,float y){
 	this->x=x;

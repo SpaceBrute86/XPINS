@@ -51,8 +51,56 @@ NUMBER COMPARISON
 	Parameters: The FLOATs to be compared
 	Return: BOOL, returns true if A is equal to B
 	
+
+ARITHMETIC
+
+#X_IADD(INT $A, INT $B)
+	Description: Evaultes the expression A+B
+	Parameters: The INTs to be added
+	Return: INT, returns the sum of A and B
 	
+#X_FADD(FLOAT $A, FLOAT $B)
+	Description: Evaultes the expression A+B
+	Parameters: The FLOATs to be added
+	Return: FLOAT, returns the sum of A and B
 	
+#X_ISUB(INT $A, INT $B)
+	Description: Evaultes the expression A-B
+	Parameters: The INTs to be subtracted
+	Return: INT, returns the difference of A and B
+	
+#X_FSUB(FLOAT $A, FLOAT $B)
+	Description: Evaultes the expression A-B
+	Parameters: The FLOATs to be subtracted
+	Return: FLOAT, returns the difference of A and B
+
+#X_IMULT(INT $A, INT $B)
+	Description: Evaultes the expression A*B
+	Parameters: The INTs to be multiplied
+	Return: INT, returns the product of A and B
+	
+#X_FMULT(FLOAT $A, FLOAT $B)
+	Description: Evaultes the expression A*B
+	Parameters: The FLOATs to be multiplied
+	Return: FLOAT, returns the product of A and B
+
+#X_IDIV(INT $A, INT $B)
+	Description: Evaultes the expression A/B
+	Parameters: The INTs to be divided
+	Return: INT, returns the quotient of A and B
+	
+#X_FDIV(FLOAT $A, FLOAT $B)
+	Description: Evaultes the expression A/B
+	Parameters: The FLOATs to be divided
+	Return: FLOAT, returns the quotient of A and B
+					
+					
+OTHER SCALAR MATH OPERATIONS
+
+#X_RAND(INT $A, INT$B)
+	Description: Generates a random number
+	Parameters: A is the lower bound and B is the upper bound
+	Return: INT, returns a random number between A and B
 	
 	
 	
