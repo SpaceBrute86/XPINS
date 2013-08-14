@@ -105,7 +105,7 @@ void ScriptParser::parseScript(char* scriptText,varSpace *vars,params *parameter
 		vars->bVars=vector<bool>();
 		vars->iVars=vector<int>();
 		vars->fVars=vector<float>();
-		vars->vVars=vector<Math::Vector*>();
+		vars->vVars=vector<ScriptableMath::Vector*>();
 		vars->pVars=vector<void*>();
 		initialized_varSpace=true;
 	}
@@ -189,10 +189,9 @@ void ScriptParser::parseScript(char* scriptText,varSpace *vars,params *parameter
 					i+=2;
 					/*Bridge Your Custom BOOL Functions*/
 					
-					
 					//BUILT IN FUNCTIONS
 					//X_AND
-					else if(scriptText[i+1]=='A'&&scriptText[i+2]=='N'&&scriptText[i+3]=='D'){
+					if(scriptText[i+1]=='A'&&scriptText[i+2]=='N'&&scriptText[i+3]=='D'){
 						i+=4;
 						if (scriptText[i]!='('||scriptText[i+1]!='$'||scriptText[i+2]!='B') {
 							printf("\nERROR:INVALID SCRIPT:ICORRECT PARAMETER FORMAT!\n");
@@ -373,7 +372,7 @@ void ScriptParser::parseScript(char* scriptText,varSpace *vars,params *parameter
 					
 					//BUILT IN FUNCTIONS
 					//X_IADD
-					else if(scriptText[i+1]=='I'&&scriptText[i+2]=='A'&&scriptText[i+3]=='D'&&scriptText[i+4]=='D'){
+					if(scriptText[i+1]=='I'&&scriptText[i+2]=='A'&&scriptText[i+3]=='D'&&scriptText[i+4]=='D'){
 						i+=5;
 						if (scriptText[i]!='('||scriptText[i+1]!='$'||scriptText[i+2]!='I') {
 							printf("\nERROR:INVALID SCRIPT:INVALID PARAMETER FORMAT!\n");
@@ -492,7 +491,7 @@ void ScriptParser::parseScript(char* scriptText,varSpace *vars,params *parameter
 					
 					//BUILT IN FUNCTIONS
 					//X_FADD
-					else if(scriptText[i+1]=='F'&&scriptText[i+2]=='A'&&scriptText[i+3]=='D'&&scriptText[i+4]=='D'){
+					if(scriptText[i+1]=='F'&&scriptText[i+2]=='A'&&scriptText[i+3]=='D'&&scriptText[i+4]=='D'){
 						i+=5;
 						if (scriptText[i]!='('||scriptText[i+1]!='$'||scriptText[i+2]!='F') {
 							printf("\nERROR:INVALID SCRIPT:INVALID PARAMETER FORMAT!\n");
@@ -622,7 +621,7 @@ void ScriptParser::parseScript(char* scriptText,varSpace *vars,params *parameter
 						}
 						i+=3;
 						int index3=readVarIndex(scriptText, &i, ')');
-						vars->fVars[index]=Math::Vector::angleBetweenVectors(vars->vVars[index2], vars->vVars[index3]);
+						vars->fVars[index]=ScriptableMath::Vector::angleBetweenVectors(vars->vVars[index2], vars->vVars[index3]);
 					}
 					//X_VADDPOLAR
 					else if(scriptText[i+1]=='V'&&scriptText[i+2]=='A'&&scriptText[i+3]=='D'&&scriptText[i+4]=='D'&&scriptText[i+5]=='P'&&scriptText[i+6]=='O'&&scriptText[i+7]=='L'&&scriptText[i+8]=='A'&&scriptText[i+9]=='R'){
@@ -639,7 +638,7 @@ void ScriptParser::parseScript(char* scriptText,varSpace *vars,params *parameter
 						}
 						i+=3;
 						int index3=readVarIndex(scriptText, &i, ')');
-						vars->fVars[index]=Math::addPolar(vars->fVars[index2], vars->fVars[index3]);
+						vars->fVars[index]=ScriptableMath::addPolar(vars->fVars[index2], vars->fVars[index3]);
 					}
 					//X_VDIST
 					else if(scriptText[i+1]=='V'&&scriptText[i+2]=='D'&&scriptText[i+3]=='I'&&scriptText[i+4]=='S'&&scriptText[i+5]=='T'){
@@ -656,7 +655,7 @@ void ScriptParser::parseScript(char* scriptText,varSpace *vars,params *parameter
 						}
 						i+=3;
 						int index3=readVarIndex(scriptText, &i, ')');
-						vars->fVars[index]=Math::dist(vars->fVars[index2], vars->fVars[index3]);
+						vars->fVars[index]=ScriptableMath::dist(vars->fVars[index2], vars->fVars[index3]);
 					}
 					//X_TSIN
 					else if(scriptText[i+1]=='T'&&scriptText[i+2]=='S'&&scriptText[i+3]=='I'&&scriptText[i+4]=='N'){
@@ -755,7 +754,7 @@ void ScriptParser::parseScript(char* scriptText,varSpace *vars,params *parameter
 					
 					//BUILT IN FUNCTIONS
 					//X_VREC
-					else if(scriptText[i+1]=='V'&&scriptText[i+2]=='R'&&scriptText[i+3]=='E'&&scriptText[i+4]=='C'){
+					 if(scriptText[i+1]=='V'&&scriptText[i+2]=='R'&&scriptText[i+3]=='E'&&scriptText[i+4]=='C'){
 						i+=5;
 						if (scriptText[i]!='('||scriptText[i+1]!='$'||scriptText[i+2]!='F') {
 							printf("\nERROR:INVALID SCRIPT:INVALID PARAMETER FORMAT!\n");
@@ -769,7 +768,7 @@ void ScriptParser::parseScript(char* scriptText,varSpace *vars,params *parameter
 						}
 						i+=3;
 						int index3=readVarIndex(scriptText, &i, ')');
-						vars->vVars[index]=new Math::Vector(vars->fVars[index2],vars->fVars[index3]);
+						vars->vVars[index]=new ScriptableMath::Vector(vars->fVars[index2],vars->fVars[index3]);
 					}
 					//X_VPOL
 					else if(scriptText[i+1]=='V'&&scriptText[i+2]=='R'&&scriptText[i+3]=='E'&&scriptText[i+4]=='C'){
@@ -786,7 +785,7 @@ void ScriptParser::parseScript(char* scriptText,varSpace *vars,params *parameter
 						}
 						i+=3;
 						int index3=readVarIndex(scriptText, &i, ')');
-						vars->vVars[index]=Math::Vector::PolarVector(vars->fVars[index2], vars->fVars[index3]);
+						vars->vVars[index]=ScriptableMath::Vector::PolarVector(vars->fVars[index2], vars->fVars[index3]);
 					}
 					//X_VADD
 					else if(scriptText[i+1]=='V'&&scriptText[i+2]=='A'&&scriptText[i+3]=='D'&&scriptText[i+4]=='D'){
@@ -803,7 +802,7 @@ void ScriptParser::parseScript(char* scriptText,varSpace *vars,params *parameter
 						}
 						i+=3;
 						int index3=readVarIndex(scriptText, &i, ')');
-						vars->vVars[index]=Math::Vector::addVectors(vars->vVars[index2], vars->vVars[index3]);
+						vars->vVars[index]=ScriptableMath::Vector::addVectors(vars->vVars[index2], vars->vVars[index3]);
 					}
 					//X_VSUB
 					else if(scriptText[i+1]=='V'&&scriptText[i+2]=='S'&&scriptText[i+3]=='U'&&scriptText[i+4]=='B'){
@@ -820,8 +819,8 @@ void ScriptParser::parseScript(char* scriptText,varSpace *vars,params *parameter
 						}
 						i+=3;
 						int index3=readVarIndex(scriptText, &i, ')');
-						Math::Vector *temp=Math::Vector::scaledVector(vars->vVars[index3], -1);
-						vars->vVars[index]=Math::Vector::addVectors(vars->vVars[index2], temp);
+						ScriptableMath::Vector *temp=ScriptableMath::Vector::scaledVector(vars->vVars[index3], -1);
+						vars->vVars[index]=ScriptableMath::Vector::addVectors(vars->vVars[index2], temp);
 						delete temp;
 					}
 					//X_VSCALE
@@ -839,7 +838,7 @@ void ScriptParser::parseScript(char* scriptText,varSpace *vars,params *parameter
 						}
 						i+=3;
 						int index3=readVarIndex(scriptText, &i, ')');
-						vars->vVars[index]=Math::Vector::scaledVector(vars->vVars[index2], vars->fVars[index3]);
+						vars->vVars[index]=ScriptableMath::Vector::scaledVector(vars->vVars[index2], vars->fVars[index3]);
 					}
 					else{
 						printf("\nERROR:INVALID SCRIPT:UNDECLARED FUNCTION!\n");
@@ -869,9 +868,9 @@ void ScriptParser::parseScript(char* scriptText,varSpace *vars,params *parameter
 					/*Bridge Your Custom Type Functions*/
 
 					
-					else{
-						printf("\nWARNING:UNDECLARED PROCEDURE!\n");
-					}
+					//else{
+				//		printf("\nWARNING:UNDECLARED PROCEDURE!\n");
+					//}
 				}
 			}
 		}

@@ -1,0 +1,69 @@
+THIS DOCUMENT CONTAINS A LIST OF FUNCTIONS BUILT INTO ____ SCRIPT
+
+
+BOOLEAN LOGIC
+
+#X_AND(BOOL $A,BOOL $B)
+	Description: Evaultes the statement A AND B
+	Parameters: The booleans to be tested for AND
+	Return: BOOL, returns true if and only if both A and B are true.
+
+#X_OR(BOOL $A,BOOL $B)
+	Description: Evaultes the statement A OR B
+	Parameters: The booleans to be tested for OR
+	Return: BOOL, returns true if either A or B is true.
+
+#X_NOT(BOOL $A)
+	Description: Evaultes the statement NOT A
+	Parameters: The booleans to be inverted
+	Return: BOOL, returns true if and only if A is false
+
+
+NUMBER COMPARISON
+
+#X_ILESS(INT $A,INT $B)
+	Description: Evaultes the expression A<B
+	Parameters: The INTs to be compared
+	Return: BOOL, returns true if A is less than B
+	
+#X_FLESS(FLOAT $A,FLOAT $B)
+	Description: Evaultes the expression A<B
+	Parameters: The FLOATs to be compared
+	Return: BOOL, returns true if A is less than B
+	
+#X_IMORE(INT $A,INT $B)
+	Description: Evaultes the expression A>B
+	Parameters: The INTs to be compared
+	Return: BOOL, returns true if A is greater than B
+	
+#X_FMORE(FLOAT $A,FLOAT $B)
+	Description: Evaultes the expression A>B
+	Parameters: The FLOATs to be compared
+	Return: BOOL, returns true if A is greater than B
+	
+#X_IEQUAL(INT $A,INT $B)
+	Description: Evaultes the expression A==B
+	Parameters: The INTs to be compared
+	Return: BOOL, returns true if A is equal to B
+	
+#X_FEQUAL(FLOAT $A,FLOAT $B)
+	Description: Evaultes the expression A==B
+	Parameters: The FLOATs to be compared
+	Return: BOOL, returns true if A is equal to B
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	

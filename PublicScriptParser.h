@@ -21,7 +21,7 @@ namespace ScriptParser {
 		vector<bool> bVars;//bool variables
 		vector<int> iVars;//int variables
 		vector<float> fVars;//float variables
-		vector<Math::Vector *> vVars;//Vector Variables
+		vector<ScriptableMath::Vector *> vVars;//Vector Variables
 		vector<void *> pVars;//Custom type variables
 	};
 	struct params{

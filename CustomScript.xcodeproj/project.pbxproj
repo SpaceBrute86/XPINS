@@ -20,6 +20,7 @@
 		E764725717BB328000902735 /* PublicScriptParser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PublicScriptParser.h; sourceTree = "<group>"; };
 		E764725817BB328000902735 /* PublicScriptParser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PublicScriptParser.cpp; sourceTree = "<group>"; };
 		E764725D17BB34E100902735 /* BRANCHING POLICY */ = {isa = PBXFileReference; lastKnownFileType = text; path = "BRANCHING POLICY"; sourceTree = "<group>"; };
+		E764725E17BB36DC00902735 /* BUILT IN FUNCTION CATALOG */ = {isa = PBXFileReference; lastKnownFileType = text; path = "BUILT IN FUNCTION CATALOG"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -37,6 +38,7 @@
 			isa = PBXGroup;
 			children = (
 				E764725D17BB34E100902735 /* BRANCHING POLICY */,
+				E764725E17BB36DC00902735 /* BUILT IN FUNCTION CATALOG */,
 				E764725517BB328000902735 /* ScriptableMath.h */,
 				E764725617BB328000902735 /* ScriptableMath.cpp */,
 				E764725717BB328000902735 /* PublicScriptParser.h */,
