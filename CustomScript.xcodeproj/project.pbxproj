@@ -6,8 +6,20 @@
 	objectVersion = 46;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		E764725917BB328000902735 /* ScriptableMath.h in Headers */ = {isa = PBXBuildFile; fileRef = E764725517BB328000902735 /* ScriptableMath.h */; };
+		E764725A17BB328000902735 /* ScriptableMath.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E764725617BB328000902735 /* ScriptableMath.cpp */; };
+		E764725B17BB328000902735 /* PublicScriptParser.h in Headers */ = {isa = PBXBuildFile; fileRef = E764725717BB328000902735 /* PublicScriptParser.h */; };
+		E764725C17BB328000902735 /* PublicScriptParser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E764725817BB328000902735 /* PublicScriptParser.cpp */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
-		E764724E17BB326600902735 /* libCustomScript.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libCustomScript.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		E764724E17BB326600902735 /* libCustomScript.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; name = libCustomScript.dylib; path = "/Users/robbiemarkwick/Desktop/iPhone Apps/CustomScript/build/Debug/libCustomScript.dylib"; sourceTree = "<absolute>"; };
+		E764725517BB328000902735 /* ScriptableMath.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ScriptableMath.h; sourceTree = "<group>"; };
+		E764725617BB328000902735 /* ScriptableMath.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ScriptableMath.cpp; sourceTree = "<group>"; };
+		E764725717BB328000902735 /* PublicScriptParser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PublicScriptParser.h; sourceTree = "<group>"; };
+		E764725817BB328000902735 /* PublicScriptParser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PublicScriptParser.cpp; sourceTree = "<group>"; };
+		E764725D17BB34E100902735 /* BRANCHING POLICY */ = {isa = PBXFileReference; lastKnownFileType = text; path = "BRANCHING POLICY"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -24,16 +36,12 @@
 		E764724517BB326600902735 = {
 			isa = PBXGroup;
 			children = (
-				E764724F17BB326600902735 /* Products */,
+				E764725D17BB34E100902735 /* BRANCHING POLICY */,
+				E764725517BB328000902735 /* ScriptableMath.h */,
+				E764725617BB328000902735 /* ScriptableMath.cpp */,
+				E764725717BB328000902735 /* PublicScriptParser.h */,
+				E764725817BB328000902735 /* PublicScriptParser.cpp */,
 			);
-			sourceTree = "<group>";
-		};
-		E764724F17BB326600902735 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				E764724E17BB326600902735 /* libCustomScript.dylib */,
-			);
-			name = Products;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -43,6 +51,8 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E764725917BB328000902735 /* ScriptableMath.h in Headers */,
+				E764725B17BB328000902735 /* PublicScriptParser.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -83,7 +93,7 @@
 				en,
 			);
 			mainGroup = E764724517BB326600902735;
-			productRefGroup = E764724F17BB326600902735 /* Products */;
+			productRefGroup = E764724517BB326600902735;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -97,6 +107,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E764725C17BB328000902735 /* PublicScriptParser.cpp in Sources */,
+				E764725A17BB328000902735 /* ScriptableMath.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
