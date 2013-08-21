@@ -692,7 +692,7 @@ void ScriptParser::parseScript(char* scriptText,varSpace *vars,params *parameter
 					}
 					//X_TATAN
 					else if(scriptText[i+1]=='T'&&scriptText[i+2]=='A'&&scriptText[i+3]=='T'&&scriptText[i+4]=='A'&&scriptText[i+5]=='N'){
-						i+=6;
+							i+=6;
 						if (scriptText[i]!='('||scriptText[i+1]!='$'||scriptText[i+2]!='F') {
 							printf("\nERROR:INVALID SCRIPT:INVALID PARAMETER FORMAT!\n");
 							return;
