@@ -30,6 +30,12 @@ namespace ScriptParser {
 		
 	};
 	//Primary Method
+	//PARAM: the script text
+	//PARAM: a varSpace object used to store script variables
+	//PARAM: custom parameters passed to the script
+	//PARAM: false unless calling recursively to use a WHILE loop
+	//PARAM: Start index if reading while loop
+	//PARAM: Stop index if reading while loop
 	void parseScript(char *,varSpace*,params*,bool,int,int);
 	
 }

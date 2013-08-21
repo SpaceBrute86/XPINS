@@ -17,7 +17,10 @@ using namespace std;
 
 //Helper functions
 
-//read index of a variable
+//read index of a variable:
+// scriptText: the script
+// startIndex: the starting index of the variable
+// expectedEnd: the character expected immediately after the variable
 int readVarIndex(char* scriptText,int *startIndex,char expectedEnd){
 	int i=*startIndex;
 	int index=0;
@@ -39,10 +42,13 @@ int readVarIndex(char* scriptText,int *startIndex,char expectedEnd){
 	return index;
 }
 //Read an int constant
+// scriptText: the script
+// startIndex: the starting index of the INT
+// expectedEnd: the character expected immediately after the INT
 int readInt(char* scriptText,int *startIndex,char expectedEnd){
 	int i=*startIndex;
 	int index=0;
-	bool isNeg=scriptText[i]=='-';
+	bool isNeg=scriptText[i]=='-';//Make negative if approrpriate
 	while(scriptText[i]!=expectedEnd){
 		index*=10;
 		if(scriptText[i]=='1')index+=1;
@@ -62,6 +68,9 @@ int readInt(char* scriptText,int *startIndex,char expectedEnd){
 	return index;
 }
 //read a float constant
+// scriptText: the script
+// startIndex: the starting index of the FLOAT
+// expectedEnd: the character expected immediately after the FLOAT
 float readFloat(char* scriptText,int *startIndex,char expectedEnd){
 	int i=*startIndex;
 	int index=0;
@@ -69,7 +78,7 @@ float readFloat(char* scriptText,int *startIndex,char expectedEnd){
 	bool fpart=false;
 	bool isNeg=scriptText[i]=='-';
 	while(scriptText[i]!=expectedEnd){
-		if(fpart)fpartDig++;
+		if(fpart)fpartDig++;//record decimal place
 		index*=10;
 		if(scriptText[i]=='1')index+=1;
 		else if(scriptText[i]=='2')index+=2;
@@ -80,11 +89,11 @@ float readFloat(char* scriptText,int *startIndex,char expectedEnd){
 		else if(scriptText[i]=='7')index+=7;
 		else if(scriptText[i]=='8')index+=8;
 		else if(scriptText[i]=='9')index+=9;
-		else if(scriptText[i]=='.')fpart=true;
+		else if(scriptText[i]=='.')fpart=true;//Start recording decimal places
 		else if(scriptText[i]!='0')index/=10;
 		i++;
 	}
-	while (fpartDig) {
+	while (fpartDig) {//put decimal point in correct place
 		index/=10;
 		fpartDig--;
 	}
@@ -94,6 +103,7 @@ float readFloat(char* scriptText,int *startIndex,char expectedEnd){
 }
 
 //Primary Function
+//See header for parameter descriptions
 void ScriptParser::parseScript(char* scriptText,varSpace *vars,params *parameters,bool isRECURSIVE,int start,int stop){
 	/*Declare Your Custom Functions*/
 	
