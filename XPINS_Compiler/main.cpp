@@ -10,6 +10,10 @@
 #include <fstream>
 #include <string>
 using namespace std;
+const int kMajor=0;
+const int kMinor=1;
+
+void checkVersion(string*);
 string removeComments(string);
 string renameFunctions(string);
 string renameTypes(string);
@@ -18,40 +22,92 @@ string cleanUp(string);
 
 string strRepresentationOfInt(int);
 bool stringsMatch(int,string,string);
+int readVarIndex(string,int *,char);
 
 int main(int argc, const char * argv[])
 {
-	string fileName="/Users/robbiemarkwick/SailingGameScriptDraft.txt";
-	cout<<"Please enter the full path for the script you would like to compile"<<endl;
-	//cin>>fileName;
+	string fileName="";
+	cout<<"Please enter the full path minus extension for the script you would like to compile"<<endl;
+	cout<<"Make sure that the file extension is .XPINS"<<endl;
+	cin>>fileName;
+	string fileExt=".XPINS";//File extension for uncompiled XPINS: XPINS
+	string outExt=".XPINSX";//File extension for compiled XPINS: XPINSX
+	//read in file
 	ifstream inFile;
-	inFile.open(fileName);
+	inFile.open(fileName+fileExt);
 	if (inFile.fail()) {
 		cerr << "unable to open file for reading" << endl;
 		exit(1);
 	}
-	string s,scriptText="";
-	/*
-	while (inFile >> s) {
-		scriptText += s;
-		scriptText +="\n";
-	}*/
+	string scriptText="";
 	char ch;
 	while (inFile.get(ch)) {
 		scriptText+=ch;
 	}
-	cout<<"About To Compile Script:\n"<<scriptText;
+	inFile.close();
+	//Compile Script
+	cout<<endl<<"Validating Version..."<<endl;
+	checkVersion(&scriptText);
+	cout<<"Version Compatilbe!";
+	cout<<endl<<"About To Compile Script:\n"<<scriptText<<endl;
 	scriptText=removeComments(scriptText);
-	cout<<"\n\n\n\nComments and ';'s Removed:\n"<<scriptText;
+	cout<<endl<<"Comments and ';'s Removed:\n"<<scriptText<<endl;
 	scriptText=renameFunctions(scriptText);
-	cout<<"\n\n\n\nFunctions Renamed:\n"<<scriptText;
+	cout<<endl<<"Functions Renamed:\n"<<scriptText<<endl;
 	scriptText=renameTypes(scriptText);
-	cout<<"\n\n\n\nVariable Types Renamed:\n"<<scriptText;
+	cout<<endl<<"Variable Types Renamed:\n"<<scriptText<<endl;
 	scriptText=renameVars(scriptText);
-	cout<<"\n\n\n\nVariables Renamed:\n"<<scriptText;
+	cout<<endl<<"Variables Renamed:\n"<<scriptText<<endl;
 	scriptText=cleanUp(scriptText);
-	cout<<"\n\n\n\nCleaned Up:\n"<<scriptText;
+	cout<<endl<<"Cleaned Up:\n"<<scriptText;
+	//Write Output to file
+
+	ofstream outFile;
+	outFile.open(fileName+outExt);
+	if (outFile.fail()) {
+		cerr << "unable to open file: "<<fileName<<outExt<<" for writing" << endl;
+		exit(1);
+	}
+	cout<<endl<<endl<<endl<<"Writing To File:\n"<<fileName<<outExt;
+	for (int i=0;i<scriptText.length();i++) {
+		ch=scriptText[i];
+		outFile<<ch;
+	}
+	outFile.close();
     return 0;
+}
+
+void checkVersion(string* script){
+	string input=*script;
+	for(int i=0;i<input.length();i++){
+		if(input[i]=='@'&&input[i+1]=='C'&&input[i+2]=='O'&&input[i+3]=='M'&&input[i+4]=='P'&&input[i+5]=='I'&&input[i+6]=='L'&&input[i+7]=='E'&&input[i+8]=='R'){
+			while(i<input.length()&&input[i]!='[')i++;
+			if(i==input.length()){
+				cout<<"SCRIPT MISSING VERSION. EXITING";
+				exit(1);
+			}
+			int MAJOR=readVarIndex(input, &i, '.');
+			int MINOR=readVarIndex(input, &i, ']');
+			if(MAJOR!=kMajor){
+				cout<<"INCOMPATIBLE VERSION. EXITING";
+				exit(1);
+			}
+			if(MINOR<kMinor){
+				cout<<"INCOMPATIBLE VERSION. EXITING";
+				exit(1);
+			}
+			while(i<input.length()&&input[i]!='\n')i++;
+			i++;
+			string output="";
+			while (i<input.length()) {
+				output+=input[i++];
+			}
+			*script=output;
+			return;
+		}
+	}
+	cout<<"SCRIPT MISSING VERSION. EXITING";
+	exit(1);
 }
 //COMPILE STEPS
 string removeComments(string input){
@@ -94,7 +150,7 @@ string renameFunctions(string input){
 	char ch;
 	int i=0;
 	//Locate Function block
-	while(input[i]!='@'){
+	while(input[i]!='@'||input[i+1]!='F'){
 		i++;
 	}
 	if(input[i+1]!='F'||input[i+2]!='U'||input[i+3]!='N'||input[i+4]!='C'){
@@ -208,7 +264,7 @@ string renameVars(string input){
 	char ch;
 	int i=0;
 	//Locate Code block
-	while(input[i]!='@'){
+	while(input[i]!='@'||input[i+1]!='C'){
 		i++;
 	}
 	if(input[i+1]!='C'||input[i+2]!='O'||input[i+3]!='D'||input[i+4]!='E'){
@@ -230,7 +286,6 @@ string renameVars(string input){
 	while(i<input.length()&&(input[i]!='@'||input[i+1]!='E')){
 		if(input[i-1]=='\n'&&(input[i]=='B'||input[i]=='I'||input[i]=='F'||input[i]=='V'||input[i]=='*'))
 		{
-			cout<<"\nFound Variable:\n";
 			//determine new variable name
 			varType=input[i]=='*'?'P':input[i];
 			int varNum=0;
@@ -252,13 +307,11 @@ string renameVars(string input){
 					break;
 				default: varType='P';varNum=++xp;
 			}
-			cout<<varType<<strRepresentationOfInt(varNum)<<":\n";
 			//read Var name
 			string varName;
 			for(i+=3;i<input.length()&&input[i]!='=';i++){
 				varName+=input[i];
 			}
-			cout<<varName<<endl;
 			//Replace Var name
 			intermediate2="";
 			j=0;
@@ -318,6 +371,26 @@ string cleanUp(string input){
 	return output;
 }
 //UTILTY FUNCTIONS
+int readVarIndex(string scriptText,int *startIndex,char expectedEnd){
+	int i=*startIndex;
+	int index=0;
+	while(scriptText[i]!=expectedEnd){
+		index*=10;
+		if(scriptText[i]=='1')index+=1;
+		else if(scriptText[i]=='2')index+=2;
+		else if(scriptText[i]=='3')index+=3;
+		else if(scriptText[i]=='4')index+=4;
+		else if(scriptText[i]=='5')index+=5;
+		else if(scriptText[i]=='6')index+=6;
+		else if(scriptText[i]=='7')index+=7;
+		else if(scriptText[i]=='8')index+=8;
+		else if(scriptText[i]=='9')index+=9;
+		else if(scriptText[i]!='0')index/=10;
+		i++;
+	}
+	*startIndex=i;
+	return index;
+}
 string strRepresentationOfInt(int x){
 	if(x/10==0){
 		switch (x) {
@@ -339,22 +412,7 @@ string strRepresentationOfInt(int x){
 bool stringsMatch(int start,string first, string sec){
 	for(int i=start;i<start+sec.length();i++){
 		if(i==first.length()) return false;
-		/*cout<<first[i];
-		cout<<sec[i-start];
-		cout<<endl<<endl<<endl<<endl;*/
 		if(first[i]!=sec[i-start])return false;
 	}
 	return true;
 }
-
-
-
-
-
-
-
-
-
-
-
-

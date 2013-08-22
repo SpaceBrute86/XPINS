@@ -41,6 +41,7 @@
 		E7C489B217C5963D00EE5F8A /* XPINS_Compiler */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = XPINS_Compiler; sourceTree = BUILT_PRODUCTS_DIR; };
 		E7C489B417C5963D00EE5F8A /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		E7C489B617C5963D00EE5F8A /* XPINS_Compiler.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = XPINS_Compiler.1; sourceTree = "<group>"; };
+		E7C489BE17C6AF5100EE5F8A /* Version Scheme */ = {isa = PBXFileReference; lastKnownFileType = text; path = "Version Scheme"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -99,6 +100,7 @@
 				E764725D17BB34E100902735 /* BRANCHING POLICY */,
 				E7C489AD17C595FC00EE5F8A /* ScriptFormat.txt */,
 				E7C489AC17C46C7300EE5F8A /* Possible Names */,
+				E7C489BE17C6AF5100EE5F8A /* Version Scheme */,
 			);
 			name = "Development Docs";
 			sourceTree = "<group>";

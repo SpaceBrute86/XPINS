@@ -10,6 +10,8 @@
 
 
 using namespace std;
+const kMajor=0;
+const kMinor=0;
 
 /*Custom Scriptable Functions*/
 
@@ -101,7 +103,28 @@ float readFloat(char* scriptText,int *startIndex,char expectedEnd){
 	*startIndex=i;
 	return index;
 }
-
+//Check to make sure script is compatible
+// script: the script
+bool checkVersion(char* script){
+	for(int i=0;true;i++){
+		if(script[i]=='@'&&script[i+1]=='P'&&script[i+2]=='A'&&script[i+3]=='R'&&script[i+4]=='S'&&script[i+5]=='E'&&script[i+6]=='R'){
+			while(script[i]!='[')i++;
+			int MAJOR=readVarIndex(script, &i, '.');
+			int MINOR=readVarIndex(script, &i, ']');
+			if(MAJOR!=kMajor){
+				cout<<"INCOMPATIBLE VERSION. FAILING";
+				return false;
+			}
+			if(MINOR<kMinor){
+				cout<<"INCOMPATIBLE VERSION. FAILING";
+				return false;
+			}
+			return true;
+		}
+	}
+	cout<<"SCRIPT MISSING VERSION. FAILING";
+	return false;
+}
 //Primary Function
 //See header for parameter descriptions
 void ScriptParser::parseScript(char* scriptText,varSpace *vars,params *parameters,bool isRECURSIVE,int start,int stop){
@@ -124,6 +147,8 @@ void ScriptParser::parseScript(char* scriptText,varSpace *vars,params *parameter
 	if(isRECURSIVE)i=start;
 	//Validate start of script
 	if(!isRECURSIVE){
+		if(!checkVersion(scriptText))return;
+		while (scriptText[i]!='\n')i++;
 		while(scriptText[i]!='@')i++;
 		if(scriptText[i+1]!='C'||
 		   scriptText[i+2]!='O'||
