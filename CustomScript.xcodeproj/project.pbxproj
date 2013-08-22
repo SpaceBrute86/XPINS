@@ -11,20 +11,47 @@
 		E764725A17BB328000902735 /* ScriptableMath.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E764725617BB328000902735 /* ScriptableMath.cpp */; };
 		E764725B17BB328000902735 /* PublicScriptParser.h in Headers */ = {isa = PBXBuildFile; fileRef = E764725717BB328000902735 /* PublicScriptParser.h */; };
 		E764725C17BB328000902735 /* PublicScriptParser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E764725817BB328000902735 /* PublicScriptParser.cpp */; };
+		E7C489B517C5963D00EE5F8A /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E7C489B417C5963D00EE5F8A /* main.cpp */; };
+		E7C489B717C5963D00EE5F8A /* XPINS_Compiler.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = E7C489B617C5963D00EE5F8A /* XPINS_Compiler.1 */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		E7C489B017C5963D00EE5F8A /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+				E7C489B717C5963D00EE5F8A /* XPINS_Compiler.1 in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
-		E764724E17BB326600902735 /* libCustomScript.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; name = libCustomScript.dylib; path = "/Users/robbiemarkwick/Desktop/iPhone Apps/CustomScript/build/Debug/libCustomScript.dylib"; sourceTree = "<absolute>"; };
 		E764725517BB328000902735 /* ScriptableMath.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ScriptableMath.h; sourceTree = "<group>"; };
 		E764725617BB328000902735 /* ScriptableMath.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ScriptableMath.cpp; sourceTree = "<group>"; };
 		E764725717BB328000902735 /* PublicScriptParser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PublicScriptParser.h; sourceTree = "<group>"; };
 		E764725817BB328000902735 /* PublicScriptParser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PublicScriptParser.cpp; sourceTree = "<group>"; };
 		E764725D17BB34E100902735 /* BRANCHING POLICY */ = {isa = PBXFileReference; lastKnownFileType = text; path = "BRANCHING POLICY"; sourceTree = "<group>"; };
 		E764725E17BB36DC00902735 /* BUILT IN FUNCTION CATALOG */ = {isa = PBXFileReference; lastKnownFileType = text; path = "BUILT IN FUNCTION CATALOG"; sourceTree = "<group>"; };
+		E7C489AB17C4692F00EE5F8A /* libCustomScript.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libCustomScript.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		E7C489AC17C46C7300EE5F8A /* Possible Names */ = {isa = PBXFileReference; lastKnownFileType = text; path = "Possible Names"; sourceTree = "<group>"; };
+		E7C489AD17C595FC00EE5F8A /* ScriptFormat.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = ScriptFormat.txt; sourceTree = "<group>"; };
+		E7C489B217C5963D00EE5F8A /* XPINS_Compiler */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = XPINS_Compiler; sourceTree = BUILT_PRODUCTS_DIR; };
+		E7C489B417C5963D00EE5F8A /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		E7C489B617C5963D00EE5F8A /* XPINS_Compiler.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = XPINS_Compiler.1; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		E764724B17BB326600902735 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E7C489AF17C5963D00EE5F8A /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -37,13 +64,51 @@
 		E764724517BB326600902735 = {
 			isa = PBXGroup;
 			children = (
-				E764725D17BB34E100902735 /* BRANCHING POLICY */,
-				E764725E17BB36DC00902735 /* BUILT IN FUNCTION CATALOG */,
+				E7C489BC17C5966700EE5F8A /* Development Docs */,
+				E7C489BD17C5966D00EE5F8A /* XPINS Documentation */,
+				E7C489B317C5963D00EE5F8A /* XPINS_Compiler */,
+				E7C489BB17C5965400EE5F8A /* XPINS Parser */,
+				E7C489AB17C4692F00EE5F8A /* libCustomScript.dylib */,
+				E7C489B217C5963D00EE5F8A /* XPINS_Compiler */,
+			);
+			sourceTree = "<group>";
+		};
+		E7C489B317C5963D00EE5F8A /* XPINS_Compiler */ = {
+			isa = PBXGroup;
+			children = (
+				E7C489B417C5963D00EE5F8A /* main.cpp */,
+				E7C489B617C5963D00EE5F8A /* XPINS_Compiler.1 */,
+			);
+			path = XPINS_Compiler;
+			sourceTree = "<group>";
+		};
+		E7C489BB17C5965400EE5F8A /* XPINS Parser */ = {
+			isa = PBXGroup;
+			children = (
 				E764725517BB328000902735 /* ScriptableMath.h */,
 				E764725617BB328000902735 /* ScriptableMath.cpp */,
 				E764725717BB328000902735 /* PublicScriptParser.h */,
 				E764725817BB328000902735 /* PublicScriptParser.cpp */,
 			);
+			name = "XPINS Parser";
+			sourceTree = "<group>";
+		};
+		E7C489BC17C5966700EE5F8A /* Development Docs */ = {
+			isa = PBXGroup;
+			children = (
+				E764725D17BB34E100902735 /* BRANCHING POLICY */,
+				E7C489AD17C595FC00EE5F8A /* ScriptFormat.txt */,
+				E7C489AC17C46C7300EE5F8A /* Possible Names */,
+			);
+			name = "Development Docs";
+			sourceTree = "<group>";
+		};
+		E7C489BD17C5966D00EE5F8A /* XPINS Documentation */ = {
+			isa = PBXGroup;
+			children = (
+				E764725E17BB36DC00902735 /* BUILT IN FUNCTION CATALOG */,
+			);
+			name = "XPINS Documentation";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -75,8 +140,25 @@
 			);
 			name = CustomScript;
 			productName = CustomScript;
-			productReference = E764724E17BB326600902735 /* libCustomScript.dylib */;
+			productReference = E7C489AB17C4692F00EE5F8A /* libCustomScript.dylib */;
 			productType = "com.apple.product-type.library.dynamic";
+		};
+		E7C489B117C5963D00EE5F8A /* XPINS_Compiler */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E7C489B817C5963D00EE5F8A /* Build configuration list for PBXNativeTarget "XPINS_Compiler" */;
+			buildPhases = (
+				E7C489AE17C5963D00EE5F8A /* Sources */,
+				E7C489AF17C5963D00EE5F8A /* Frameworks */,
+				E7C489B017C5963D00EE5F8A /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = XPINS_Compiler;
+			productName = XPINS_Compiler;
+			productReference = E7C489B217C5963D00EE5F8A /* XPINS_Compiler */;
+			productType = "com.apple.product-type.tool";
 		};
 /* End PBXNativeTarget section */
 
@@ -100,6 +182,7 @@
 			projectRoot = "";
 			targets = (
 				E764724D17BB326600902735 /* CustomScript */,
+				E7C489B117C5963D00EE5F8A /* XPINS_Compiler */,
 			);
 		};
 /* End PBXProject section */
@@ -111,6 +194,14 @@
 			files = (
 				E764725C17BB328000902735 /* PublicScriptParser.cpp in Sources */,
 				E764725A17BB328000902735 /* ScriptableMath.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E7C489AE17C5963D00EE5F8A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E7C489B517C5963D00EE5F8A /* main.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -203,6 +294,24 @@
 			};
 			name = Release;
 		};
+		E7C489B917C5963D00EE5F8A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		E7C489BA17C5963D00EE5F8A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -220,6 +329,15 @@
 			buildConfigurations = (
 				E764725317BB326600902735 /* Debug */,
 				E764725417BB326600902735 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		E7C489B817C5963D00EE5F8A /* Build configuration list for PBXNativeTarget "XPINS_Compiler" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E7C489B917C5963D00EE5F8A /* Debug */,
+				E7C489BA17C5963D00EE5F8A /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 		};

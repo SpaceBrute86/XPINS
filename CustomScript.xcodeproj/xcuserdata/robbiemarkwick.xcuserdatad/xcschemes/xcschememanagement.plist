@@ -9,10 +9,20 @@
 			<key>orderHint</key>
 			<integer>0</integer>
 		</dict>
+		<key>XPINS_Compiler.xcscheme</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>1</integer>
+		</dict>
 	</dict>
 	<key>SuppressBuildableAutocreation</key>
 	<dict>
 		<key>E764724D17BB326600902735</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>E7C489B117C5963D00EE5F8A</key>
 		<dict>
 			<key>primary</key>
 			<true/>
