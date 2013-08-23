@@ -1,10 +1,10 @@
 //Copyright (c) 2013 Robert Markwick
 //See the file license.txt for copying permission
 
-#ifndef __Script__Math__
-#define __Script__Math__
+#ifndef __XPINS__Math__
+#define __XPINS__Math__
 #include <iostream>
-namespace ScriptableMath{
+namespace XPINSScriptableMath{
 	class Vector{
 	public:
 		//creating vectors

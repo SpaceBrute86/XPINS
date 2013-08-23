@@ -1,8 +1,8 @@
 //Copyright (c) 2013 Robert Markwick
 //See the file license.txt for copying permission
 
-#ifndef __Script__ScriptParser__
-#define __Script__ScriptParser__
+#ifndef __XPINS__Parser__
+#define __XPINS__Parser__
 
 #include <iostream>
 #include <vector>

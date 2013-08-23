@@ -2,7 +2,7 @@
 //See the file license.txt for copying permission
 
 
-#include "PublicScriptParser.h"
+#include "XPINSParser.h"
 #include <math.h>
 /*include your own headers*/
 
