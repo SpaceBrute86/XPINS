@@ -1,8 +1,6 @@
-//
-//  PublicScriptParser.cpp
-//
-//  Copyright (c) 2013 Robbie Markwick. All rights reserved.
-//
+//Copyright (c) 2013 Robert Markwick
+//See the file license.txt for copying permission
+
 
 #include "PublicScriptParser.h"
 #include <math.h>

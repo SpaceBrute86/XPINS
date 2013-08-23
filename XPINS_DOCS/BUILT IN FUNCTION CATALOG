@@ -1,5 +1,7 @@
-THIS DOCUMENT CONTAINS A LIST OF FUNCTIONS BUILT INTO XPINS
+Copyright (c) 2013 Robert Markwick
+See the file license.txt for copying permission
 
+THIS DOCUMENT CONTAINS A LIST OF FUNCTIONS BUILT INTO XPINS
 
 BOOLEAN LOGIC
 
@@ -202,25 +204,3 @@ VECTOR OPERATIONS
 	Description: Scales a vector
 	Parameters: The vectors to be scaled, and the FLOAT by which to scale it
 	Return: VEC, returns a vector in the same direction as A with the magnitude multiplied by B
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-
-	
-	

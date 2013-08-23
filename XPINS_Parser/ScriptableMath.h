@@ -1,10 +1,5 @@
-//
-//  SLNVector.h
-//  SailingGame
-//
-//  Created by Robbie Markwick on 5/2/13.
-//  Copyright (c) 2013 Robbie Markwick. All rights reserved.
-//
+//Copyright (c) 2013 Robert Markwick
+//See the file license.txt for copying permission
 
 #ifndef __Script__Math__
 #define __Script__Math__

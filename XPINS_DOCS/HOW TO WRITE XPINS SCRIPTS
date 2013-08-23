@@ -1,3 +1,6 @@
+Copyright (c) 2013 Robert Markwick
+See the file license.txt for copying permission
+
 This document explains how to write XPINS scripts.
 XPINS stands for eXtensible Program Instruction Notation/Script
 
@@ -138,14 +141,4 @@ So if I have function F11 that takes two floats and my custom parameters and spi
 vars->vVars[index]=f11(parameters,fVars[index2],fVars[index3]);
 That's really all there is to bridging your functions.
 
-
-
-
-
-
-
-
-
-
-
-
+Have Fun with XPINS!

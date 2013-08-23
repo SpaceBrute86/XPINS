@@ -1,10 +1,6 @@
-//
-//  main.cpp
-//  XPINS_Compiler
-//
-//  Created by Robbie Markwick on 8/21/13.
-//  Copyright (c) 2013 Robbie Markwick. All rights reserved.
-//
+//Copyright (c) 2013 Robert Markwick
+//See the file license.txt for copying permission
+
 
 #include <iostream>
 #include <fstream>

@@ -1,6 +1,0 @@
-Both the Compiler and the Parser use Semantic Versioning. The first two lines of the script declare which versions they are compatible with:
-@COMP[M.m]
-@PARSE[M.m]
-
-A Script is compatible with a Compiler whose Major number is equal to and whose minor number is less than or equal to the script number
-A Script is compatible with a Parser whose Major number is equal to and whose minor number is less than or equal to the script number
