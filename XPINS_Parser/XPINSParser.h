@@ -12,7 +12,7 @@
 
 
 using namespace std;
-namespace ScriptParser {
+namespace XPINSParser {
 	//Variable space
 	struct varSpace{
 		vector<bool> bVars;//bool variables

@@ -125,7 +125,7 @@ bool checkVersion(char* script){
 }
 //Primary Function
 //See header for parameter descriptions
-void ScriptParser::parseScript(char* scriptText,varSpace *vars,params *parameters,bool isRECURSIVE,int start,int stop){
+void XPINSParser::parseScript(char* scriptText,varSpace *vars,params *parameters,bool isRECURSIVE,int start,int stop){
 	/*Declare Your Custom Functions*/
 	
 	
