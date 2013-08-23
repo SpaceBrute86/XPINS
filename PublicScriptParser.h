@@ -10,7 +10,7 @@
 #include <iostream>
 #include <vector>
 #include "ScriptableMath.h"
-/*Import your custom classes*/
+/*include your custom classes*/
 
 
 
