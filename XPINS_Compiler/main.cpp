@@ -1,7 +1,6 @@
 //Copyright (c) 2013 Robert Markwick
 //See the file license.txt for copying permission
 
-//THIS IS THE COMPILER
 #include <iostream>
 #include <fstream>
 #include <string>
