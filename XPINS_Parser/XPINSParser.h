@@ -1,6 +1,7 @@
 //Copyright (c) 2013 Robert Markwick
 //See the file license.txt for copying permission
 
+//Version 0.2.0
 #ifndef __XPINS__Parser__
 #define __XPINS__Parser__
 
@@ -17,7 +18,7 @@ namespace XPINSParser{
 		vector<bool> bVars;//bool variables
 		vector<int> iVars;//int variables
 		vector<float> fVars;//float variables
-		vector<ScriptableMath::Vector *> vVars;//Vector Variables
+		vector<XPINSScriptableMath::Vector *> vVars;//Vector Variables
 		vector<void *> pVars;//Custom type variables
 	};
 	

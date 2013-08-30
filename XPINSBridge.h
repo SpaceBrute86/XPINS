@@ -26,6 +26,7 @@ namespace XPINSBridge{
 	//PARAM: a varSpace object used to store script variables
 	//PARAM: the script text
 	//PARAM: the current index of the script (index of the '(')
-	void bridgeFunction(int,params,XPINSParser::varSpace*,char*, int*);
+	//PARAM: the index of the variable to which the function is to be assigned
+	void bridgeFunction(int,params,XPINSParser::varSpace*,char*, int*,int);
 }
 #endif /* defined(__XPINS__XPINSBridge__) */

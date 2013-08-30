@@ -8,7 +8,7 @@
 
 using namespace std;
 const kMajor=0;
-const kMinor=0;
+const kMinor=2;
 
 //Read Variable Index for Function Parameters
 int readFuncParameter(char* scriptText,int *startIndex,char varType,char expectedEnd){
@@ -141,7 +141,7 @@ void XPINSParser::parseScript(char* scriptText,varSpace *vars,params *parameters
 		vars->bVars=vector<bool>();
 		vars->iVars=vector<int>();
 		vars->fVars=vector<float>();
-		vars->vVars=vector<ScriptableMath::Vector*>();
+		vars->vVars=vector<XPINSScriptableMath::Vector*>();
 		vars->pVars=vector<void*>();
 		initialized_varSpace=true;
 	}
@@ -227,7 +227,7 @@ void XPINSParser::parseScript(char* scriptText,varSpace *vars,params *parameters
 					if(scriptText[i]=='#'&&scriptText[i+1]=='F'){
 						i+=2;
 						int fNum=readVarIndex(scriptText, &i, '(');
-						XPINSBridge::bridgeFunction(fNum, parameters, vars, scriptText, &i);
+						XPINSBridge::bridgeFunction(fNum, parameters, vars, scriptText, &i,index);
 					}
 					else{
 						i+=2;
@@ -535,7 +535,7 @@ void XPINSParser::parseScript(char* scriptText,varSpace *vars,params *parameters
 					if(scriptText[i]=='#'&&scriptText[i+1]=='F'){
 						i+=2;
 						int fNum=readVarIndex(scriptText, &i, '(');
-						XPINSBridge::bridgeFunction(fNum, parameters, vars, scriptText, &i);
+						XPINSBridge::bridgeFunction(fNum, parameters, vars, scriptText, &i,index);
 					}
 					else{
 						i+=2;
@@ -671,7 +671,7 @@ void XPINSParser::parseScript(char* scriptText,varSpace *vars,params *parameters
 							}
 							i+=3;
 							int index3=readVarIndex(scriptText, &i, ')');
-							vars->fVars[index]=ScriptableMath::Vector::angleBetweenVectors(vars->vVars[index2], vars->vVars[index3]);
+							vars->fVars[index]=XPINSScriptableMath::Vector::angleBetweenVectors(vars->vVars[index2], vars->vVars[index3]);
 						}
 						//X_VADDPOLAR
 						else if(scriptText[i+1]=='V'&&scriptText[i+2]=='A'&&scriptText[i+3]=='D'&&scriptText[i+4]=='D'&&scriptText[i+5]=='P'&&scriptText[i+6]=='O'&&scriptText[i+7]=='L'&&scriptText[i+8]=='A'&&scriptText[i+9]=='R'){
@@ -688,7 +688,7 @@ void XPINSParser::parseScript(char* scriptText,varSpace *vars,params *parameters
 							}
 							i+=3;
 							int index3=readVarIndex(scriptText, &i, ')');
-							vars->fVars[index]=ScriptableMath::addPolar(vars->fVars[index2], vars->fVars[index3]);
+							vars->fVars[index]=XPINSScriptableMath::addPolar(vars->fVars[index2], vars->fVars[index3]);
 						}
 						//X_VDIST
 						else if(scriptText[i+1]=='V'&&scriptText[i+2]=='D'&&scriptText[i+3]=='I'&&scriptText[i+4]=='S'&&scriptText[i+5]=='T'){
@@ -705,7 +705,7 @@ void XPINSParser::parseScript(char* scriptText,varSpace *vars,params *parameters
 							}
 							i+=3;
 							int index3=readVarIndex(scriptText, &i, ')');
-							vars->fVars[index]=ScriptableMath::dist(vars->fVars[index2], vars->fVars[index3]);
+							vars->fVars[index]=XPINSScriptableMath::dist(vars->fVars[index2], vars->fVars[index3]);
 						}
 						//X_TSIN
 						else if(scriptText[i+1]=='T'&&scriptText[i+2]=='S'&&scriptText[i+3]=='I'&&scriptText[i+4]=='N'){
@@ -802,7 +802,7 @@ void XPINSParser::parseScript(char* scriptText,varSpace *vars,params *parameters
 					if(scriptText[i]=='#'&&scriptText[i+1]=='F'){
 						i+=2;
 						int fNum=readVarIndex(scriptText, &i, '(');
-						XPINSBridge::bridgeFunction(fNum, parameters, vars, scriptText, &i);
+						XPINSBridge::bridgeFunction(fNum, parameters, vars, scriptText, &i,index);
 					}
 					else{
 						i+=2;
@@ -821,7 +821,7 @@ void XPINSParser::parseScript(char* scriptText,varSpace *vars,params *parameters
 							}
 							i+=3;
 							int index3=readVarIndex(scriptText, &i, ')');
-							vars->vVars[index]=new ScriptableMath::Vector(vars->fVars[index2],vars->fVars[index3]);
+							vars->vVars[index]=new XPINSScriptableMath::Vector(vars->fVars[index2],vars->fVars[index3]);
 						}
 						//X_VPOL
 						else if(scriptText[i+1]=='V'&&scriptText[i+2]=='R'&&scriptText[i+3]=='E'&&scriptText[i+4]=='C'){
@@ -838,7 +838,7 @@ void XPINSParser::parseScript(char* scriptText,varSpace *vars,params *parameters
 							}
 							i+=3;
 							int index3=readVarIndex(scriptText, &i, ')');
-							vars->vVars[index]=ScriptableMath::Vector::PolarVector(vars->fVars[index2], vars->fVars[index3]);
+							vars->vVars[index]=XPINSScriptableMath::Vector::PolarVector(vars->fVars[index2], vars->fVars[index3]);
 						}
 						//X_VADD
 						else if(scriptText[i+1]=='V'&&scriptText[i+2]=='A'&&scriptText[i+3]=='D'&&scriptText[i+4]=='D'){
@@ -855,7 +855,7 @@ void XPINSParser::parseScript(char* scriptText,varSpace *vars,params *parameters
 							}
 							i+=3;
 							int index3=readVarIndex(scriptText, &i, ')');
-							vars->vVars[index]=ScriptableMath::Vector::addVectors(vars->vVars[index2], vars->vVars[index3]);
+							vars->vVars[index]=XPINSScriptableMath::Vector::addVectors(vars->vVars[index2], vars->vVars[index3]);
 						}
 						//X_VSUB
 						else if(scriptText[i+1]=='V'&&scriptText[i+2]=='S'&&scriptText[i+3]=='U'&&scriptText[i+4]=='B'){
@@ -872,8 +872,8 @@ void XPINSParser::parseScript(char* scriptText,varSpace *vars,params *parameters
 							}
 							i+=3;
 							int index3=readVarIndex(scriptText, &i, ')');
-							ScriptableMath::Vector *temp=ScriptableMath::Vector::scaledVector(vars->vVars[index3], -1);
-							vars->vVars[index]=ScriptableMath::Vector::addVectors(vars->vVars[index2], temp);
+							XPINSScriptableMath::Vector *temp=XPINSScriptableMath::Vector::scaledVector(vars->vVars[index3], -1);
+							vars->vVars[index]=XPINSScriptableMath::Vector::addVectors(vars->vVars[index2], temp);
 							delete temp;
 						}
 						//X_VSCALE
@@ -891,7 +891,7 @@ void XPINSParser::parseScript(char* scriptText,varSpace *vars,params *parameters
 							}
 							i+=3;
 							int index3=readVarIndex(scriptText, &i, ')');
-							vars->vVars[index]=ScriptableMath::Vector::scaledVector(vars->vVars[index2], vars->fVars[index3]);
+							vars->vVars[index]=XPINSScriptableMath::Vector::scaledVector(vars->vVars[index2], vars->fVars[index3]);
 						}
 						else{
 							printf("\nERROR:INVALID SCRIPT:UNDECLARED FUNCTION!\n");
@@ -920,7 +920,7 @@ void XPINSParser::parseScript(char* scriptText,varSpace *vars,params *parameters
 					}
 					i+=2;
 					int fNum=readVarIndex(scriptText, &i, '(');
-					XPINSBridge::bridgeFunction(fNum, parameters, vars, scriptText, &i);
+					XPINSBridge::bridgeFunction(fNum, parameters, vars, scriptText, &i,index);
 				}
 			}
 		}
@@ -930,7 +930,7 @@ void XPINSParser::parseScript(char* scriptText,varSpace *vars,params *parameters
 			}
 			i+=2;
 			int fNum=readVarIndex(scriptText, &i, '(');
-			XPINSBridge::bridgeFunction(fNum, parameters, vars, scriptText, &i);
+			XPINSBridge::bridgeFunction(fNum, parameters, vars, scriptText, &i,0);
 		}
 		else if(scriptText[i]=='@'){
 			i++;

@@ -2,7 +2,7 @@
 //See the file license.txt for copying permission
 
 
-#include "ScriptableMath.h"
+#include "XPINSScriptableMath.h"
 #include <math.h>
 
 XPINSScriptableMath::Vector::Vector(float x,float y){

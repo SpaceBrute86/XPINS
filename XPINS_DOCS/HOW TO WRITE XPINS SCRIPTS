@@ -63,82 +63,63 @@ Using XPINS, you can script almost anything you can do in C/C++.
 
 
 
-In order to make XPINS useful, you must add some code to the Parser:
+In order to make XPINS useful, you must implement the Bridging code:
 -Include any of your own headers
 -Declare custom parameters
 -Implement Custom Functions
 -Bridge your custom functions
 
-In order to interact with your code, the XPINS parser must be able to see your code. You do this by including your header files. If you don't need a piece of code for your custom parameters, it is recommended that you include it in the implementation file.
+In order to interact with your code, the XPINSBridge.h and XPINSBridge.cpp must be able to see your code. You do this by including your header files. If you don't need a piece of code for your custom parameters, it is recommended that you include it in XPINSBridge.cpp.
 
-The XPINS parser is set up so that you can "pass parameters" to a script. In the header file for the XPINS parser there is a struct type called params. In that struct, you can declare any custom parameters that you want. Before you execute a script, you can create a params variable and fill it with whatever you want and pass it to the parser. To access these custom parameters in your script, you must use custom functions.
+The XPINS parser is set up so that you can "pass parameters" to a script. In XPINSBridge.h there is a struct type called params. In that struct, you can declare any custom parameters that you want. 
+Before you execute a script, create a params variable and fill it with whatever you want, then pass it to the parser. To access these custom parameters in your script, you must use custom functions.
 
-In the implementation file for the XPINS parser, there is a comment that says /*Custom Scriptable Functions*/ In the whitespace after that, implement your custom functions just as you would implement any other function. Well, almost...
-If you want to write a function that takes a VEC variable as a parameter, it will be passed as an object of type ScriptableMath::Vector. BOOL, INT, and FLOAT will be passed as their C/C++ cousins. That is pretty simple, but if you want to pass a variable of any other type, you must pass it as a generic pointer variable. These are the *___ variables you declared in your scripts, but the parser treats them as void*. Your function must be implemented to receive a void*, and to use it you must convert it to the desired time:
+In XPINSBridge.cpp, there is a comment that says /*Write your own Scriptable Functions*/. In the whitespace after that, implement your custom functions just as you would implement any other function. Well, almost...
+If you want to write a function that takes a VEC variable as a parameter, it will be passed as an object of type XPINSScriptableMath::Vector. BOOL, INT, and FLOAT will be passed as their C/C++ cousins. That is pretty simple, but if you want to pass a variable of any other type, you must pass it as a generic pointer variable. These are the *___ variables you declared in your scripts, but the parser treats them as void*. Your function must be implemented to receive a void*, and to use it you must convert it to the desired time:
 MyType *var=(MyType*)arg1;
 If you need to access the parameters, the first argument for your function should be a params variable. This doesn't effect how you write your scripts. You'll add this argument when you bridge the scripts.
 
 BRIDGING CUSTOM FUNCTIONS
-So you've done all this work, but if you don't bridge your functions, the scripts will pretty much do nothing except consume resources. The first thing you have to do to bridge your functions are declare function pointers in the beginning of the main parser method:
+So you've done all this work, but if you don't bridge your functions, the scripts will pretty much do nothing except consume resources. The first thing you have to do to bridge your functions are declare function pointers in the beginning of the bridgeFunction method in XPINSBridge.cpp:
 float (*f1)(void*)=GET_PLAYER_FIREANGLE_FUNCTION;
 The format looks something like this: type (*pointerName)(arg1,arg2,...)=ACTUAL_FUNCTION_NAME; You should declare your function pointers in the order that they appear in the Function block in your script, and name the pointers f1, f2, ..., as this is basically what the compiler does to your functions. The argument and return types must match your function (remember to pass the params object if necessary).
 
 Once you declare the fuction pointer, you must call it. Follow these steps:
--Detect function call in scripts
+-Detect Function
 -Find parameters
 -call function.
 
-Detect function calls:
-You must group your function call detection by return type. First find the comment saying /*Bridge Your Custom Functions*/
-Below that insert and fill in the following code snippets:
-//F__ <--Your Funciton name here
-if(scriptText[i]=='_'&&scriptText[i+1]=='_'){
-	//^^^ _'s should be the two digits for the function*
-	//...
-}
-//F__ <--Your Funciton name here
-else if(scriptText[i]=='_'&&scriptText[i+1]=='_'){
-	//^^^ _'s should be the two digits for the function*
-	//...
-}
-Then put an else in front of the if for the first Built in function of that type
+Detect function:
+there is a switch statement in the bridgeFunction Mehtod.  For each function you declare, you need a case statement. It should look like this:
+case __:{...}break;
+the __ should be the same number as f__ for the given function. (e.g. for f26, case 26:{...}break;)
+the ... is where the code for the remaining steps goes.
 
-*For your single digit functions, use this instead of "scriptText[i+1]=='_'":
-	(scriptText[i+1]<'0'||scriptText[i+1]>'9')
 
 Finding Parmeters:
-Ok, now that we have detected a function, we need to figure out what parameters were passed. Here is the first code snippet (all of this code goes in the //... in the above script):
-i+=2; //use i++ for single digit functions
-if (scriptText[i]!='('||scriptText[i+1]!='$'||scriptText[i+2]!='_') {
-	//^^^  _ should be Type for parameter**
-	printf("\nERROR:INVALID SCRIPT:INVALID PARAMETER FORMAT!\n");
-	return;
-}
-while(scriptText[i]!='$')i++;
-i+=2;
-int index2=readVarIndex(scriptText, &i, ',');
-If your function has more than one parameter (not counting params), simple keep repeating the code starting at if (keep pasting, not loop), making sure that each parameter is of the correct type (also use index3, index4..., you can't just use index2, also index is already taken). For your last parameter (even if it's also the first), change the comma passed to readVarIndex to a ')'
-If you have no parameters to pass (usually for parameter lookup functions), here is an easier code snippet:
-i+=2;
-if (scriptText[i]!='('||scriptText[i+1]!=')') {
-	printf("\nERROR:INVALID SCRIPT:INVALID PARAMETER FORMAT!\n");
-	return;
-}
-**The letters for each parameter type: BOOL=B, INT=I, FLOAT=F, VEC=V, and *___=P
+Ok, now that we have detected a function, we need to figure out what parameters were passed. Good News: The parser does all of the heavy lifting. Here is what your code looks like:
+___ param__=vars->__Vars[readFuncParameter(scriptText,index,'_','_')];
+Only five blanks. The first blank is the type of th parameter. this should be one of the following, depending on what your function takes for the parameter: bool, int, float, XPINSScriptableMath::Vector, or void*
+The second blank should be the number of the parameter, so the variable is called param1, param2, etc. (It is Your choice on whether or not to zero-index, just be consistent. In this documentation I will not be zero-indexing.).
+the third blank should correspond to the first blank: bool --> b, int --> i, float --> f, XPINSScriptableMath::Vector  --> v, and void* --> p.
+The fourth blank is the same as the third except that it should be capitalized (so B, I, F, V, or P).
+The final blank is the expected end character. This is usually ',' unless it is the final parameter for a function, in which case it is ')'.
+So for a VEC parameter that is the 2nd but not last parameter in a function, the code would look like this:
+XPINSScriptableMath::Vector param2=vars->vVars[readFuncParameter(scriptText,index,'V',',')];
+For functions that don't take parameters, simply use this line of code:
+while(scriptText[*index]!=')')(*index)++;
 
 Calling the Function (Woohoo!):
 Finally, the most important part: calling your functions. This actually is only one line of code (per function), and it goes right after the code for Finding the parameters:
-vars->__Vars[index]=f__(...);
+vars->__Vars[retIndex]=f__(...);
 Hold on, that's a lot of blanks. It's actually not that complicated:
 -the first blank is simply the return type letter: BOOL=b, INT=i, FLOAT=f, VEC=v, and *___=p.
 -the second blank is the number for the function (e.g. if it is the first function declared, then f1)
 -the "..." is the parameters, comma-separated as usual:
-	-If you want to pass your custom parameters, write parameters as your first (and/or only) argument.
-	-All	other parameters: _Vars[___]
-		-The first is the type letter just like in the return type
-		-the second blank is the index number of the variable index2, index3, etc. (you put them in the order you got them).
-So if I have function F11 that takes two floats and my custom parameters and spits out a bool:
-vars->vVars[index]=f11(parameters,fVars[index2],fVars[index3]);
+	-If you want to pass your custom parameters, write "parameters" as your first (and/or only) argument.
+	-All	other parameters: these are simply the param__ variables you declared in the previous step, in the order you declared them.
+So if I have function F11 that takes two parameters and the custom parameters and returns a bool:
+vars->bVars[retIndex]=f11(parameters,param1,param2);
 That's really all there is to bridging your functions.
 
 Have Fun with XPINS!
