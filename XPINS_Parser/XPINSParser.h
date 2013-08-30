@@ -6,13 +6,12 @@
 
 #include <iostream>
 #include <vector>
-#include "ScriptableMath.h"
-/*include your custom classes*/
-
+#include "XPINSScriptableMath.h"
+#include "XPINSBridge.h"
 
 
 using namespace std;
-namespace XPINSParser {
+namespace XPINSParser{
 	//Variable space
 	struct varSpace{
 		vector<bool> bVars;//bool variables
@@ -21,11 +20,7 @@ namespace XPINSParser {
 		vector<ScriptableMath::Vector *> vVars;//Vector Variables
 		vector<void *> pVars;//Custom type variables
 	};
-	struct params{
-		/*Define Your Custom Parameters*/
-		
-		
-	};
+	
 	//Primary Method
 	//PARAM: the script text
 	//PARAM: a varSpace object used to store script variables
@@ -33,8 +28,13 @@ namespace XPINSParser {
 	//PARAM: false unless calling recursively to use a WHILE loop
 	//PARAM: Start index if reading while loop
 	//PARAM: Stop index if reading while loop
-	void parseScript(char *,varSpace*,params*,bool,int,int);
-	
+	void parseScript(char *,varSpace*,XPINSBridge::params*,bool,int,int);
+	//Read Function Parameter
+	//PARAM: the script text
+	//PARAM: the current index
+	//PARAM: Variable Type
+	//PARAM: expected end character (',' or ')')
+	int readFuncParameter(char*,int*,char,char);
 }
 
 #endif /* defined(__Script__ScriptParser__) */

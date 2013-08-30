@@ -89,7 +89,7 @@ Once you declare the fuction pointer, you must call it. Follow these steps:
 -call function.
 
 Detect function calls:
-You must group your function call detection by return type. First find the comment saying /*Bridge Your Custom ____ Functions*/
+You must group your function call detection by return type. First find the comment saying /*Bridge Your Custom Functions*/
 Below that insert and fill in the following code snippets:
 //F__ <--Your Funciton name here
 if(scriptText[i]=='_'&&scriptText[i+1]=='_'){
