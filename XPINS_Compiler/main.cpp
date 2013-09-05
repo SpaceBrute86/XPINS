@@ -320,7 +320,11 @@ string renameVars(string input){
 				//Check for block end
 				if(intermediate1[j]=='{')blockCount++;
 				else if(intermediate1[j]=='}'){
-					if(blockCount==0) break;
+					if(blockCount==0){
+						while(!(intermediate1[j]=='@'&&intermediate1[j+1]=='E'&&intermediate1[j+2]=='N'&&intermediate1[j+3]=='D')&&j+3<intermediate1.length())intermediate2+=intermediate1[j];
+						intermediate2+="@END"
+						break;
+					}
 					else blockCount--;
 
 				}

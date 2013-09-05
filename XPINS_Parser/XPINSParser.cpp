@@ -1010,12 +1010,22 @@ void XPINSParser::parseScript(char* scriptText,varSpace *vars,params *parameters
 		}
 	}
 	if(initialized_varSpace) delete vars;
-	else{//remove declared variables
+	else{//wipe declared variables
+		int bSize2=vars->bVars.size();
+		int iSize2=vars->iVars.size();
+		int fSize2=vars->fVars.size();
+		int vSize2=vars->vVars.size();
+		int pSize2=vars->pVars.size();
 		vars->bVars.resize(bSize);
 		vars->iVars.resize(iSize);
 		vars->fVars.resize(fSize);
 		vars->vVars.resize(vSize);
 		vars->pVars.resize(pSize);
+		vars->bVars.resize(bSize2);
+		vars->iVars.resize(iSize2);
+		vars->fVars.resize(fSize2);
+		vars->vVars.resize(vSize2);
+		vars->pVars.resize(pSize2);
 
 	}
 }
