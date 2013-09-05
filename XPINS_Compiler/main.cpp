@@ -310,11 +310,19 @@ string renameVars(string input){
 			//Replace Var name
 			intermediate2="";
 			j=0;
+			int blockCount=0;
 			while(j<intermediate1.length()){
 				//CHECK FOR @END
 				if(intermediate1[j]=='@'&&intermediate1[j+1]=='E'&&intermediate1[j+2]=='N'&&intermediate1[j+3]=='D'){
 					intermediate2+="@END";
 					break;
+				}
+				//Check for block end
+				if(intermediate1[j]=='{')blockCount++;
+				else if(intermediate1[j]=='}'){
+					if(blockCount==0) break;
+					else blockCount--;
+
 				}
 				//Find start of Var
 				if(intermediate1[j]=='$'){

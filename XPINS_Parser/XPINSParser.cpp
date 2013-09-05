@@ -145,6 +145,12 @@ void XPINSParser::parseScript(char* scriptText,varSpace *vars,params *parameters
 		vars->pVars=vector<void*>();
 		initialized_varSpace=true;
 	}
+	int bSize=vars->bVars.size();
+	int iSize=vars->iVars.size();
+	int fSize=vars->fVars.size();
+	int vSize=vars->vVars.size();
+	int pSize=vars->pVars.size();
+	
 	//RUN SCRIPT
 	int i=0;//index of char in script
 	if(isRECURSIVE)i=start;
@@ -1004,6 +1010,14 @@ void XPINSParser::parseScript(char* scriptText,varSpace *vars,params *parameters
 		}
 	}
 	if(initialized_varSpace) delete vars;
+	else{//remove declared variables
+		vars->bVars.resize(bSize);
+		vars->iVars.resize(iSize);
+		vars->fVars.resize(fSize);
+		vars->vVars.resize(vSize);
+		vars->pVars.resize(pSize);
+
+	}
 }
 
 
