@@ -8,7 +8,7 @@
 
 using namespace std;
 const kMajor=0;
-const kMinor=2;
+const kMinor=3;
 
 //Read Variable Index for Function Parameters
 int readFuncParameter(char* scriptText,int *startIndex,char varType,char expectedEnd){
