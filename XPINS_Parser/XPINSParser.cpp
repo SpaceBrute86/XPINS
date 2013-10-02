@@ -679,6 +679,23 @@ void XPINSParser::parseScript(char* scriptText,varSpace *vars,params *parameters
 							int index3=readVarIndex(scriptText, &i, ')');
 							vars->fVars[index]=XPINSScriptableMath::Vector::angleBetweenVectors(vars->vVars[index2], vars->vVars[index3]);
 						}
+						//X_VDOT
+						else if(scriptText[i+1]=='V'&&scriptText[i+2]=='D'&&scriptText[i+3]=='O'&&scriptText[i+4]=='T'){
+							i+=5;
+							if (scriptText[i]!='('||scriptText[i+1]!='$'||scriptText[i+2]!='V') {
+								printf("\nERROR:INVALID SCRIPT:INVALID PARAMETER FORMAT!\n");
+								return;
+							}
+							i+=3;
+							int index2=readVarIndex(scriptText, &i, ',');
+							if (scriptText[i]!='('||scriptText[i+1]!='$'||scriptText[i+2]!='V') {
+								printf("\nERROR:INVALID SCRIPT:INVALID PARAMETER FORMAT!\n");
+								return;
+							}
+							i+=3;
+							int index3=readVarIndex(scriptText, &i, ')');
+							vars->fVars[index]=XPINSScriptableMath::Vector::dotProduct(vars->vVars[index2], vars->vVars[index3]);
+						}
 						//X_VADDPOLAR
 						else if(scriptText[i+1]=='V'&&scriptText[i+2]=='A'&&scriptText[i+3]=='D'&&scriptText[i+4]=='D'&&scriptText[i+5]=='P'&&scriptText[i+6]=='O'&&scriptText[i+7]=='L'&&scriptText[i+8]=='A'&&scriptText[i+9]=='R'){
 							i+=10;
@@ -898,6 +915,23 @@ void XPINSParser::parseScript(char* scriptText,varSpace *vars,params *parameters
 							i+=3;
 							int index3=readVarIndex(scriptText, &i, ')');
 							vars->vVars[index]=XPINSScriptableMath::Vector::scaledVector(vars->vVars[index2], vars->fVars[index3]);
+						}
+						//X_VPROJ
+						else if(scriptText[i+1]=='V'&&scriptText[i+2]=='P'&&scriptText[i+3]=='R'&&scriptText[i+4]=='O'&&scriptText[i+4]=='J'){
+							i+=6;
+							if (scriptText[i]!='('||scriptText[i+1]!='$'||scriptText[i+2]!='V') {
+								printf("\nERROR:INVALID SCRIPT:INVALID PARAMETER FORMAT!\n");
+								return;
+							}
+							i+=3;
+							int index2=readVarIndex(scriptText, &i, ',');
+							if (scriptText[i]!='('||scriptText[i+1]!='$'||scriptText[i+2]!='F') {
+								printf("\nERROR:INVALID SCRIPT:INVALID PARAMETER FORMAT!\n");
+								return;
+							}
+							i+=3;
+							int index3=readVarIndex(scriptText, &i, ')');
+							vars->vVars[index]=XPINSScriptableMath::Vector::projectionInDirection(vars->vVars[index2], vars->fVars[index3]);
 						}
 						else{
 							printf("\nERROR:INVALID SCRIPT:UNDECLARED FUNCTION!\n");
