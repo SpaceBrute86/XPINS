@@ -60,3 +60,21 @@ float XPINSScriptableMath::Vector::angleBetweenVectors(Vector *vec1, Vector *vec
 	float angle=addPolar(vec1->direction(),-1*vec2->direction());
 	return angle;
 }
+float XPINSScriptableMath::Vector::dotProduct(Vector*a,Vector*b){
+	float x=a->x*b->x;
+	float y=a->y*b->y;
+	return x+y;
+}
+XPINSScriptableMath::Vector* XPINSScriptableMath::Vector::projectionInDirection(Vector* vec,float dir){
+	Vector *unit=Vector::PolarVector(1, dir);
+	float dot=dotProduct(vec, unit);
+	Vector* result=scaledVector(unit, dot);
+	delete unit;
+	return result;
+}
+
+
+
+
+
+

@@ -21,6 +21,8 @@ namespace XPINSScriptableMath{
 		static Vector* addVectorArr(Vector**,int);
 		static Vector* scaledVector(Vector*, float);
 		static float angleBetweenVectors(Vector*,Vector*);
+		static float dotProduct(Vector*,Vector*);
+		static Vector* projectionInDirection(Vector*,float);
 	private:
 		float x;
 		float y;
