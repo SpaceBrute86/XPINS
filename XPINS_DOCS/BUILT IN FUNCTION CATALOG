@@ -202,5 +202,15 @@ VECTOR OPERATIONS
 	
 #X_VSCALE(VEC $A, FLOAT $B)
 	Description: Scales a vector
-	Parameters: The vectors to be scaled, and the FLOAT by which to scale it
+	Parameters: The vector to be scaled, and the FLOAT by which to scale it
 	Return: VEC, returns a vector in the same direction as A with the magnitude multiplied by B
+	
+#X_VDOT(VEC $A, VEC $B)
+	Description: Finds the dot product of two vectors
+	Parameters: The vectors for which the dot product will be found
+	Return: FLOAT, returns A dot B.
+
+#X_VPROJ(VEC $A, FLOAT $B)
+	Description: Finds the projection of a vector onto a generic vector in a given direction
+	Parameters: The vector from whihc the projection is to be taken, and the direction of the result.
+	Return: VEC, returns the projection of A onto a vector in direction.
