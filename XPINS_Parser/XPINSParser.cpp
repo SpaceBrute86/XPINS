@@ -8,19 +8,76 @@
 
 using namespace std;
 const kMajor=0;
-const kMinor=3;
+const kMinor=4;
 
-//Read Variable Index for Function Parameters
-int readFuncParameter(char* scriptText,int *startIndex,char varType,char expectedEnd){
-	i++;
-	if (scriptText[i]!='$'||scriptText[i+1]!=varType) {
-		printf("\nERROR:INVALID SCRIPT:INVALID PARAMETER FORMAT!\n");
-		return;
+
+//parameter parsing
+bool parseBoolArg(char * scriptText,varSpace* vars,int* start,char expectedEnd){
+	int i=*start;
+	bool retVal=false;
+	while (scriptText[i]!='$'&&scriptText[i]!='^') ++i;
+	if(scriptText[i]=='$'){
+		int index=readFuncParameter(scriptText, &i, 'B', expectedEnd);
+		retVal=vars->bVars[index];
 	}
-	i+=2;
-	int index=readVarIndex(scriptText, &i, expectedEnd);
-	*startIndex=i;
-	return index;
+	else{
+		retVal=(scriptText[i+1]=='T');
+	}
+	while(scriptText[i]!=expectedEnd)++i;
+	*start=i;
+	return retVal;
+}
+int parseIntArg(char * scriptText,varSpace* vars,int* start,char expectedEnd){
+	int i=*start;
+	int retVal=0;
+	while (scriptText[i]!='$'&&scriptText[i]!='^') ++i;
+	if(scriptText[i]=='$'){
+		int index=readFuncParameter(scriptText, &i, 'I', expectedEnd);
+		retVal=vars->iVars[index];
+	}
+	else{
+		++i;
+		retVal=readInt(scriptText, &i, expectedEnd);
+	}
+	while(scriptText[i]!=expectedEnd)++i;
+	*start=i;
+	return retVal;
+}
+float parseFloatArg(char * scriptText,varSpace* vars,int* start,char expectedEnd){
+	int i=*start;
+	float retVal=0;
+	while (scriptText[i]!='$'&&scriptText[i]!='^') ++i;
+	if(scriptText[i]=='$'){
+		int index=readFuncParameter(scriptText, &i, 'F', expectedEnd);
+		retVal=vars->fVars[index];
+	}
+	else{
+		++i;
+		retVal=readFloat(scriptText, &i, expectedEnd);
+	}
+	while(scriptText[i]!=expectedEnd)++i;
+	*start=i;
+	return retVal;
+}
+XPINSScriptableMath::Vector parseVecArg(char * scriptText,varSpace* vars,int* start,char expectedEnd)float parseFloatArg(char * scriptText,varSpace* vars,int* start,char expectedEnd){
+	int i=*start;
+	XPINSScriptableMath::Vector* retVal=NULL;
+	while (scriptText[i]!='$') ++i;
+	int index=readFuncParameter(scriptText, &i, 'V', expectedEnd);
+	retVal=vars->vVars[index];
+	while(scriptText[i]!=expectedEnd)++i;
+	*start=i;
+	return retVal;
+}
+void* parsePointerArg(char * scriptText,varSpace* vars,int* start,char expectedEnd){
+	int i=*start;
+	void* retVal=NULL;
+	while (scriptText[i]!='$') ++i;
+	int index=readFuncParameter(scriptText, &i, 'P', expectedEnd);
+	retVal=vars->pVars[index];
+	while(scriptText[i]!=expectedEnd)++i;
+	*start=i;
+	return retVal;
 }
 //Helper functions
 
@@ -105,6 +162,18 @@ float readFloat(char* scriptText,int *startIndex,char expectedEnd){
 		fpartDig--;
 	}
 	if(isNeg)index*=-1;
+	*startIndex=i;
+	return index;
+}
+//Read Variable Index for Function Parameters
+int readFuncParameter(char* scriptText,int *startIndex,char varType,char expectedEnd){
+	++i;
+	if (scriptText[i]!='$'||scriptText[i+1]!=varType) {
+		printf("\nERROR:INVALID SCRIPT:INVALID PARAMETER FORMAT!\n");
+		return;
+	}
+	i+=2;
+	int index=readVarIndex(scriptText, &i, expectedEnd);
 	*startIndex=i;
 	return index;
 }

@@ -98,12 +98,12 @@ the ... is where the code for the remaining steps goes.
 
 Finding Parmeters:
 Ok, now that we have detected a function, we need to figure out what parameters were passed. Good News: The parser does all of the heavy lifting. Here is what your code looks like:
-___ param__=vars->__Vars[readFuncParameter(scriptText,index,'_','_')];
-Only five blanks. The first blank is the type of th parameter. this should be one of the following, depending on what your function takes for the parameter: bool, int, float, XPINSScriptableMath::Vector, or void*
+___ param__=parse___Arg(script,vars,index,___);
+
+Only four blanks. The first blank is the type of the parameter. this should be one of the following, depending on what your function takes for the parameter: bool, int, float, XPINSScriptableMath::Vector, or void*
 The second blank should be the number of the parameter, so the variable is called param1, param2, etc. (It is Your choice on whether or not to zero-index, just be consistent. In this documentation I will not be zero-indexing.).
-the third blank should correspond to the first blank: bool --> b, int --> i, float --> f, XPINSScriptableMath::Vector  --> v, and void* --> p.
-The fourth blank is the same as the third except that it should be capitalized (so B, I, F, V, or P).
-The final blank is the expected end character. This is usually ',' unless it is the final parameter for a function, in which case it is ')'.
+The third blank should match the type: Bool, Int, Float, Vec, or Pointer.
+The final blank is the expected end character. This is ',' unless it is the final parameter for a function, in which case it is ')'.
 So for a VEC parameter that is the 2nd but not last parameter in a function, the code would look like this:
 XPINSScriptableMath::Vector param2=vars->vVars[readFuncParameter(scriptText,index,'V',',')];
 For functions that don't take parameters, simply use this line of code:
@@ -117,7 +117,7 @@ Hold on, that's a lot of blanks. It's actually not that complicated:
 -the second blank is the number for the function (e.g. if it is the first function declared, then f1)
 -the "..." is the parameters, comma-separated as usual:
 	-If you want to pass your custom parameters, write "parameters" as your first (and/or only) argument.
-	-All	other parameters: these are simply the param__ variables you declared in the previous step, in the order you declared them.
+	-All other parameters: these are simply the param__ variables you declared in the previous step, in the order you declared them.
 So if I have function F11 that takes two parameters and the custom parameters and returns a bool:
 vars->bVars[retIndex]=f11(parameters,param1,param2);
 That's really all there is to bridging your functions.

@@ -21,7 +21,18 @@ namespace XPINSParser{
 		vector<XPINSScriptableMath::Vector *> vVars;//Vector Variables
 		vector<void *> pVars;//Custom type variables
 	};
-	
+	//PARAMETER PARSING:
+	//All of these functions have same params, just different return types
+	//PARAM: the script text
+	//PARAM: a varSpace object used to store script variables
+	//PARAM: current index
+	//PARAM: expected end
+	bool parseBoolArg(char *,varSpace*,int*,char);
+	int parseIntArg(char *,varSpace*,int*,char);
+	float parseFloatArg(char *,varSpace*,int*,char);
+	XPINSScriptableMath::Vector parseVecArg(char *,varSpace*,int*,char);
+	void* parsePointerArg(char *,varSpace*,int*,char);
+
 	//Primary Method
 	//PARAM: the script text
 	//PARAM: a varSpace object used to store script variables
@@ -30,12 +41,6 @@ namespace XPINSParser{
 	//PARAM: Start index if reading while loop
 	//PARAM: Stop index if reading while loop
 	void parseScript(char *,varSpace*,XPINSBridge::params*,bool,int,int);
-	//Read Function Parameter
-	//PARAM: the script text
-	//PARAM: the current index
-	//PARAM: Variable Type
-	//PARAM: expected end character (',' or ')')
-	int readFuncParameter(char*,int*,char,char);
 }
 
 #endif /* defined(__Script__ScriptParser__) */
