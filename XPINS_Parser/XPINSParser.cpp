@@ -310,149 +310,65 @@ void XPINSParser::parseScript(char* scriptText,varSpace *vars,params *parameters
 						//X_AND
 						if(scriptText[i+1]=='A'&&scriptText[i+2]=='N'&&scriptText[i+3]=='D'){
 							i+=4;
-							if (scriptText[i]!='('||scriptText[i+1]!='$'||scriptText[i+2]!='B') {
-								printf("\nERROR:INVALID SCRIPT:ICORRECT PARAMETER FORMAT!\n");
-								return;
-							}
-							i+=3;
-							int index2=readVarIndex(scriptText, &i, ',');
-							if (scriptText[i]!=','||scriptText[i+1]!='$'||scriptText[i+2]!='B') {
-								printf("\nERROR:INVALID SCRIPT:ICORRECT PARAMETER FORMAT!\n");
-								return;
-							}
-							i+=3;
-							int index3=readVarIndex(scriptText, &i, ')');
-							vars->bVars[index]=vars->bVars[index2]&&vars->bVars[index3];
+							bool param1=parseBoolArg(scriptText, vars, &i, ',');
+							bool param2=parseBoolArg(scriptText, vars, &i, ')');
+							vars->bVars[index]=param1&&param2;
 						}
 						//X_OR
 						else if(scriptText[i+1]=='O'&&scriptText[i+2]=='R'){
 							i+=3;
-							if (scriptText[i]!='('||scriptText[i+1]!='$'||scriptText[i+2]!='B') {
-								printf("\nERROR:INVALID SCRIPT:ICORRECT PARAMETER FORMAT!\n");
-								return;
-							}
-							i+=3;
-							int index2=readVarIndex(scriptText, &i, ',');
-							if (scriptText[i]!=','||scriptText[i+1]!='$'||scriptText[i+2]!='B') {
-								printf("\nERROR:INVALID SCRIPT:ICORRECT PARAMETER FORMAT!\n");
-								return;
-							}
-							i+=3;
-							int index3=readVarIndex(scriptText, &i, ')');
-							vars->bVars[index]=vars->bVars[index2]||vars->bVars[index3];
+							bool param1=parseBoolArg(scriptText, vars, &i, ',');
+							bool param2=parseBoolArg(scriptText, vars, &i, ')');
+							vars->bVars[index]=param1||param2;
 						}
 						//X_NOT
 						else if(scriptText[i+1]=='N'&&scriptText[i+2]=='O'&&scriptText[i+3]=='T'){
 							i+=4;
-							if (scriptText[i]!='('||scriptText[i+1]!='$'||scriptText[i+2]!='B') {
-								printf("\nERROR:INVALID SCRIPT:ICORRECT PARAMETER FORMAT!\n");
-								return;
-							}
-							i+=3;
-							int index2=readVarIndex(scriptText, &i, ')');
-							vars->bVars[index]=!vars->bVars[index2];
+							bool param1=parseBoolArg(scriptText, vars, &i, ')');
+							vars->bVars[index]=!param1;
 						}
 						//X_ILESS
 						else if(scriptText[i+1]=='I'&&scriptText[i+2]=='L'&&scriptText[i+3]=='E'&&scriptText[i+4]=='S'&&scriptText[i+5]=='S'){
 							i+=6;
-							if (scriptText[i]!='('||scriptText[i+1]!='$'||scriptText[i+2]!='I') {
-								printf("\nERROR:INVALID SCRIPT:ICORRECT PARAMETER FORMAT!\n");
-								return;
-							}
-							i+=3;
-							int index2=readVarIndex(scriptText, &i, ',');
-							if (scriptText[i]!=','||scriptText[i+1]!='$'||scriptText[i+2]!='I') {
-								printf("\nERROR:INVALID SCRIPT:ICORRECT PARAMETER FORMAT!\n");
-								return;
-							}
-							i+=3;
-							int index3=readVarIndex(scriptText, &i, ')');
-							vars->bVars[index]=vars->iVars[index2]<vars->iVars[index3];
+							int param1=parseIntArg(scriptText, vars, &i, ',');
+							int param2=parseIntArg(scriptText, vars, &i, ')');
+							vars->bVars[index]=param1<param2;
 						}
 						//X_FLESS
 						else if(scriptText[i+1]=='F'&&scriptText[i+2]=='L'&&scriptText[i+3]=='E'&&scriptText[i+4]=='S'&&scriptText[i+5]=='S'){
 							i+=6;
-							if (scriptText[i]!='('||scriptText[i+1]!='$'||scriptText[i+2]!='F') {
-								printf("\nERROR:INVALID SCRIPT:ICORRECT PARAMETER FORMAT!\n");
-								return;
-							}
-							i+=3;
-							int index2=readVarIndex(scriptText, &i, ',');
-							if (scriptText[i]!=','||scriptText[i+1]!='$'||scriptText[i+2]!='F') {
-								printf("\nERROR:INVALID SCRIPT:ICORRECT PARAMETER FORMAT!\n");
-								return;
-							}
-							i+=3;
-							int index3=readVarIndex(scriptText, &i, ')');
-							vars->bVars[index]=vars->fVars[index2]<vars->fVars[index3];
+							float param1=parseFloatArg(scriptText, vars, &i, ',');
+							float param2=parseFloatArg(scriptText, vars, &i, ')');
+							vars->bVars[index]=param1<param2;
+
 						}
 						//X_IMORE
 						else if(scriptText[i+1]=='I'&&scriptText[i+2]=='M'&&scriptText[i+3]=='O'&&scriptText[i+4]=='R'&&scriptText[i+5]=='E'){
 							i+=6;
-							if (scriptText[i]!='('||scriptText[i+1]!='$'||scriptText[i+2]!='I') {
-								printf("\nERROR:INVALID SCRIPT:ICORRECT PARAMETER FORMAT!\n");
-								return;
-							}
-							i+=3;
-							int index2=readVarIndex(scriptText, &i, ',');
-							if (scriptText[i]!=','||scriptText[i+1]!='$'||scriptText[i+2]!='I') {
-								printf("\nERROR:INVALID SCRIPT:ICORRECT PARAMETER FORMAT!\n");
-								return;
-							}
-							i+=3;
-							int index3=readVarIndex(scriptText, &i, ')');
-							vars->bVars[index]=vars->iVars[index2]>vars->iVars[index3];
+							int param1=parseIntArg(scriptText, vars, &i, ',');
+							int param2=parseIntArg(scriptText, vars, &i, ')');
+							vars->bVars[index]=param1>param2;
 						}
 						//X_FMORE
 						else if(scriptText[i+1]=='F'&&scriptText[i+2]=='M'&&scriptText[i+3]=='O'&&scriptText[i+4]=='R'&&scriptText[i+5]=='E'){
 							i+=6;
-							if (scriptText[i]!='('||scriptText[i+1]!='$'||scriptText[i+2]!='F') {
-								printf("\nERROR:INVALID SCRIPT:ICORRECT PARAMETER FORMAT!\n");
-								return;
-							}
-							i+=3;
-							int index2=readVarIndex(scriptText, &i, ',');
-							if (scriptText[i]!=','||scriptText[i+1]!='$'||scriptText[i+2]!='F') {
-								printf("\nERROR:INVALID SCRIPT:ICORRECT PARAMETER FORMAT!\n");
-								return;
-							}
-							i+=3;
-							int index3=readVarIndex(scriptText, &i, ')');
-							vars->bVars[index]=vars->fVars[index2]>vars->fVars[index3];
+							float param1=parseFloatArg(scriptText, vars, &i, ',');
+							float param2=parseFloatArg(scriptText, vars, &i, ')');
+							vars->bVars[index]=param1>param2;
 						}
 						//X_IEQUAL
 						else if(scriptText[i+1]=='I'&&scriptText[i+2]=='E'&&scriptText[i+3]=='Q'&&scriptText[i+4]=='U'&&scriptText[i+5]=='A'&&scriptText[i+5]=='L'){
 							i+=7;
-							if (scriptText[i]!='('||scriptText[i+1]!='$'||scriptText[i+2]!='I') {
-								printf("\nERROR:INVALID SCRIPT:ICORRECT PARAMETER FORMAT!\n");
-								return;
-							}
-							i+=3;
-							int index2=readVarIndex(scriptText, &i, ',');
-							if (scriptText[i]!=','||scriptText[i+1]!='$'||scriptText[i+2]!='I') {
-								printf("\nERROR:INVALID SCRIPT:ICORRECT PARAMETER FORMAT!\n");
-								return;
-							}
-							i+=3;
-							int index3=readVarIndex(scriptText, &i, ')');
-							vars->bVars[index]=vars->iVars[index2]==vars->iVars[index3];
+							int param1=parseIntArg(scriptText, vars, &i, ',');
+							int param2=parseIntArg(scriptText, vars, &i, ')');
+							vars->bVars[index]=param1==param2;
 						}
 						//X_FEQUAL
 						else if(scriptText[i+1]=='F'&&scriptText[i+2]=='E'&&scriptText[i+3]=='Q'&&scriptText[i+4]=='U'&&scriptText[i+5]=='A'&&scriptText[i+5]=='L'){
 							i+=7;
-							if (scriptText[i]!='('||scriptText[i+1]!='$'||scriptText[i+2]!='F') {
-								printf("\nERROR:INVALID SCRIPT:ICORRECT PARAMETER FORMAT!\n");
-								return;
-							}
-							i+=3;
-							int index2=readVarIndex(scriptText, &i, ',');
-							if (scriptText[i]!=','||scriptText[i+1]!='$'||scriptText[i+2]!='F') {
-								printf("\nERROR:INVALID SCRIPT:ICORRECT PARAMETER FORMAT!\n");
-								return;
-							}
-							i+=3;
-							int index3=readVarIndex(scriptText, &i, ')');
-							vars->bVars[index]=vars->fVars[index2]==vars->fVars[index3];
+							float param1=parseFloatArg(scriptText, vars, &i, ',');
+							float param2=parseFloatArg(scriptText, vars, &i, ')');
+							vars->bVars[index]=param1==param2;
 						}
 						else{
 							printf("\nERROR:INVALID SCRIPT:UNDEFINED FUNCTION!\n");
@@ -495,87 +411,44 @@ void XPINSParser::parseScript(char* scriptText,varSpace *vars,params *parameters
 						//X_IADD
 						if(scriptText[i+1]=='I'&&scriptText[i+2]=='A'&&scriptText[i+3]=='D'&&scriptText[i+4]=='D'){
 							i+=5;
-							if (scriptText[i]!='('||scriptText[i+1]!='$'||scriptText[i+2]!='I') {
-								printf("\nERROR:INVALID SCRIPT:INVALID PARAMETER FORMAT!\n");
-								return;
-							}
-							i+=3;
-							int index2=readVarIndex(scriptText, &i, ',');
-							if (scriptText[i]!=','||scriptText[i+1]!='$'||scriptText[i+2]!='I') {
-								printf("\nERROR:INVALID SCRIPT:INVALID PARAMETER FORMAT!\n");
-								return;
-							}
-							i+=3;
-							int index3=readVarIndex(scriptText, &i, ')');
-							vars->iVars[index]=vars->iVars[index2]+vars->iVars[index3];
+							int param1=parseIntArg(scriptText, vars, &i, ',');
+							int param2=parseIntArg(scriptText, vars, &i, ')');
+							vars->iVars[index]=param1+param2;
 						}
 						//X_ISUB
 						else if(scriptText[i+1]=='I'&&scriptText[i+2]=='S'&&scriptText[i+3]=='U'&&scriptText[i+4]=='B'){
 							i+=5;
-							if (scriptText[i]!='('||scriptText[i+1]!='$'||scriptText[i+2]!='I') {
-								printf("\nERROR:INVALID SCRIPT:INVALID PARAMETER FORMAT!\n");
-								return;
-							}
-							i+=3;
-							int index2=readVarIndex(scriptText, &i, ',');
-							if (scriptText[i]!=','||scriptText[i+1]!='$'||scriptText[i+2]!='I') {
-								printf("\nERROR:INVALID SCRIPT:INVALID PARAMETER FORMAT!\n");
-								return;
-							}
-							i+=3;
-							int index3=readVarIndex(scriptText, &i, ')');
-							vars->iVars[index]=vars->iVars[index2]-vars->iVars[index3];
+							int param1=parseIntArg(scriptText, vars, &i, ',');
+							int param2=parseIntArg(scriptText, vars, &i, ')');
+							vars->iVars[index]=param1-param2;
 						}
 						//X_IMULT
 						else if(scriptText[i+1]=='I'&&scriptText[i+2]=='M'&&scriptText[i+3]=='U'&&scriptText[i+4]=='L'&&scriptText[i+4]=='T'){
 							i+=6;
-							if (scriptText[i]!='('||scriptText[i+1]!='$'||scriptText[i+2]!='I') {
-								printf("\nERROR:INVALID SCRIPT:INVALID PARAMETER FORMAT!\n");
-								return;
-							}
-							i+=3;
-							int index2=readVarIndex(scriptText, &i, ',');
-							if (scriptText[i]!=','||scriptText[i+1]!='$'||scriptText[i+2]!='I') {
-								printf("\nERROR:INVALID SCRIPT:INVALID PARAMETER FORMAT!\n");
-								return;
-							}
-							i+=3;
-							int index3=readVarIndex(scriptText, &i, ')');
-							vars->iVars[index]=vars->iVars[index2]*vars->iVars[index3];
+							int param1=parseIntArg(scriptText, vars, &i, ',');
+							int param2=parseIntArg(scriptText, vars, &i, ')');
+							vars->iVars[index]=param1*param2;
 						}
 						//X_IDIV
 						else if(scriptText[i+1]=='I'&&scriptText[i+2]=='D'&&scriptText[i+3]=='I'&&scriptText[i+4]=='V'){
 							i+=5;
-							if (scriptText[i]!='('||scriptText[i+1]!='$'||scriptText[i+2]!='I') {
-								printf("\nERROR:INVALID SCRIPT:INVALID PARAMETER FORMAT!\n");
-								return;
-							}
-							i+=3;
-							int index2=readVarIndex(scriptText, &i, ',');
-							if (scriptText[i]!=','||scriptText[i+1]!='$'||scriptText[i+2]!='I') {
-								printf("\nERROR:INVALID SCRIPT:INVALID PARAMETER FORMAT!\n");
-								return;
-							}
-							i+=3;
-							int index3=readVarIndex(scriptText, &i, ')');
-							vars->iVars[index]=vars->iVars[index2]/vars->iVars[index3];
+							int param1=parseIntArg(scriptText, vars, &i, ',');
+							int param2=parseIntArg(scriptText, vars, &i, ')');
+							vars->iVars[index]=param1/param2;
+						}
+						//X_IMOD
+						else if(scriptText[i+1]=='I'&&scriptText[i+2]=='M'&&scriptText[i+3]=='O'&&scriptText[i+4]=='D'){
+							i+=5;
+							int param1=parseIntArg(scriptText, vars, &i, ',');
+							int param2=parseIntArg(scriptText, vars, &i, ')');
+							vars->iVars[index]=param1%param2;
 						}
 						//X_RAND
-						else if(scriptText[i+1]=='P'&&scriptText[i+2]=='O'&&scriptText[i+3]=='W'){
-							i+=4;
-							if (scriptText[i]!='('||scriptText[i+1]!='$'||scriptText[i+2]!='I') {
-								printf("\nERROR:INVALID SCRIPT:INVALID PARAMETER FORMAT!\n");
-								return;
-							}
-							i+=3;
-							int index2=readVarIndex(scriptText, &i, ',');
-							if (scriptText[i]!=','||scriptText[i+1]!='$'||scriptText[i+2]!='I') {
-								printf("\nERROR:INVALID SCRIPT:INVALID PARAMETER FORMAT!\n");
-								return;
-							}
-							i+=3;
-							int index3=readVarIndex(scriptText, &i, ',');
-							vars->iVars[index]=arc4random()%(vars->iVars[index3]-vars->iVars[index2])+vars->fVars[index2];
+						else if(scriptText[i+1]=='R'&&scriptText[i+2]=='A'&&scriptText[i+3]=='N'&&scriptText[i+3]=='D'){
+							i+=5;
+							int param1=parseIntArg(scriptText, vars, &i, ',');
+							int param2=parseIntArg(scriptText, vars, &i, ')');
+							vars->iVars[index]=arc4random()%(param2-param1)+param1;
 						}
 						else{
 							printf("\nERROR:INVALID SCRIPT:NONEXISTENT FUNCTION!\n");
@@ -618,253 +491,116 @@ void XPINSParser::parseScript(char* scriptText,varSpace *vars,params *parameters
 						//X_FADD
 						if(scriptText[i+1]=='F'&&scriptText[i+2]=='A'&&scriptText[i+3]=='D'&&scriptText[i+4]=='D'){
 							i+=5;
-							if (scriptText[i]!='('||scriptText[i+1]!='$'||scriptText[i+2]!='F') {
-								printf("\nERROR:INVALID SCRIPT:INVALID PARAMETER FORMAT!\n");
-								return;
-							}
-							i+=3;
-							int index2=readVarIndex(scriptText, &i, ',');
-							if (scriptText[i]!=','||scriptText[i+1]!='$'||scriptText[i+2]!='F') {
-								printf("\nERROR:INVALID SCRIPT:INVALID PARAMETER FORMAT!\n");
-								return;
-							}
-							i+=3;
-							int index3=readVarIndex(scriptText, &i, ')');
-							vars->fVars[index]=vars->fVars[index2]+vars->fVars[index3];
+							float param1=parseFloatArg(scriptText, vars, &i, ',');
+							float param2=parseFloatArg(scriptText, vars, &i, ')');
+							vars->fVars[index]=param1+param2;
 						}
 						//X_FSUB
 						else if(scriptText[i+1]=='F'&&scriptText[i+2]=='S'&&scriptText[i+3]=='U'&&scriptText[i+4]=='B'){
 							i+=5;
-							if (scriptText[i]!='('||scriptText[i+1]!='$'||scriptText[i+2]!='F') {
-								printf("\nERROR:INVALID SCRIPT:INVALID PARAMETER FORMAT!\n");
-								return;
-							}
-							i+=3;
-							int index2=readVarIndex(scriptText, &i, ',');
-							if (scriptText[i]!=','||scriptText[i+1]!='$'||scriptText[i+2]!='F') {
-								printf("\nERROR:INVALID SCRIPT:INVALID PARAMETER FORMAT!\n");
-								return;
-							}
-							i+=3;
-							int index3=readVarIndex(scriptText, &i, ')');
-							vars->fVars[index]=vars->fVars[index2]-vars->fVars[index3];
+							float param1=parseFloatArg(scriptText, vars, &i, ',');
+							float param2=parseFloatArg(scriptText, vars, &i, ')');
+							vars->fVars[index]=param1-param2;
 						}
 						//X_FMULT
 						else if(scriptText[i+1]=='F'&&scriptText[i+2]=='M'&&scriptText[i+3]=='U'&&scriptText[i+4]=='L'&&scriptText[i+4]=='T'){
 							i+=6;
-							if (scriptText[i]!='('||scriptText[i+1]!='$'||scriptText[i+2]!='F') {
-								printf("\nERROR:INVALID SCRIPT:INVALID PARAMETER FORMAT!\n");
-								return;
-							}
-							i+=3;
-							int index2=readVarIndex(scriptText, &i, ',');
-							if (scriptText[i]!=','||scriptText[i+1]!='$'||scriptText[i+2]!='F') {
-								printf("\nERROR:INVALID SCRIPT:INVALID PARAMETER FORMAT!\n");
-								return;
-							}
-							i+=3;
-							int index3=readVarIndex(scriptText, &i, ')');
-							vars->fVars[index]=vars->fVars[index2]*vars->fVars[index3];
+							float param1=parseFloatArg(scriptText, vars, &i, ',');
+							float param2=parseFloatArg(scriptText, vars, &i, ')');
+							vars->fVars[index]=param1*param2;
 						}
 						//X_FDIV
 						else if(scriptText[i+1]=='F'&&scriptText[i+2]=='D'&&scriptText[i+3]=='I'&&scriptText[i+4]=='V'){
 							i+=5;
-							if (scriptText[i]!='('||scriptText[i+1]!='$'||scriptText[i+2]!='F') {
-								printf("\nERROR:INVALID SCRIPT:INVALID PARAMETER FORMAT!\n");
-								return;
-							}
-							i+=3;
-							int index2=readVarIndex(scriptText, &i, ',');
-							if (scriptText[i]!=','||scriptText[i+1]!='$'||scriptText[i+2]!='F') {
-								printf("\nERROR:INVALID SCRIPT:INVALID PARAMETER FORMAT!\n");
-								return;
-							}
-							i+=3;
-							int index3=readVarIndex(scriptText, &i, ')');
-							vars->fVars[index]=vars->fVars[index2]/vars->fVars[index3];
+							float param1=parseFloatArg(scriptText, vars, &i, ',');
+							float param2=parseFloatArg(scriptText, vars, &i, ')');
+							vars->fVars[index]=param1/param2;
 						}
 						//X_VMAG
 						else if(scriptText[i+1]=='V'&&scriptText[i+2]=='M'&&scriptText[i+3]=='A'&&scriptText[i+4]=='G'){
 							i+=5;
-							if (scriptText[i]!='('||scriptText[i+1]!='$'||scriptText[i+2]!='V') {
-								printf("\nERROR:INVALID SCRIPT:INVALID PARAMETER FORMAT!\n");
-								return;
-							}
-							i+=3;
-							int index2=readVarIndex(scriptText, &i, ')');
-							vars->fVars[index]=vars->vVars[index2]->magnitude();
+							XPINSScriptableMath::Vector* param1=parseVecArg(scriptText, vars, &i, ')');
+							vars->fVars[index]=vars->param1->magnitude();
 						}
 						//X_VDIR
 						else if(scriptText[i+1]=='V'&&scriptText[i+2]=='D'&&scriptText[i+3]=='I'&&scriptText[i+4]=='R'){
 							i+=5;
-							if (scriptText[i]!='('||scriptText[i+1]!='$'||scriptText[i+2]!='V') {
-								printf("\nERROR:INVALID SCRIPT:INVALID PARAMETER FORMAT!\n");
-								return;
-							}
-							i+=3;
-							int index2=readVarIndex(scriptText, &i, ')');
-							vars->fVars[index]=vars->vVars[index2]->direction();
+							XPINSScriptableMath::Vector* param1=parseVecArg(scriptText, vars, &i, ')');
+							vars->fVars[index]=param1->direction();
 						}
 						//X_VX
 						else if(scriptText[i+1]=='V'&&scriptText[i+2]=='X'){
 							i+=3;
-							if (scriptText[i]!='('||scriptText[i+1]!='$'||scriptText[i+2]!='V') {
-								printf("\nERROR:INVALID SCRIPT:INVALID PARAMETER FORMAT!\n");
-								return;
-							}
-							i+=3;
-							int index2=readVarIndex(scriptText, &i, ')');
+							XPINSScriptableMath::Vector* param1=parseVecArg(scriptText, vars, &i, ')');
 							float f=0;
-							vars->vVars[index2]->RectCoords(&f, NULL);
+							vars->param1->RectCoords(&f, NULL);
 							vars->fVars[index]=f;
 						}
 						//X_VY
 						else if(scriptText[i+1]=='V'&&scriptText[i+2]=='Y'){
 							i+=3;
-							if (scriptText[i]!='('||scriptText[i+1]!='$'||scriptText[i+2]!='V') {
-								printf("\nERROR:INVALID SCRIPT:INVALID PARAMETER FORMAT!\n");
-								return;
-							}
-							i+=3;
-							int index2=readVarIndex(scriptText, &i, ')');
+							XPINSScriptableMath::Vector* param1=parseVecArg(scriptText, vars, &i, ')');
 							float f=0;
-							vars->vVars[index2]->RectCoords(NULL, &f);
+							vars->param1->RectCoords(&f, NULL);
 							vars->fVars[index]=f;
 						}
 						//X_VANG
 						else if(scriptText[i+1]=='V'&&scriptText[i+2]=='A'&&scriptText[i+3]=='N'&&scriptText[i+4]=='G'){
 							i+=5;
-							if (scriptText[i]!='('||scriptText[i+1]!='$'||scriptText[i+2]!='V') {
-								printf("\nERROR:INVALID SCRIPT:INVALID PARAMETER FORMAT!\n");
-								return;
-							}
-							i+=3;
-							int index2=readVarIndex(scriptText, &i, ',');
-							if (scriptText[i]!='('||scriptText[i+1]!='$'||scriptText[i+2]!='V') {
-								printf("\nERROR:INVALID SCRIPT:INVALID PARAMETER FORMAT!\n");
-								return;
-							}
-							i+=3;
-							int index3=readVarIndex(scriptText, &i, ')');
-							vars->fVars[index]=XPINSScriptableMath::Vector::angleBetweenVectors(vars->vVars[index2], vars->vVars[index3]);
+							XPINSScriptableMath::Vector* param1=parseVecArg(scriptText, vars, &i, ',');
+							XPINSScriptableMath::Vector* param2=parseVecArg(scriptText, vars, &i, ')');
+							vars->fVars[index]=XPINSScriptableMath::Vector::angleBetweenVectors(param1, param2);
 						}
 						//X_VDOT
 						else if(scriptText[i+1]=='V'&&scriptText[i+2]=='D'&&scriptText[i+3]=='O'&&scriptText[i+4]=='T'){
 							i+=5;
-							if (scriptText[i]!='('||scriptText[i+1]!='$'||scriptText[i+2]!='V') {
-								printf("\nERROR:INVALID SCRIPT:INVALID PARAMETER FORMAT!\n");
-								return;
-							}
-							i+=3;
-							int index2=readVarIndex(scriptText, &i, ',');
-							if (scriptText[i]!='('||scriptText[i+1]!='$'||scriptText[i+2]!='V') {
-								printf("\nERROR:INVALID SCRIPT:INVALID PARAMETER FORMAT!\n");
-								return;
-							}
-							i+=3;
-							int index3=readVarIndex(scriptText, &i, ')');
-							vars->fVars[index]=XPINSScriptableMath::Vector::dotProduct(vars->vVars[index2], vars->vVars[index3]);
+							XPINSScriptableMath::Vector* param1=parseVecArg(scriptText, vars, &i, ',');
+							XPINSScriptableMath::Vector* param2=parseVecArg(scriptText, vars, &i, ')');
+							vars->fVars[index]=XPINSScriptableMath::Vector::dotProduct(param1, param2);
 						}
 						//X_VADDPOLAR
 						else if(scriptText[i+1]=='V'&&scriptText[i+2]=='A'&&scriptText[i+3]=='D'&&scriptText[i+4]=='D'&&scriptText[i+5]=='P'&&scriptText[i+6]=='O'&&scriptText[i+7]=='L'&&scriptText[i+8]=='A'&&scriptText[i+9]=='R'){
 							i+=10;
-							if (scriptText[i]!='('||scriptText[i+1]!='$'||scriptText[i+2]!='F') {
-								printf("\nERROR:INVALID SCRIPT:INVALID PARAMETER FORMAT!\n");
-								return;
-							}
-							i+=3;
-							int index2=readVarIndex(scriptText, &i, ',');
-							if (scriptText[i]!=','||scriptText[i+1]!='$'||scriptText[i+2]!='F') {
-								printf("\nERROR:INVALID SCRIPT:INVALID PARAMETER FORMAT!\n");
-								return;
-							}
-							i+=3;
-							int index3=readVarIndex(scriptText, &i, ')');
-							vars->fVars[index]=XPINSScriptableMath::addPolar(vars->fVars[index2], vars->fVars[index3]);
+							float param1=parseFloatArg(scriptText, vars, &i, ',');
+							float param2=parseFloatArg(scriptText, vars, &i, ')');
+							vars->fVars[index]=XPINSScriptableMath::addPolar(param1, param2);
 						}
 						//X_VDIST
 						else if(scriptText[i+1]=='V'&&scriptText[i+2]=='D'&&scriptText[i+3]=='I'&&scriptText[i+4]=='S'&&scriptText[i+5]=='T'){
 							i+=6;
-							if (scriptText[i]!='('||scriptText[i+1]!='$'||scriptText[i+2]!='F') {
-								printf("\nERROR:INVALID SCRIPT:INVALID PARAMETER FORMAT!\n");
-								return;
-							}
-							i+=3;
-							int index2=readVarIndex(scriptText, &i, ',');
-							if (scriptText[i]!='('||scriptText[i+1]!='$'||scriptText[i+2]!='F') {
-								printf("\nERROR:INVALID SCRIPT:INVALID PARAMETER FORMAT!\n");
-								return;
-							}
-							i+=3;
-							int index3=readVarIndex(scriptText, &i, ')');
-							vars->fVars[index]=XPINSScriptableMath::dist(vars->fVars[index2], vars->fVars[index3]);
-						}
+							float param1=parseFloatArg(scriptText, vars, &i, ',');
+							float param2=parseFloatArg(scriptText, vars, &i, ')');
+							vars->fVars[index]=XPINSScriptableMath::dist(param1, param2);						}
 						//X_TSIN
 						else if(scriptText[i+1]=='T'&&scriptText[i+2]=='S'&&scriptText[i+3]=='I'&&scriptText[i+4]=='N'){
 							i+=5;
-							if (scriptText[i]!='('||scriptText[i+1]!='$'||scriptText[i+2]!='F') {
-								printf("\nERROR:INVALID SCRIPT:INVALID PARAMETER FORMAT!\n");
-								return;
-							}
-							i+=3;
-							int index2=readVarIndex(scriptText, &i, ',');
-							vars->fVars[index]=sinf(vars->fVars[index2]);
+							float param1=parseFloatArg(scriptText, vars, &i, ')');
+							vars->fVars[index]=sinf(param1);
 						}
 						//X_TCOS
 						else if(scriptText[i+1]=='T'&&scriptText[i+2]=='C'&&scriptText[i+3]=='O'&&scriptText[i+4]=='S'){
 							i+=5;
-							if (scriptText[i]!='('||scriptText[i+1]!='$'||scriptText[i+2]!='F') {
-								printf("\nERROR:INVALID SCRIPT:INVALID PARAMETER FORMAT!\n");
-								return;
-							}
-							i+=3;
-							int index2=readVarIndex(scriptText, &i, ',');
-							vars->fVars[index]=cosf(vars->fVars[index2]);
+							float param1=parseFloatArg(scriptText, vars, &i, ')');
+							vars->fVars[index]=cosf(param1);
 						}
 						//X_TTAN
 						else if(scriptText[i+1]=='T'&&scriptText[i+2]=='T'&&scriptText[i+3]=='A'&&scriptText[i+4]=='N'){
 							i+=5;
-							if (scriptText[i]!='('||scriptText[i+1]!='$'||scriptText[i+2]!='F') {
-								printf("\nERROR:INVALID SCRIPT:INVALID PARAMETER FORMAT!\n");
-								return;
-							}
-							i+=3;
-							int index2=readVarIndex(scriptText, &i, ',');
-							vars->fVars[index]=tanf(vars->fVars[index2]);
-						}
+							float param1=parseFloatArg(scriptText, vars, &i, ')');
+							vars->fVars[index]=tanf(param1);						}
 						//X_TATAN
 						else if(scriptText[i+1]=='T'&&scriptText[i+2]=='A'&&scriptText[i+3]=='T'&&scriptText[i+4]=='A'&&scriptText[i+5]=='N'){
 							i+=6;
-							if (scriptText[i]!='('||scriptText[i+1]!='$'||scriptText[i+2]!='F') {
-								printf("\nERROR:INVALID SCRIPT:INVALID PARAMETER FORMAT!\n");
-								return;
-							}
-							i+=3;
-							int index2=readVarIndex(scriptText, &i, ',');
-							if (scriptText[i]!=','||scriptText[i+1]!='$'||scriptText[i+2]!='F') {
-								printf("\nERROR:INVALID SCRIPT:INVALID PARAMETER FORMAT!\n");
-								return;
-							}
-							i+=3;
-							int index3=readVarIndex(scriptText, &i, ',');
-							vars->fVars[index]=atan2f(index2, index3);
+							float param1=parseFloatArg(scriptText, vars, &i, ',');
+							float param2=parseFloatArg(scriptText, vars, &i, ')');
+							vars->fVars[index]=atan2f(param1, param2);
 						}
 						//X_POW
 						else if(scriptText[i+1]=='P'&&scriptText[i+2]=='O'&&scriptText[i+3]=='W'){
 							i+=4;
-							if (scriptText[i]!='('||scriptText[i+1]!='$'||scriptText[i+2]!='F') {
-								printf("\nERROR:INVALID SCRIPT:INVALID PARAMETER FORMAT!\n");
-								return;
-							}
-							i+=3;
-							int index2=readVarIndex(scriptText, &i, ',');
-							if (scriptText[i]!=','||scriptText[i+1]!='$'||scriptText[i+2]!='F') {
-								printf("\nERROR:INVALID SCRIPT:INVALID PARAMETER FORMAT!\n");
-								return;
-							}
-							i+=3;
-							int index3=readVarIndex(scriptText, &i, ',');
-							vars->fVars[index]=powf(index2, index3);
+							float param1=parseFloatArg(scriptText, vars, &i, ',');
+							float param2=parseFloatArg(scriptText, vars, &i, ')');
+							vars->fVars[index]=powf(param1, param2);
 						}
 						else{
 							printf("\nERROR:INVALID SCRIPT!\n");
@@ -901,106 +637,47 @@ void XPINSParser::parseScript(char* scriptText,varSpace *vars,params *parameters
 						//X_VREC
 						if(scriptText[i+1]=='V'&&scriptText[i+2]=='R'&&scriptText[i+3]=='E'&&scriptText[i+4]=='C'){
 							i+=5;
-							if (scriptText[i]!='('||scriptText[i+1]!='$'||scriptText[i+2]!='F') {
-								printf("\nERROR:INVALID SCRIPT:INVALID PARAMETER FORMAT!\n");
-								return;
-							}
-							i+=3;
-							int index2=readVarIndex(scriptText, &i, ',');
-							if (scriptText[i]!=','||scriptText[i+1]!='$'||scriptText[i+2]!='F') {
-								printf("\nERROR:INVALID SCRIPT:INVALID PARAMETER FORMAT!\n");
-								return;
-							}
-							i+=3;
-							int index3=readVarIndex(scriptText, &i, ')');
-							vars->vVars[index]=new XPINSScriptableMath::Vector(vars->fVars[index2],vars->fVars[index3]);
+							float param1=parseFloatArg(scriptText, vars, &i, ',');
+							float param2=parseFloatArg(scriptText, vars, &i, ')');
+							vars->vVars[index]=new XPINSScriptableMath::Vector::Vector(param1,param2);
+
 						}
 						//X_VPOL
 						else if(scriptText[i+1]=='V'&&scriptText[i+2]=='R'&&scriptText[i+3]=='E'&&scriptText[i+4]=='C'){
 							i+=5;
-							if (scriptText[i]!='('||scriptText[i+1]!='$'||scriptText[i+2]!='F') {
-								printf("\nERROR:INVALID SCRIPT:INVALID PARAMETER FORMAT!\n");
-								return;
-							}
-							i+=3;
-							int index2=readVarIndex(scriptText, &i, ',');
-							if (scriptText[i]!=','||scriptText[i+1]!='$'||scriptText[i+2]!='F') {
-								printf("\nERROR:INVALID SCRIPT:INVALID PARAMETER FORMAT!\n");
-								return;
-							}
-							i+=3;
-							int index3=readVarIndex(scriptText, &i, ')');
-							vars->vVars[index]=XPINSScriptableMath::Vector::PolarVector(vars->fVars[index2], vars->fVars[index3]);
+							float param1=parseFloatArg(scriptText, vars, &i, ',');
+							float param2=parseFloatArg(scriptText, vars, &i, ')');
+							vars->vVars[index]=XPINSScriptableMath::Vector::PolarVector(param1,param2);
 						}
 						//X_VADD
 						else if(scriptText[i+1]=='V'&&scriptText[i+2]=='A'&&scriptText[i+3]=='D'&&scriptText[i+4]=='D'){
 							i+=5;
-							if (scriptText[i]!='('||scriptText[i+1]!='$'||scriptText[i+2]!='V') {
-								printf("\nERROR:INVALID SCRIPT:INVALID PARAMETER FORMAT!\n");
-								return;
-							}
-							i+=3;
-							int index2=readVarIndex(scriptText, &i, ',');
-							if (scriptText[i]!=','||scriptText[i+1]!='$'||scriptText[i+2]!='V') {
-								printf("\nERROR:INVALID SCRIPT:INVALID PARAMETER FORMAT!\n");
-								return;
-							}
-							i+=3;
-							int index3=readVarIndex(scriptText, &i, ')');
-							vars->vVars[index]=XPINSScriptableMath::Vector::addVectors(vars->vVars[index2], vars->vVars[index3]);
+							XPINSScriptableMath::Vector* param1=parseVecArg(scriptText, vars, &i, ',');
+							XPINSScriptableMath::Vector* param2=parseVecArg(scriptText, vars, &i, ')');
+							vars->vVars[index]=XPINSScriptableMath::Vector::addVectors(param1,param2);
 						}
 						//X_VSUB
 						else if(scriptText[i+1]=='V'&&scriptText[i+2]=='S'&&scriptText[i+3]=='U'&&scriptText[i+4]=='B'){
 							i+=5;
-							if (scriptText[i]!='('||scriptText[i+1]!='$'||scriptText[i+2]!='V') {
-								printf("\nERROR:INVALID SCRIPT:INVALID PARAMETER FORMAT!\n");
-								return;
-							}
-							i+=3;
-							int index2=readVarIndex(scriptText, &i, ',');
-							if (scriptText[i]!=','||scriptText[i+1]!='$'||scriptText[i+2]!='V') {
-								printf("\nERROR:INVALID SCRIPT:INVALID PARAMETER FORMAT!\n");
-								return;
-							}
-							i+=3;
-							int index3=readVarIndex(scriptText, &i, ')');
-							XPINSScriptableMath::Vector *temp=XPINSScriptableMath::Vector::scaledVector(vars->vVars[index3], -1);
-							vars->vVars[index]=XPINSScriptableMath::Vector::addVectors(vars->vVars[index2], temp);
+							XPINSScriptableMath::Vector* param1=parseVecArg(scriptText, vars, &i, ',');
+							XPINSScriptableMath::Vector* param2=parseVecArg(scriptText, vars, &i, ')');
+							XPINSScriptableMath::Vector *temp=XPINSScriptableMath::Vector::scaledVector(param2, -1);
+							vars->vVars[index]=XPINSScriptableMath::Vector::addVectors(param1,temp);
 							delete temp;
 						}
 						//X_VSCALE
 						else if(scriptText[i+1]=='V'&&scriptText[i+2]=='S'&&scriptText[i+3]=='C'&&scriptText[i+4]=='A'&&scriptText[i+5]=='L'&&scriptText[i+6]=='E'){
 							i+=7;
-							if (scriptText[i]!='('||scriptText[i+1]!='$'||scriptText[i+2]!='V') {
-								printf("\nERROR:INVALID SCRIPT:INVALID PARAMETER FORMAT!\n");
-								return;
-							}
-							i+=3;
-							int index2=readVarIndex(scriptText, &i, ',');
-							if (scriptText[i]!=','||scriptText[i+1]!='$'||scriptText[i+2]!='F') {
-								printf("\nERROR:INVALID SCRIPT:INVALID PARAMETER FORMAT!\n");
-								return;
-							}
-							i+=3;
-							int index3=readVarIndex(scriptText, &i, ')');
-							vars->vVars[index]=XPINSScriptableMath::Vector::scaledVector(vars->vVars[index2], vars->fVars[index3]);
+							XPINSScriptableMath::Vector* param1=parseVecArg(scriptText, vars, &i, ',');
+							float param2=parseFloatArg(scriptText, vars, &i, ')');
+							vars->vVars[index]=XPINSScriptableMath::Vector::scaledVector(param1,param2);
 						}
 						//X_VPROJ
 						else if(scriptText[i+1]=='V'&&scriptText[i+2]=='P'&&scriptText[i+3]=='R'&&scriptText[i+4]=='O'&&scriptText[i+4]=='J'){
 							i+=6;
-							if (scriptText[i]!='('||scriptText[i+1]!='$'||scriptText[i+2]!='V') {
-								printf("\nERROR:INVALID SCRIPT:INVALID PARAMETER FORMAT!\n");
-								return;
-							}
-							i+=3;
-							int index2=readVarIndex(scriptText, &i, ',');
-							if (scriptText[i]!='('||scriptText[i+1]!='$'||scriptText[i+2]!='F') {
-								printf("\nERROR:INVALID SCRIPT:INVALID PARAMETER FORMAT!\n");
-								return;
-							}
-							i+=3;
-							int index3=readVarIndex(scriptText, &i, ')');
-							vars->vVars[index]=XPINSScriptableMath::Vector::projectionInDirection(vars->vVars[index2], vars->fVars[index3]);
+							XPINSScriptableMath::Vector* param1=parseVecArg(scriptText, vars, &i, ',');
+							float param2=parseFloatArg(scriptText, vars, &i, ')');
+							vars->vVars[index]=XPINSScriptableMath::Vector::projectionInDirection(param1,param2);
 						}
 						else{
 							printf("\nERROR:INVALID SCRIPT:UNDECLARED FUNCTION!\n");
