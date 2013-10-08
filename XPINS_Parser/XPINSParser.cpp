@@ -11,6 +11,275 @@ const kMajor=0;
 const kMinor=4;
 
 
+//Expression Parsing
+bool parseBoolExp(char* scriptText,varSpace* vars, int* start){
+	bool result=false;
+	int i=*start;
+	while(scriptText[i++]!='?'){}
+	if(scriptText[i]=='B'){
+		cerr<<"Could not parse XPINS expression, returning false\n";
+	}
+	else{
+		i+=2;
+		if (scriptText[i]=='!'&&scriptText[i+1]=='=') {//not
+			++i;
+			bool arg=parseBoolArg(scriptText, vars, &i, ')');
+			result=!arg;
+			++i;
+		}
+		else {//two inputs
+			int j=i;
+			while (scriptText[j]!='|'&&scriptText[j]!='&'&&scriptText[j]!='<'&&scriptText[j]!='='&&scriptText[j]!='>'&&scriptText[j]!='!') ++j;
+			if(scriptText[j]=='|'&&scriptText[j+1]=='|'){//OR
+				bool arg1=parseBoolArg(scriptText, vars, &i,'|');
+				if(arg1){
+					result=true;
+					while (scriptText[++i]!=')') {}
+					++i;
+				}
+				else{
+					i+=2;
+					bool arg2=parseBoolArg(scriptText, vars, &i,')');
+					result=arg1||arg2;
+					++i;
+				}
+			}
+			else if(scriptText[j]=='&'&&scriptText[j+1]=='&'){//And
+				bool arg1=parseBoolArg(scriptText, vars, &i,'|');
+				if(!arg1){
+					result=false;
+					while (scriptText[++i]!=')') {}
+					++i;
+				}
+				else{
+					i+=2;
+					bool arg2=parseBoolArg(scriptText, vars, &i,')');
+					result=arg1&&arg2;
+					++i;
+				}
+			}
+			else if(scriptText[j]=='<'&&scriptText[j+1]!='='){//Less Than
+				float arg1=0,arg2=0;
+				if(scriptText[i]=='^'||scriptText[i+1]=='F')//Input 1 is float
+					arg1=parseFloatArg(scriptText, vars, &i,'<');
+				else
+					arg1=parseIntArg(scriptText, vars, &i, '<');
+				++i;
+				if(scriptText[i]=='^'||scriptText[i+1]=='F')//Input 2 is float
+					arg2=parseFloatArg(scriptText, vars, &i,')');
+				else
+					arg2=parseIntArg(scriptText, vars, &i, ')');
+				++i;
+				result=arg1<arg2;
+			}
+			else if(scriptText[j]=='<'&&scriptText[j+1]=='='){//Less Than or Equal
+				float arg1=0,arg2=0;
+				if(scriptText[i]=='^'||scriptText[i+1]=='F')//Input 1 is float
+					arg1=parseFloatArg(scriptText, vars, &i,'<');
+				else
+					arg1=parseIntArg(scriptText, vars, &i, '<');
+				i+=2;
+				if(scriptText[i]=='^'||scriptText[i+1]=='F')//Input 2 is float
+					arg2=parseFloatArg(scriptText, vars, &i,')');
+				else
+					arg2=parseIntArg(scriptText, vars, &i, ')');
+				++i;
+				result=arg1<=arg2;
+			}
+			else if(scriptText[j]=='>'&&scriptText[j+1]!='='){//Greater Than
+				float arg1=0,arg2=0;
+				if(scriptText[i]=='^'||scriptText[i+1]=='F')//Input 1 is float
+					arg1=parseFloatArg(scriptText, vars, &i,'>');
+				else
+					arg1=parseIntArg(scriptText, vars, &i, '>');
+				++i;
+				if(scriptText[i]=='^'||scriptText[i+1]=='F')//Input 2 is float
+					arg2=parseFloatArg(scriptText, vars, &i,')');
+				else
+					arg2=parseIntArg(scriptText, vars, &i, ')');
+				++i;
+				result=arg1>arg2;
+			}
+			else if(scriptText[j]=='>'&&scriptText[j+1]=='='){//Greater than Or equal
+				float arg1=0,arg2=0;
+				if(scriptText[i]=='^'||scriptText[i+1]=='F')//Input 1 is float
+					arg1=parseFloatArg(scriptText, vars, &i,'>');
+				else
+					arg1=parseIntArg(scriptText, vars, &i, '>');
+				i+=2;
+				if(scriptText[i]=='^'||scriptText[i+1]=='F')//Input 2 is float
+					arg2=parseFloatArg(scriptText, vars, &i,')');
+				else
+					arg2=parseIntArg(scriptText, vars, &i, ')');
+				++i;
+				result=arg1>=arg2;
+			}
+			else if(scriptText[j]=='!'&&scriptText[j+1]=='='){//Not Equal
+				float arg1=0,arg2=0;
+				if(scriptText[i]=='^'||scriptText[i+1]=='F')//Input 1 is float
+					arg1=parseFloatArg(scriptText, vars, &i,'!');
+				else
+					arg1=parseIntArg(scriptText, vars, &i, '!');
+				i+=2;
+				if(scriptText[i]=='^'||scriptText[i+1]=='F')//Input 2 is float
+					arg2=parseFloatArg(scriptText, vars, &i,')');
+				else
+					arg2=parseIntArg(scriptText, vars, &i, ')');
+				++i;
+				result=arg1!=arg2;
+			}
+			else if(scriptText[j]=='='&&scriptText[j+1]=='='){//Equal
+				float arg1=0,arg2=0;
+				if(scriptText[i]=='^'||scriptText[i+1]=='F')//Input 1 is float
+					arg1=parseFloatArg(scriptText, vars, &i,'=');
+				else
+					arg1=parseIntArg(scriptText, vars, &i, '=');
+				i+=2;
+				if(scriptText[i]=='^'||scriptText[i+1]=='F')//Input 2 is float
+					arg2=parseFloatArg(scriptText, vars, &i,')');
+				else
+					arg2=parseIntArg(scriptText, vars, &i, ')');
+				++i;
+				result=arg1==arg2;
+			}
+		}
+	}
+	*start=i;
+	return result;
+}
+int parseIntExp(char* scriptText,varSpace* vars, int* start){
+	int result=0;
+	int i=*start;
+	while(scriptText[i++]!='?'){}
+	if(scriptText[i]=='I'){
+		cerr<<"Could not parse XPINS expression, returning 0\n";
+	}
+	else{
+		i+=2;
+		int j=i;
+		while (scriptText[j]!='+'&&scriptText[j]!='-'&&scriptText[j]!='*'&&scriptText[j]!='/'&&scriptText[j]!='%') ++j;
+		if (scriptText[j]=='+') {//addition
+			if(scriptText[i]=='^'||scriptText[i+1]=='F')//Input 1 is float
+				result=parseFloatArg(scriptText, vars, &i,'+');
+			else
+				result=parseIntArg(scriptText, vars, &i, '+');
+			++i;
+			if(scriptText[i]=='^'||scriptText[i+1]=='F')//Input 1 is float
+				result+=parseFloatArg(scriptText, vars, &i,')');
+			else
+				result+=parseIntArg(scriptText, vars, &i, ')');
+			++i;
+		}
+		else if (scriptText[j]=='-') {//subtraction
+			if(scriptText[i]=='^'||scriptText[i+1]=='F')//Input 1 is float
+				result=parseFloatArg(scriptText, vars, &i,'-');
+			else
+				result=parseIntArg(scriptText, vars, &i, '-');
+			++i;
+			if(scriptText[i]=='^'||scriptText[i+1]=='F')//Input 1 is float
+				result-=parseFloatArg(scriptText, vars, &i,')');
+			else
+				result-=parseIntArg(scriptText, vars, &i, ')');
+			++i;
+		}
+		else if (scriptText[j]=='*') {//multiplication
+			if(scriptText[i]=='^'||scriptText[i+1]=='F')//Input 1 is float
+				result=parseFloatArg(scriptText, vars, &i,'*');
+			else
+				result=parseIntArg(scriptText, vars, &i, '*');
+			++i;
+			if(scriptText[i]=='^'||scriptText[i+1]=='F')//Input 1 is float
+				result*=parseFloatArg(scriptText, vars, &i,')');
+			else
+				result*=parseIntArg(scriptText, vars, &i, ')');
+			++i;
+		}
+		else if (scriptText[j]=='/') {//division
+			if(scriptText[i]=='^'||scriptText[i+1]=='F')//Input 1 is float
+				result=parseFloatArg(scriptText, vars, &i,'/');
+			else
+				result=parseIntArg(scriptText, vars, &i, '/');
+			++i;
+			if(scriptText[i]=='^'||scriptText[i+1]=='F')//Input 1 is float
+				result/=parseFloatArg(scriptText, vars, &i,')');
+			else
+				result/=parseIntArg(scriptText, vars, &i, ')');
+			++i;
+		}
+		else if (scriptText[j]=='%') {//modulus
+			result=parseIntArg(scriptText, vars, &i, '%');
+			++i;
+			result%=parseIntArg(scriptText, vars, &i, ')');
+			++i;
+		}
+	}
+	*start=i;
+	return result;
+}
+float parseFloatExp(char* scriptText,varSpace* vars, int* start){
+	float result=0.0;
+	int i=*start;
+	while(scriptText[i++]!='?'){}
+	if(scriptText[i]=='F'){
+		cerr<<"Could not parse XPINS expression, returning 0.0\n";
+	}
+	else{
+		i+=2;
+		int j=i;
+		while (scriptText[j]!='+'&&scriptText[j]!='-'&&scriptText[j]!='*'&&scriptText[j]!='/') ++j;
+		if (scriptText[j]=='+') {//addition
+			if(scriptText[i]=='^'||scriptText[i+1]=='F')//Input 1 is float
+				result=parseFloatArg(scriptText, vars, &i,'+');
+			else
+				result=(float)parseIntArg(scriptText, vars, &i, '+');
+			++i;
+			if(scriptText[i]=='^'||scriptText[i+1]=='F')//Input 1 is float
+				result+=parseFloatArg(scriptText, vars, &i,')');
+			else
+				result+=(float)parseIntArg(scriptText, vars, &i, ')');
+			++i;
+		}
+		else if (scriptText[j]=='-') {//subtraction
+			if(scriptText[i]=='^'||scriptText[i+1]=='F')//Input 1 is float
+				result=parseFloatArg(scriptText, vars, &i,'-');
+			else
+				result=(float)parseIntArg(scriptText, vars, &i, '-');
+			++i;
+			if(scriptText[i]=='^'||scriptText[i+1]=='F')//Input 1 is float
+				result-=parseFloatArg(scriptText, vars, &i,')');
+			else
+				result-=(float)parseIntArg(scriptText, vars, &i, ')');
+			++i;
+		}
+		else if (scriptText[j]=='*') {//multiplication
+			if(scriptText[i]=='^'||scriptText[i+1]=='F')//Input 1 is float
+				result=parseFloatArg(scriptText, vars, &i,'*');
+			else
+				result=(float)parseIntArg(scriptText, vars, &i, '*');
+			++i;
+			if(scriptText[i]=='^'||scriptText[i+1]=='F')//Input 1 is float
+				result*=parseFloatArg(scriptText, vars, &i,')');
+			else
+				result*=(float)parseIntArg(scriptText, vars, &i, ')');
+			++i;
+		}
+		else if (scriptText[j]=='/') {//division
+			if(scriptText[i]=='^'||scriptText[i+1]=='F')//Input 1 is float
+				result=parseFloatArg(scriptText, vars, &i,'/');
+			else
+				result=(float)parseIntArg(scriptText, vars, &i, '/');
+			++i;
+			if(scriptText[i]=='^'||scriptText[i+1]=='F')//Input 1 is float
+				result/=parseFloatArg(scriptText, vars, &i,')');
+			else
+				result/=(float)parseIntArg(scriptText, vars, &i, ')');
+			++i;
+		}
+	}
+	*start=i;
+	return result;
+}
+
 //parameter parsing
 bool parseBoolArg(char * scriptText,varSpace* vars,int* start,char expectedEnd){
 	int i=*start;
@@ -20,8 +289,11 @@ bool parseBoolArg(char * scriptText,varSpace* vars,int* start,char expectedEnd){
 		int index=readFuncParameter(scriptText, &i, 'B', expectedEnd);
 		retVal=vars->bVars[index];
 	}
-	else{
+	else if(scriptText[i]=='^'){
 		retVal=(scriptText[i+1]=='T');
+	}
+	else if(scriptText[i]=='?'){
+		retVal=parseBoolExp(scriptText, vars, start);
 	}
 	while(scriptText[i]!=expectedEnd)++i;
 	*start=i;
@@ -35,9 +307,12 @@ int parseIntArg(char * scriptText,varSpace* vars,int* start,char expectedEnd){
 		int index=readFuncParameter(scriptText, &i, 'I', expectedEnd);
 		retVal=vars->iVars[index];
 	}
-	else{
+	else if(scriptText[i]=='^'){
 		++i;
 		retVal=readInt(scriptText, &i, expectedEnd);
+	}
+	else if(scriptText[i]=='?'){
+		retVal=parseIntExp(scriptText, vars, start);
 	}
 	while(scriptText[i]!=expectedEnd)++i;
 	*start=i;
@@ -51,9 +326,12 @@ float parseFloatArg(char * scriptText,varSpace* vars,int* start,char expectedEnd
 		int index=readFuncParameter(scriptText, &i, 'F', expectedEnd);
 		retVal=vars->fVars[index];
 	}
-	else{
+	else if(scriptText[i]=='^'){
 		++i;
 		retVal=readFloat(scriptText, &i, expectedEnd);
+	}
+	else if(scriptText[i]=='?'){
+		retVal=parseFloatExp(scriptText, vars, start);
 	}
 	while(scriptText[i]!=expectedEnd)++i;
 	*start=i;
@@ -294,6 +572,10 @@ void XPINSParser::parseScript(char* scriptText,varSpace *vars,params *parameters
 						return;
 					}
 				}
+				else if(scriptText[i]=='?'){
+					++i;
+					vars->bVars[index]=parseBoolExp(scriptText, vars, &i);
+				}
 				else if(scriptText[i]=='#'||scriptText[i]=='X'){
 					if ((scriptText[i]!='#'||scriptText[i+1]!='F')&&(scriptText[i]!='X'||scriptText[i+1]!='_')) {
 						printf("\nERROR:INVALID SCRIPT:NOT A FUNCTION NAME!\n");
@@ -395,6 +677,10 @@ void XPINSParser::parseScript(char* scriptText,varSpace *vars,params *parameters
 					int n=readInt(scriptText,&i,'\n');
 					vars->iVars[index]=n;
 				}
+				else if(scriptText[i]=='?'){
+					++i;
+					vars->iVars[index]=parseIntExp(scriptText, vars, &i);
+				}
 				else if(scriptText[i]=='#'||scriptText[i]=='X'){
 					if ((scriptText[i]!='#'||scriptText[i+1]!='F')&&(scriptText[i]!='X'||scriptText[i+1]!='_')) {
 						printf("\nERROR:INVALID SCRIPT:NOT A FUNCTION NAME!\n");
@@ -474,6 +760,10 @@ void XPINSParser::parseScript(char* scriptText,varSpace *vars,params *parameters
 					i++;
 					float n=readFloat(scriptText,&i,'\n');
 					vars->fVars[index]=n;
+				}
+				else if(scriptText[i]=='?'){
+					++i;
+					vars->fVars[index]=parseFloatExp(scriptText, vars, &i);
 				}
 				else if(scriptText[i]=='#'||scriptText[i]=='X'){
 					if ((scriptText[i]!='#'||scriptText[i+1]!='F')&&(scriptText[i]!='X'||scriptText[i+1]!='_')) {

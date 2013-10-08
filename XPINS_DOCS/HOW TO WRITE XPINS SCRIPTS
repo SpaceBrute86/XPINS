@@ -58,6 +58,25 @@ After the while loop, we declare a genaric pionter variable. In this case, it mo
 Using XPINS, you can script almost anything you can do in C/C++.
 
 
+Exressions:
+In C++, there are expressions and operators that make it very easy to perform calculations. In XPINS, there are functions for addition, subtraction, etc, but those take a lot of time to write (and also use more memory). XPINS has expressions that allow mathematical calculations to performded easier. Here is a sample expression:
+?B($Var1<$Var2)?
+An expression always starts and ends with a '?'. At the beginning of the epxression is the return type: B, I, or F (at this time, there is no support for Vector or Pointer expressions). After the type is a pair of parentheses contaning the input and operator. The inputs can be constants, variables, or even other expressions. The operator goes before the last input. Valid operators at this point in time are listed below. The format is: <op> : <Use> (<Return types>):(<1st Input types>),(<2nd Input types>),...
+	+  : Addition (I,D):(I,D),(I,D)
+	-  : Subtraction (I,D):(I,D),(I,D)
+	*  : Multiplication (I,D):(I,D),(I,D)
+	/  : Division (I,D):(I,D),(I,D)
+	%  : Modulus (I):(I),(I)
+	<  : Less than (B):(I,D),(I,D)
+	<= : less than or equal (B)(I or D)
+	>  : Greater than (B):(I,D),(I,D)
+	>= : Greater than or equal (B):(I,D),(I,D)
+	== : Equal (B):(I,D),(I,D)
+	!= : Not Equal (B):(I,D),(I,D)
+	!  : Not (B):(B)
+	|| : Or (B):(B),(B)
+	&& : Or (B):(B),(B)
+
 
 In order to make XPINS useful, you must implement the Bridging code:
 -Include any of your own headers
