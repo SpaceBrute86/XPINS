@@ -62,20 +62,26 @@ Exressions:
 In C++, there are expressions and operators that make it very easy to perform calculations. In XPINS, there are functions for addition, subtraction, etc, but those take a lot of time to write (and also use more memory). XPINS has expressions that allow mathematical calculations to performded easier. Here is a sample expression:
 ?B($Var1<$Var2)?
 An expression always starts and ends with a '?'. At the beginning of the epxression is the return type: B, I, or F (at this time, there is no support for Vector or Pointer expressions). After the type is a pair of parentheses contaning the input and operator. The inputs can be constants, variables, or even other expressions. The operator goes before the last input. Valid operators at this point in time are listed below. The format is: <op> : <Use> (<Return types>):(<1st Input types>),(<2nd Input types>),...
-	+  : Addition (I,D):(I,D),(I,D)
-	-  : Subtraction (I,D):(I,D),(I,D)
-	*  : Multiplication (I,D):(I,D),(I,D)
-	/  : Division (I,D):(I,D),(I,D)
+	+  : Addition (I,F):(I,F),(I,F)
+	+  :Vector Addition (V):(V),(V)
+	-  : Subtraction (I,F):(I,F),(I,F)
+	-  :Vector Subtraction (V):(V),(V)
+	*  : Multiplication (I,F):(I,F),(I,F)
+	*  : Vector-Scalar Multiplication (V):(V),(I,F)
+	*  : Vector Dot Product (F):(V),(V)
+	/  : Division (I,F):(I,F),(I,F)
+	/  :Vector-Scalar Division (V):(V),(V),(I,F)
 	%  : Modulus (I):(I),(I)
-	<  : Less than (B):(I,D),(I,D)
-	<= : less than or equal (B)(I or D)
-	>  : Greater than (B):(I,D),(I,D)
-	>= : Greater than or equal (B):(I,D),(I,D)
-	== : Equal (B):(I,D),(I,D)
-	!= : Not Equal (B):(I,D),(I,D)
+	<  : Less than (B):(I,F),(I,F)
+	<= : less than or equal (B):(I,F),(I,F)
+	>  : Greater than (B):(I,F),(I,F)
+	>= : Greater than or equal (B):(I,F),(I,F)
+	== : Equal (B):(I,F),(I,F)
+	!= : Not Equal (B):(I,F),(I,F)
 	!  : Not (B):(B)
 	|| : Or (B):(B),(B)
 	&& : Or (B):(B),(B)
+	Note that * can be Scaling or Dot product with Vectors. It depends on the second input.
 
 
 In order to make XPINS useful, you must implement the Bridging code:
@@ -126,15 +132,15 @@ while(scriptText[*index]!=')')(*index)++;
 
 Calling the Function (Woohoo!):
 Finally, the most important part: calling your functions. This actually is only one line of code (per function), and it goes right after the code for Finding the parameters:
-vars->__Vars[retIndex]=f__(...);
+*rett=(___)f__(...);
 Hold on, that's a lot of blanks. It's actually not that complicated:
--the first blank is simply the return type letter: BOOL=b, INT=i, FLOAT=f, VEC=v, and *___=p.
+-the first blank is simply the return type letter: bool, int, float, XPINSScriptableMath::Vector*, or ___(the custom type you intended, or leave out the blank and ()).
 -the second blank is the number for the function (e.g. if it is the first function declared, then f1)
 -the "..." is the parameters, comma-separated as usual:
 	-If you want to pass your custom parameters, write "parameters" as your first (and/or only) argument.
 	-All other parameters: these are simply the param__ variables you declared in the previous step, in the order you declared them.
 So if I have function F11 that takes two parameters and the custom parameters and returns a bool:
-vars->bVars[retIndex]=f11(parameters,param1,param2);
+*rett=(bool)f11(parameters,param1,param2);
 That's really all there is to bridging your functions.
 
 Have Fun with XPINS!

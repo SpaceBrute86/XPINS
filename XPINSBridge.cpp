@@ -19,7 +19,7 @@
 
 
 //PRIMARY METHOD
-void bridgeFunction(int fNum,params parameters,XPINSParser::varSpace* vars,char* script,int* index,int retIndex){
+void XPINSBridge::bridgeFunction(int fNum,XPINSBridge::params parameters,XPINSParser::varSpace* vars,char* script,int* index,void* rett){
 	/*Declare Pointers to Your Custom Functions*/
 	
 	/*Bridge Your Custom Functions*/
