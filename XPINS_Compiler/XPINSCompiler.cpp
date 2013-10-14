@@ -10,12 +10,13 @@
 using namespace std;
 
 const int kMajor=0;
-const int kMinor=1;
+const int kMinor=3;
 
 namespace XPINSCompileUtil {
 	string strRepresentationOfInt(int);
 	bool stringsMatch(int,string,string);
 	int readVarIndex(string,int *,char);
+	char charForBuiltin(string);
 }
 
 //Compile Script
@@ -28,11 +29,13 @@ bool XPINSCompiler::compileScript(string* input){
 	if(!removeComments(&scriptText))return false;
 	cout<<endl<<"Comments and ';'s Removed:\n"<<scriptText<<endl;
 	if(!renameFunctions(&scriptText))return false;
-	cout<<endl<<"Functions Renamed:\n"<<scriptText<<endl;
+	cout<<endl<<"User Functions Renamed:\n"<<scriptText<<endl;
 	if(!renameTypes(&scriptText))return false;
 	cout<<endl<<"Variable Types Renamed:\n"<<scriptText<<endl;
 	if(!renameVars(&scriptText))return false;
 	cout<<endl<<"Variables Renamed:\n"<<scriptText<<endl;
+	if(!renameBuiltIns(&scriptText))return false;
+	cout<<endl<<"Built-in Functions Renamed:\n"<<scriptText<<endl;
 	if(!cleanUp(&scriptText))return false;
 	cout<<endl<<"Cleaned Up:\n"<<scriptText;
 	*input=scriptText;
@@ -141,6 +144,34 @@ bool XPINSCompiler::renameFunctions(string *text){
 			cerr<<"Invalid Script: Missing @END.\nEXITING";
 			return false;;
 		}
+		while(input[i++]!='\n'){}
+		char functionType=input[i++];
+		switch (functionType) {
+			case 'B':
+			case 'b':
+				functionType='B';
+				break;
+			case 'I':
+			case 'i':
+				functionType='I';
+				break;
+			case 'F':
+			case 'f':
+				functionType='F';
+				break;
+			case '*':
+				functionType='P';
+				break;
+			case 'V':
+			case 'v':
+				if (input[i]=='E'||input[i]=='e') {
+					functionType='V';
+					break;
+				}
+			default:
+				functionType=' ';
+				break;
+		}
 		while (input[i]!=' '){
 			i++;
 		}
@@ -180,6 +211,7 @@ bool XPINSCompiler::renameFunctions(string *text){
 			j++;
 			//Check for match
 			if(XPINSCompileUtil::stringsMatch(j, intermediate1, functionName)){
+				if(functionType!=' ')intermediate2+=functionType;//add function types to user functions.
 				intermediate2+='F';
 				intermediate2+=XPINSCompileUtil::strRepresentationOfInt(x);
 				while(intermediate1[j]!='('){//Find '('
@@ -201,6 +233,34 @@ bool XPINSCompiler::renameFunctions(string *text){
 		output+=intermediate1[j];
 	}
 	//output=intermediate1;
+	*text=output;
+	return true;
+}
+bool XPINSCompiler::renameBuiltIns(string *text){
+	string input=*text;
+	string output="";
+	for(int i=0;i<input.length();++i){
+		output+=input[i];
+		if(input[i]=='X'&&input[i+1]=='_'){//found built-in
+			i+=2;
+			string name="";
+			while (input[i]!='(') name+=input[i++];
+			output+=XPINSCompileUtil::charForBuiltin(name);
+			output+='_';
+			output+=name;
+			output+='(';
+		}
+	}
+	string inter=""+output;
+	output="";
+	//Double Check Ending (strip after @END)
+	for(int j=0;j<inter.length();j++){
+		if(inter[j]=='@'&&inter[j+1]=='E'&&inter[j+2]=='N'&&inter[j+3]=='D'){
+			output+="@END";
+			break;
+		}
+		output+=inter[j];
+	}
 	*text=output;
 	return true;
 }
@@ -355,6 +415,46 @@ bool XPINSCompiler::cleanUp(string *text){
 	return true;
 }
 //UTILTY FUNCTIONS
+char XPINSCompileUtil::charForBuiltin(string name){
+	if(name.compare("AND")==0)return 'B';
+	if(name.compare("OR")==0)return 'B';
+	if(name.compare("NOT")==0)return 'B';
+	if(name.compare("ILESS")==0)return 'B';
+	if(name.compare("IMORE")==0)return 'B';
+	if(name.compare("FLESS")==0)return 'B';
+	if(name.compare("FMORE")==0)return 'B';
+	if(name.compare("IEQUAL")==0)return 'B';
+	if(name.compare("FEQUAL")==0)return 'B';
+	if(name.compare("IADD")==0)return 'I';
+	if(name.compare("ISUB")==0)return 'I';
+	if(name.compare("IMULT")==0)return 'I';
+	if(name.compare("IDIV")==0)return 'I';
+	if(name.compare("IMOD")==0)return 'I';
+	if(name.compare("FADD")==0)return 'F';
+	if(name.compare("FSUB")==0)return 'F';
+	if(name.compare("FMULT")==0)return 'F';
+	if(name.compare("FDIV")==0)return 'F';
+	if(name.compare("TSIN")==0)return 'F';
+	if(name.compare("TCOS")==0)return 'F';
+	if(name.compare("TTAN")==0)return 'F';
+	if(name.compare("TATAN")==0)return 'F';
+	if(name.compare("VADDPOLAR")==0)return 'F';
+	if(name.compare("POW")==0)return 'F';
+	if(name.compare("VDIST")==0)return 'F';
+	if(name.compare("VX")==0)return 'F';
+	if(name.compare("VY")==0)return 'F';
+	if(name.compare("VMAG")==0)return 'F';
+	if(name.compare("VDIR")==0)return 'F';
+	if(name.compare("VANG")==0)return 'F';
+	if(name.compare("VDOT")==0)return 'F';
+	if(name.compare("VREC")==0)return 'V';
+	if(name.compare("VPOL")==0)return 'V';
+	if(name.compare("VADD")==0)return 'V';
+	if(name.compare("VSUB")==0)return 'V';
+	if(name.compare("VSCALE")==0)return 'V';
+	if(name.compare("VPROJ")==0)return 'V';
+	return 'K';
+}
 int XPINSCompileUtil::readVarIndex(string scriptText,int *startIndex,char expectedEnd){
 	int i=*startIndex;
 	int index=0;

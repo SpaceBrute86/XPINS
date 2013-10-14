@@ -22,6 +22,7 @@ namespace XPINSCompiler{
 	bool renameFunctions(string*);
 	bool renameTypes(string*);
 	bool renameVars(string*);
+	bool renameBuiltIns(string*);
 	bool cleanUp(string*);
 }
 #endif /* defined(__XPINS__XPINSCompiler__) */

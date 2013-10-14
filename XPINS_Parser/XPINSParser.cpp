@@ -367,19 +367,19 @@ bool parseBoolArg(char * scriptText,varSpace* vars,int* start,char expectedEnd){
 		retVal=parseBoolExp(scriptText, vars, start);
 	}
 	else if(scriptText[i]=='#'){//User-defined Function
-		if(scriptText[i+1]!='F'){
-			retVal=false;
+		if(scriptText[i+1]!='B'||scriptText[i+2]!='F'){
+			retVal=NULL;
 		}
 		else{
-			i+=2;
+			i+=3;
 			int fNum=readVarIndex(scriptText, &i, '(');
 			XPINSBridge::bridgeFunction(fNum, parameters, vars, scriptText, &i, &retVal);
 		}
 	}
 	else if(scriptText[i]=='X'){//Built-in Function
-		i+=2;
-		if(scriptText[i-1]!='_'){
-			retVal=false;
+		i+=3;
+		if(scriptText[i-1]!='_'||scriptText[i-2]!='B'){
+			retVal=0;
 		}
 		//X_AND
 		else if(scriptText[i+1]=='A'&&scriptText[i+2]=='N'&&scriptText[i+3]=='D'){
@@ -468,18 +468,18 @@ int parseIntArg(char * scriptText,varSpace* vars,int* start,char expectedEnd){
 		retVal=parseIntExp(scriptText, vars, start);
 	}
 	else if(scriptText[i]=='#'){//User-defined Function
-		if(scriptText[i+1]!='F'){
-			retVal=0;
+		if(scriptText[i+1]!='I'||scriptText[i+2]!='F'){
+			retVal=NULL;
 		}
 		else{
-			i+=2;
+			i+=3;
 			int fNum=readVarIndex(scriptText, &i, '(');
 			XPINSBridge::bridgeFunction(fNum, parameters, vars, scriptText, &i,&retVal);
 		}
 	}
 	else if(scriptText[i]=='X'){//Built-in Function
-		i+=2;
-		if(scriptText[i-1]!='_'){
+		i+=3;
+		if(scriptText[i-1]!='_'||scriptText[i-2]!='I'){
 			retVal=0;
 		}
 		//X_IADD
@@ -546,18 +546,18 @@ float parseFloatArg(char * scriptText,varSpace* vars,int* start,char expectedEnd
 		retVal=parseFloatExp(scriptText, vars, start);
 	}
 	else if(scriptText[i]=='#'){//User-defined Function
-		if(scriptText[i+1]!='F'){
-			retVal=0;
+		if(scriptText[i+1]!='F'||scriptText[i+2]!='F'){
+			retVal=NULL;
 		}
 		else{
-			i+=2;
+			i+=3;
 			int fNum=readVarIndex(scriptText, &i, '(');
 			XPINSBridge::bridgeFunction(fNum, parameters, vars, scriptText, &i,&retVal);
 		}
 	}
 	else if(scriptText[i]=='X'){//Built-in Function
-		i+=2;
-		if(scriptText[i-1]!='_'){
+		i+=3;
+		if(scriptText[i-1]!='_'||scriptText[i-2]!='F'){
 			retVal=0;
 		}
 		//X_FADD
@@ -716,18 +716,18 @@ XPINSScriptableMath::Vector parseVecArg(char * scriptText,varSpace* vars,int* st
 		retVal=parseVecExp(scriptText, vars, start);
 	}
 	else if(scriptText[i]=='#'){//User-defined Function
-		if(scriptText[i+1]!='F'){
-			retVal=new XPINSScriptableMath::Vector(0,0);
+		if(scriptText[i+1]!='V'||scriptText[i+2]!='F'){
+			retVal=NULL;
 		}
 		else{
-			i+=2;
+			i+=3;
 			int fNum=readVarIndex(scriptText, &i, '(');
 			XPINSBridge::bridgeFunction(fNum, parameters, vars, scriptText, &i,&retVal);
 		}
 	}
 	else if(scriptText[i]=='X'){//Built-in Function
-		i+=2;
-		if(scriptText[i-1]!='_'){
+		i+=3;
+		if(scriptText[i-1]!='_'||scriptText[i-2]!='V'){
 			retVal=0;
 		}
 		else //X_VREC
@@ -796,11 +796,11 @@ void* parsePointerArg(char * scriptText,varSpace* vars,int* start,char expectedE
 		retVal=vars->vVars[index]->copy();
 	}
 	else if(scriptText[i]=='#'){//User-defined Function
-		if(scriptText[i+1]!='F'){
+		if(scriptText[i+1]!='P'||scriptText[i+2]!='F'){
 			retVal=NULL;
 		}
 		else{
-			i+=2;
+			i+=3;
 			int fNum=readVarIndex(scriptText, &i, '(');
 			XPINSBridge::bridgeFunction(fNum, parameters, vars, scriptText, &i,&retVal);
 		}
