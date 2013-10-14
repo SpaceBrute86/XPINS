@@ -285,15 +285,97 @@ bool parseBoolArg(char * scriptText,varSpace* vars,int* start,char expectedEnd){
 	int i=*start;
 	bool retVal=false;
 	while (scriptText[i]!='$'&&scriptText[i]!='^') ++i;
-	if(scriptText[i]=='$'){
+	if(scriptText[i]=='$'){//Variable
 		int index=readFuncParameter(scriptText, &i, 'B', expectedEnd);
 		retVal=vars->bVars[index];
 	}
-	else if(scriptText[i]=='^'){
+	else if(scriptText[i]=='^'){//constant
 		retVal=(scriptText[i+1]=='T');
 	}
-	else if(scriptText[i]=='?'){
+	else if(scriptText[i]=='?'){//expression
 		retVal=parseBoolExp(scriptText, vars, start);
+	}
+	else if(scriptText[i]=='#'){//User-defined Function
+		if(scriptText[i+1]!='F'){
+			retVal=false;
+		}
+		else{
+			i+=2;
+			int fNum=readVarIndex(scriptText, &i, '(');
+			XPINSBridge::bridgeFunction(fNum, parameters, vars, scriptText, &i,index);
+		}
+	}
+	else if(scriptText[i]=='X'){//Built-in Function
+		i+=2;
+		if(scriptText[i-1]!='_'){
+			retVal=false;
+		}
+		//X_AND
+		else if(scriptText[i+1]=='A'&&scriptText[i+2]=='N'&&scriptText[i+3]=='D'){
+			i+=4;
+			bool param1=parseBoolArg(scriptText, vars, &i, ',');
+			bool param2=parseBoolArg(scriptText, vars, &i, ')');
+			retVal=param1&&param2;
+		}
+		//X_OR
+		else if(scriptText[i+1]=='O'&&scriptText[i+2]=='R'){
+			i+=3;
+			bool param1=parseBoolArg(scriptText, vars, &i, ',');
+			bool param2=parseBoolArg(scriptText, vars, &i, ')');
+			retVal=param1||param2;
+		}
+		//X_NOT
+		else if(scriptText[i+1]=='N'&&scriptText[i+2]=='O'&&scriptText[i+3]=='T'){
+			i+=4;
+			bool param1=parseBoolArg(scriptText, vars, &i, ')');
+			retVal=!param1;
+		}
+		//X_ILESS
+		else if(scriptText[i+1]=='I'&&scriptText[i+2]=='L'&&scriptText[i+3]=='E'&&scriptText[i+4]=='S'&&scriptText[i+5]=='S'){
+			i+=6;
+			int param1=parseIntArg(scriptText, vars, &i, ',');
+			int param2=parseIntArg(scriptText, vars, &i, ')');
+			retVal=param1<param2;
+		}
+		//X_FLESS
+		else if(scriptText[i+1]=='F'&&scriptText[i+2]=='L'&&scriptText[i+3]=='E'&&scriptText[i+4]=='S'&&scriptText[i+5]=='S'){
+			i+=6;
+			float param1=parseFloatArg(scriptText, vars, &i, ',');
+			float param2=parseFloatArg(scriptText, vars, &i, ')');
+			retVal=param1<param2;
+			
+		}
+		//X_IMORE
+		else if(scriptText[i+1]=='I'&&scriptText[i+2]=='M'&&scriptText[i+3]=='O'&&scriptText[i+4]=='R'&&scriptText[i+5]=='E'){
+			i+=6;
+			int param1=parseIntArg(scriptText, vars, &i, ',');
+			int param2=parseIntArg(scriptText, vars, &i, ')');
+			retVal=param1>param2;
+		}
+		//X_FMORE
+		else if(scriptText[i+1]=='F'&&scriptText[i+2]=='M'&&scriptText[i+3]=='O'&&scriptText[i+4]=='R'&&scriptText[i+5]=='E'){
+			i+=6;
+			float param1=parseFloatArg(scriptText, vars, &i, ',');
+			float param2=parseFloatArg(scriptText, vars, &i, ')');
+			retVal=param1>param2;
+		}
+		//X_IEQUAL
+		else if(scriptText[i+1]=='I'&&scriptText[i+2]=='E'&&scriptText[i+3]=='Q'&&scriptText[i+4]=='U'&&scriptText[i+5]=='A'&&scriptText[i+5]=='L'){
+			i+=7;
+			int param1=parseIntArg(scriptText, vars, &i, ',');
+			int param2=parseIntArg(scriptText, vars, &i, ')');
+			retVal=param1==param2;
+		}
+		//X_FEQUAL
+		else if(scriptText[i+1]=='F'&&scriptText[i+2]=='E'&&scriptText[i+3]=='Q'&&scriptText[i+4]=='U'&&scriptText[i+5]=='A'&&scriptText[i+5]=='L'){
+			i+=7;
+			float param1=parseFloatArg(scriptText, vars, &i, ',');
+			float param2=parseFloatArg(scriptText, vars, &i, ')');
+			retVal=param1==param2;
+		}
+		else{
+			retVal=false;
+		}
 	}
 	while(scriptText[i]!=expectedEnd)++i;
 	*start=i;
@@ -314,6 +396,65 @@ int parseIntArg(char * scriptText,varSpace* vars,int* start,char expectedEnd){
 	else if(scriptText[i]=='?'){
 		retVal=parseIntExp(scriptText, vars, start);
 	}
+	else if(scriptText[i]=='#'){//User-defined Function
+		if(scriptText[i+1]!='F'){
+			retVal=0;
+		}
+		else{
+			i+=2;
+			int fNum=readVarIndex(scriptText, &i, '(');
+			XPINSBridge::bridgeFunction(fNum, parameters, vars, scriptText, &i,index);
+		}
+	}
+	else if(scriptText[i]=='X'){//Built-in Function
+		i+=2;
+		if(scriptText[i-1]!='_'){
+			retVal=0;
+		}
+		//X_IADD
+		else if(scriptText[i+1]=='I'&&scriptText[i+2]=='A'&&scriptText[i+3]=='D'&&scriptText[i+4]=='D'){
+			i+=5;
+			int param1=parseIntArg(scriptText, vars, &i, ',');
+			int param2=parseIntArg(scriptText, vars, &i, ')');
+			retVal=param1+param2;
+		}
+		//X_ISUB
+		else if(scriptText[i+1]=='I'&&scriptText[i+2]=='S'&&scriptText[i+3]=='U'&&scriptText[i+4]=='B'){
+			i+=5;
+			int param1=parseIntArg(scriptText, vars, &i, ',');
+			int param2=parseIntArg(scriptText, vars, &i, ')');
+			retVal=param1-param2;
+		}
+		//X_IMULT
+		else if(scriptText[i+1]=='I'&&scriptText[i+2]=='M'&&scriptText[i+3]=='U'&&scriptText[i+4]=='L'&&scriptText[i+4]=='T'){
+			i+=6;
+			int param1=parseIntArg(scriptText, vars, &i, ',');
+			int param2=parseIntArg(scriptText, vars, &i, ')');
+			retVal=param1*param2;
+		}
+		//X_IDIV
+		else if(scriptText[i+1]=='I'&&scriptText[i+2]=='D'&&scriptText[i+3]=='I'&&scriptText[i+4]=='V'){
+			i+=5;
+			int param1=parseIntArg(scriptText, vars, &i, ',');
+			int param2=parseIntArg(scriptText, vars, &i, ')');
+			retVal=param1/param2;
+		}
+		//X_IMOD
+		else if(scriptText[i+1]=='I'&&scriptText[i+2]=='M'&&scriptText[i+3]=='O'&&scriptText[i+4]=='D'){
+			i+=5;
+			int param1=parseIntArg(scriptText, vars, &i, ',');
+			int param2=parseIntArg(scriptText, vars, &i, ')');
+			retVal=param1%param2;
+		}
+		//X_RAND
+		else if(scriptText[i+1]=='R'&&scriptText[i+2]=='A'&&scriptText[i+3]=='N'&&scriptText[i+3]=='D'){
+			i+=5;
+			int param1=parseIntArg(scriptText, vars, &i, ',');
+			int param2=parseIntArg(scriptText, vars, &i, ')');
+			retVal=arc4random()%(param2-param1)+param1;
+		}
+		else retVal=0;
+	}
 	while(scriptText[i]!=expectedEnd)++i;
 	*start=i;
 	return retVal;
@@ -332,6 +473,139 @@ float parseFloatArg(char * scriptText,varSpace* vars,int* start,char expectedEnd
 	}
 	else if(scriptText[i]=='?'){
 		retVal=parseFloatExp(scriptText, vars, start);
+	}
+	else if(scriptText[i]=='#'){//User-defined Function
+		if(scriptText[i+1]!='F'){
+			retVal=0;
+		}
+		else{
+			i+=2;
+			int fNum=readVarIndex(scriptText, &i, '(');
+			XPINSBridge::bridgeFunction(fNum, parameters, vars, scriptText, &i,index);
+		}
+	}
+	else if(scriptText[i]=='X'){//Built-in Function
+		i+=2;
+		if(scriptText[i-1]!='_'){
+			retVal=0;
+		}
+		//X_FADD
+		else if(scriptText[i+1]=='F'&&scriptText[i+2]=='A'&&scriptText[i+3]=='D'&&scriptText[i+4]=='D'){
+			i+=5;
+			float param1=parseFloatArg(scriptText, vars, &i, ',');
+			float param2=parseFloatArg(scriptText, vars, &i, ')');
+			retVal=param1+param2;
+		}
+		//X_FSUB
+		else if(scriptText[i+1]=='F'&&scriptText[i+2]=='S'&&scriptText[i+3]=='U'&&scriptText[i+4]=='B'){
+			i+=5;
+			float param1=parseFloatArg(scriptText, vars, &i, ',');
+			float param2=parseFloatArg(scriptText, vars, &i, ')');
+			retVal=param1-param2;
+		}
+		//X_FMULT
+		else if(scriptText[i+1]=='F'&&scriptText[i+2]=='M'&&scriptText[i+3]=='U'&&scriptText[i+4]=='L'&&scriptText[i+4]=='T'){
+			i+=6;
+			float param1=parseFloatArg(scriptText, vars, &i, ',');
+			float param2=parseFloatArg(scriptText, vars, &i, ')');
+			retVal=param1*param2;
+		}
+		//X_FDIV
+		else if(scriptText[i+1]=='F'&&scriptText[i+2]=='D'&&scriptText[i+3]=='I'&&scriptText[i+4]=='V'){
+			i+=5;
+			float param1=parseFloatArg(scriptText, vars, &i, ',');
+			float param2=parseFloatArg(scriptText, vars, &i, ')');
+			retVal=param1/param2;
+		}
+		//X_VMAG
+		else if(scriptText[i+1]=='V'&&scriptText[i+2]=='M'&&scriptText[i+3]=='A'&&scriptText[i+4]=='G'){
+			i+=5;
+			XPINSScriptableMath::Vector* param1=parseVecArg(scriptText, vars, &i, ')');
+			retVal=param1->magnitude();
+		}
+		//X_VDIR
+		else if(scriptText[i+1]=='V'&&scriptText[i+2]=='D'&&scriptText[i+3]=='I'&&scriptText[i+4]=='R'){
+			i+=5;
+			XPINSScriptableMath::Vector* param1=parseVecArg(scriptText, vars, &i, ')');
+			retVal=param1->direction();
+		}
+		//X_VX
+		else if(scriptText[i+1]=='V'&&scriptText[i+2]=='X'){
+			i+=3;
+			XPINSScriptableMath::Vector* param1=parseVecArg(scriptText, vars, &i, ')');
+			float f=0;
+			param1->RectCoords(&f, NULL);
+			retVal=f;
+		}
+		//X_VY
+		else if(scriptText[i+1]=='V'&&scriptText[i+2]=='Y'){
+			i+=3;
+			XPINSScriptableMath::Vector* param1=parseVecArg(scriptText, vars, &i, ')');
+			float f=0;
+			param1->RectCoords(NULL, &f);
+			retVal=f;
+		}
+		//X_VANG
+		else if(scriptText[i+1]=='V'&&scriptText[i+2]=='A'&&scriptText[i+3]=='N'&&scriptText[i+4]=='G'){
+			i+=5;
+			XPINSScriptableMath::Vector* param1=parseVecArg(scriptText, vars, &i, ',');
+			XPINSScriptableMath::Vector* param2=parseVecArg(scriptText, vars, &i, ')');
+			retVal=XPINSScriptableMath::Vector::angleBetweenVectors(param1, param2);
+		}
+		//X_VDOT
+		else if(scriptText[i+1]=='V'&&scriptText[i+2]=='D'&&scriptText[i+3]=='O'&&scriptText[i+4]=='T'){
+			i+=5;
+			XPINSScriptableMath::Vector* param1=parseVecArg(scriptText, vars, &i, ',');
+			XPINSScriptableMath::Vector* param2=parseVecArg(scriptText, vars, &i, ')');
+			retVal=XPINSScriptableMath::Vector::dotProduct(param1, param2);
+		}
+		//X_VADDPOLAR
+		else if(scriptText[i+1]=='V'&&scriptText[i+2]=='A'&&scriptText[i+3]=='D'&&scriptText[i+4]=='D'&&scriptText[i+5]=='P'&&scriptText[i+6]=='O'&&scriptText[i+7]=='L'&&scriptText[i+8]=='A'&&scriptText[i+9]=='R'){
+			i+=10;
+			float param1=parseFloatArg(scriptText, vars, &i, ',');
+			float param2=parseFloatArg(scriptText, vars, &i, ')');
+			retVal=XPINSScriptableMath::addPolar(param1, param2);
+		}
+		//X_VDIST
+		else if(scriptText[i+1]=='V'&&scriptText[i+2]=='D'&&scriptText[i+3]=='I'&&scriptText[i+4]=='S'&&scriptText[i+5]=='T'){
+			i+=6;
+			float param1=parseFloatArg(scriptText, vars, &i, ',');
+			float param2=parseFloatArg(scriptText, vars, &i, ')');
+			retVal=XPINSScriptableMath::dist(param1, param2);
+		}
+		//X_TSIN
+		else if(scriptText[i+1]=='T'&&scriptText[i+2]=='S'&&scriptText[i+3]=='I'&&scriptText[i+4]=='N'){
+			i+=5;
+			float param1=parseFloatArg(scriptText, vars, &i, ')');
+			retVal=sinf(param1);
+		}
+		//X_TCOS
+		else if(scriptText[i+1]=='T'&&scriptText[i+2]=='C'&&scriptText[i+3]=='O'&&scriptText[i+4]=='S'){
+			i+=5;
+			float param1=parseFloatArg(scriptText, vars, &i, ')');
+			retVal=cosf(param1);
+		}
+		//X_TTAN
+		else if(scriptText[i+1]=='T'&&scriptText[i+2]=='T'&&scriptText[i+3]=='A'&&scriptText[i+4]=='N'){
+			i+=5;
+			float param1=parseFloatArg(scriptText, vars, &i, ')');
+			retVal=tanf(param1);
+		}
+		//X_TATAN
+		else if(scriptText[i+1]=='T'&&scriptText[i+2]=='A'&&scriptText[i+3]=='T'&&scriptText[i+4]=='A'&&scriptText[i+5]=='N'){
+			i+=6;
+			float param1=parseFloatArg(scriptText, vars, &i, ',');
+			float param2=parseFloatArg(scriptText, vars, &i, ')');
+			retVal=atan2f(param1, param2);
+		}
+		//X_POW
+		else if(scriptText[i+1]=='P'&&scriptText[i+2]=='O'&&scriptText[i+3]=='W'){
+			i+=4;
+			float param1=parseFloatArg(scriptText, vars, &i, ',');
+			float param2=parseFloatArg(scriptText, vars, &i, ')');
+			retVal=powf(param1, param2);
+		}
+		else retVal=0;
 	}
 	while(scriptText[i]!=expectedEnd)++i;
 	*start=i;
@@ -552,7 +826,9 @@ void XPINSParser::parseScript(char* scriptText,varSpace *vars,params *parameters
 			if(scriptText[i]=='B'){
 				i++;
 				int index=readVarIndex(scriptText, &i, '=');
-				while(scriptText[i]!='#'&&scriptText[i]!='$'&&scriptText[i]!='^')i++;
+				while(scriptText[i++]!='='){}
+				vars->bVars[index]=parseBoolArg(scriptText, vars, &i, '\n');
+				/*
 				if(scriptText[i]=='$'){
 					if (scriptText[i+1]!='B') {
 						printf("\nERROR:INVALID SCRIPT:DECLARED VARIABLE TYPE DOESN'T MATCH!\n");
@@ -587,7 +863,9 @@ void XPINSParser::parseScript(char* scriptText,varSpace *vars,params *parameters
 						XPINSBridge::bridgeFunction(fNum, parameters, vars, scriptText, &i,index);
 					}
 					else{
+						
 						i+=2;
+						
 						//BUILT IN FUNCTIONS
 						//X_AND
 						if(scriptText[i+1]=='A'&&scriptText[i+2]=='N'&&scriptText[i+3]=='D'){
@@ -657,12 +935,16 @@ void XPINSParser::parseScript(char* scriptText,varSpace *vars,params *parameters
 							return;
 						}
 					}
+						
 				}
+				 */
 			}
 			else if(scriptText[i]=='I'){
 				i++;
 				int index=readVarIndex(scriptText, &i, '=');
-				while(scriptText[i]!='#'&&scriptText[i]!='$'&&scriptText[i]!='^')i++;
+				while(scriptText[i++]!='='){}
+				vars->iVars[index]=parseIntArg(scriptText, vars, &i, '\n');
+				/*
 				if(scriptText[i]=='$'){
 					if (scriptText[i+1]!='I') {
 						printf("\nERROR:INVALID SCRIPT:DECLARED VARIABLE TYPES DON'T MATCH!\n");
@@ -741,12 +1023,14 @@ void XPINSParser::parseScript(char* scriptText,varSpace *vars,params *parameters
 							return;
 						}
 					}
-				}
+				}*/
 			}
 			else if(scriptText[i]=='F'){
 				i++;
 				int index=readVarIndex(scriptText, &i, '=');
-				while(scriptText[i]!='#'&&scriptText[i]!='$'&&scriptText[i]!='^')i++;
+				while(scriptText[i++]!='='){}
+				vars->fVars[index]=parseFloatArg(scriptText, vars, &i, '\n');
+				/*
 				if(scriptText[i]=='$'){
 					if (scriptText[i+1]!='F') {
 						printf("\nERROR:INVALID SCRIPT:DECLARED VARIABLE TYPES DON'T MATCH!\n");
@@ -898,6 +1182,7 @@ void XPINSParser::parseScript(char* scriptText,varSpace *vars,params *parameters
 						}
 					}
 				}
+				 */
 			}
 			else if(scriptText[i]=='V'){
 				i++;
