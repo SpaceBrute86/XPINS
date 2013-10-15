@@ -23,7 +23,7 @@ namespace XPINSCompileUtil {
 bool XPINSCompiler::compileScript(string* input){
 	string scriptText=*input;
 	cout<<endl<<"Validating Version..."<<endl;
-	checkVersion(&scriptText);
+	if(!checkVersion(&scriptText))return false;
 	cout<<"Version Compatilbe!";
 	cout<<endl<<"About To Compile Script:\n"<<scriptText<<endl;
 	if(!removeComments(&scriptText))return false;
@@ -221,7 +221,7 @@ bool XPINSCompiler::renameFunctions(string *text){
 		}
 		//Get ready for next loop
 		intermediate1=""+intermediate2;
-		x++;
+		++x;
 		while (input[i]!='\n')i++;
 	}
 	//Double Check Ending (strip after @END)

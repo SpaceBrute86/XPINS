@@ -7,12 +7,12 @@
 
 
 using namespace std;
-const kMajor=0;
-const kMinor=6;
+const kPMajor=0;
+const kPMinor=6;
 
 
 //Expression Parsing
-bool parseBoolExp(char* scriptText,varSpace* vars, int* start){
+bool parseBoolExp(string scriptText,varSpace* vars, int* start){
 	bool result=false;
 	int i=*start;
 	while(scriptText[i++]!='?'){}
@@ -147,7 +147,7 @@ bool parseBoolExp(char* scriptText,varSpace* vars, int* start){
 	*start=i;
 	return result;
 }
-int parseIntExp(char* scriptText,varSpace* vars, int* start){
+int parseIntExp(string scriptText,varSpace* vars, int* start){
 	int result=0;
 	int i=*start;
 	while(scriptText[i++]!='?'){}
@@ -216,7 +216,7 @@ int parseIntExp(char* scriptText,varSpace* vars, int* start){
 	*start=i;
 	return result;
 }
-float parseFloatExp(char* scriptText,varSpace* vars, int* start){
+float parseFloatExp(string scriptText,varSpace* vars, int* start){
 	float result=0.0;
 	int i=*start;
 	while(scriptText[i++]!='?'){}
@@ -290,7 +290,7 @@ float parseFloatExp(char* scriptText,varSpace* vars, int* start){
 	*start=i;
 	return result;
 }
-int parseVecExp(char* scriptText,varSpace* vars, int* start){
+int parseVecExp(string scriptText,varSpace* vars, int* start){
 	XPINSScriptableMath::Vector *result=NULL;
 	int i=*start;
 	while(scriptText[i++]!='?'){}
@@ -352,7 +352,7 @@ int parseVecExp(char* scriptText,varSpace* vars, int* start){
 }
 
 //parameter parsing
-bool parseBoolArg(char * scriptText,varSpace* vars,int* start,char expectedEnd){
+bool parseBoolArg(string scriptText,varSpace* vars,int* start,char expectedEnd){
 	int i=*start;
 	bool retVal=false;
 	while (scriptText[i]!='$'&&scriptText[i]!='^'&&scriptText[i]!='?'&&scriptText[i]!='#'&&scriptText[i]!='X') ++i;
@@ -452,7 +452,7 @@ bool parseBoolArg(char * scriptText,varSpace* vars,int* start,char expectedEnd){
 	*start=i;
 	return retVal;
 }
-int parseIntArg(char * scriptText,varSpace* vars,int* start,char expectedEnd){
+int parseIntArg(string scriptText,varSpace* vars,int* start,char expectedEnd){
 	int i=*start;
 	int retVal=0;
 	while (scriptText[i]!='$'&&scriptText[i]!='^'&&scriptText[i]!='?'&&scriptText[i]!='#'&&scriptText[i]!='X') ++i;
@@ -530,7 +530,7 @@ int parseIntArg(char * scriptText,varSpace* vars,int* start,char expectedEnd){
 	*start=i;
 	return retVal;
 }
-float parseFloatArg(char * scriptText,varSpace* vars,int* start,char expectedEnd){
+float parseFloatArg(string scriptText,varSpace* vars,int* start,char expectedEnd){
 	int i=*start;
 	float retVal=0;
 	while (scriptText[i]!='$'&&scriptText[i]!='^'&&scriptText[i]!='?'&&scriptText[i]!='#'&&scriptText[i]!='X') ++i;
@@ -682,7 +682,7 @@ float parseFloatArg(char * scriptText,varSpace* vars,int* start,char expectedEnd
 	*start=i;
 	return retVal;
 }
-XPINSScriptableMath::Vector parseVecArg(char * scriptText,varSpace* vars,int* start,char expectedEnd){
+XPINSScriptableMath::Vector parseVecArg(string scriptText,varSpace* vars,int* start,char expectedEnd){
 
 	int i=*start;
 	XPINSScriptableMath::Vector* retVal=NULL;
@@ -787,7 +787,7 @@ XPINSScriptableMath::Vector parseVecArg(char * scriptText,varSpace* vars,int* st
 	*start=i;
 	return retVal;
 }
-void* parsePointerArg(char * scriptText,varSpace* vars,int* start,char expectedEnd){
+void* parsePointerArg(string scriptText,varSpace* vars,int* start,char expectedEnd){
 	int i=*start;
 	void* retVal=NULL;
 	while (scriptText[i]!='$'&&scriptText[i]!='#') ++i;
@@ -813,10 +813,10 @@ void* parsePointerArg(char * scriptText,varSpace* vars,int* start,char expectedE
 // scriptText: the script
 // startIndex: the starting index of the variable
 // expectedEnd: the character expected immediately after the variable
-int readVarIndex(char* scriptText,int *startIndex,char expectedEnd){
+int readVarIndex(string scriptText,int *startIndex,char expectedEnd){
 	int i=*startIndex;
 	int index=0;
-	while(scriptText[i]!=expectedEnd){
+	while(i<scriptText.length()&&scriptText[i]!=expectedEnd){
 		index*=10;
 		if(scriptText[i]=='1')index+=1;
 		else if(scriptText[i]=='2')index+=2;
@@ -837,7 +837,7 @@ int readVarIndex(char* scriptText,int *startIndex,char expectedEnd){
 // scriptText: the script
 // startIndex: the starting index of the INT
 // expectedEnd: the character expected immediately after the INT
-int readInt(char* scriptText,int *startIndex,char expectedEnd){
+int readInt(string scriptText,int *startIndex,char expectedEnd){
 	int i=*startIndex;
 	int index=0;
 	bool isNeg=scriptText[i]=='-';//Make negative if approrpriate
@@ -863,7 +863,7 @@ int readInt(char* scriptText,int *startIndex,char expectedEnd){
 // scriptText: the script
 // startIndex: the starting index of the FLOAT
 // expectedEnd: the character expected immediately after the FLOAT
-float readFloat(char* scriptText,int *startIndex,char expectedEnd){
+float readFloat(string scriptText,int *startIndex,char expectedEnd){
 	int i=*startIndex;
 	int index=0;
 	int fpartDig=0;
@@ -894,7 +894,7 @@ float readFloat(char* scriptText,int *startIndex,char expectedEnd){
 	return index;
 }
 //Read Variable Index for Function Parameters
-int readFuncParameter(char* scriptText,int *startIndex,char varType,char expectedEnd){
+int readFuncParameter(string scriptText,int *startIndex,char varType,char expectedEnd){
 	++i;
 	if (scriptText[i]!='$'||scriptText[i+1]!=varType) {
 		printf("\nERROR:INVALID SCRIPT:INVALID PARAMETER FORMAT!\n");
@@ -907,17 +907,17 @@ int readFuncParameter(char* scriptText,int *startIndex,char varType,char expecte
 }
 //Check to make sure script is compatible
 // script: the script
-bool checkVersion(char* script){
-	for(int i=0;true;i++){
+bool checkVersion(string script){
+	for(int i=0;i<scriptText.length();i++){
 		if(script[i]=='@'&&script[i+1]=='P'&&script[i+2]=='A'&&script[i+3]=='R'&&script[i+4]=='S'&&script[i+5]=='E'&&script[i+6]=='R'){
 			while(script[i]!='[')i++;
 			int MAJOR=readVarIndex(script, &i, '.');
 			int MINOR=readVarIndex(script, &i, ']');
-			if(MAJOR!=kMajor){
+			if(MAJOR!=kPMajor){
 				cout<<"INCOMPATIBLE VERSION. FAILING";
 				return false;
 			}
-			if(MINOR<kMinor){
+			if(MINOR<kPMinor){
 				cout<<"INCOMPATIBLE VERSION. FAILING";
 				return false;
 			}
@@ -929,7 +929,7 @@ bool checkVersion(char* script){
 }
 //Primary Function
 //See header for parameter descriptions
-void XPINSParser::parseScript(char* scriptText,varSpace *vars,params *parameters,bool isRECURSIVE,int start,int stop){
+void XPINSParser::parseScript(string scriptText,params *parameters,varSpace *vars,bool isRECURSIVE,int start,int stop){
 	
 	//SET UP VAR SPACE
 	bool initialized_varSpace=false;
@@ -939,7 +939,7 @@ void XPINSParser::parseScript(char* scriptText,varSpace *vars,params *parameters
 		vars->iVars=vector<int>();
 		vars->fVars=vector<float>();
 		vars->vVars=vector<XPINSScriptableMath::Vector*>();
-		vars->pVars=vector<void*>();
+		vars->pVars=vector<XPINSCustomStruct*>();
 		initialized_varSpace=true;
 	}
 	int bSize=vars->bVars.size();
@@ -1018,12 +1018,14 @@ void XPINSParser::parseScript(char* scriptText,varSpace *vars,params *parameters
 			}
 			else if(scriptText[i]=='V'){
 				i++;
+				if(vars->vVars.size()>index+1)delete vars->vVars[index];
 				int index=readVarIndex(scriptText, &i, '=');
 				i++;
 				vars->vVars[index]=parseVecArg(scriptText, vars, &i,'\n');
 			}
 			else if(scriptText[i]=='P'){
 				i++;
+				if(vars->pVars.size()>index+1||vars->pVars[i]->shouldDelete)delete vars->vVars[index];
 				int index=readVarIndex(scriptText, &i, '=');
 				i++;
 				vars->pVars[index]=parsePointerArg(scriptText, vars, &i,'\n');
@@ -1089,7 +1091,7 @@ void XPINSParser::parseScript(char* scriptText,varSpace *vars,params *parameters
 					}
 					int loopStop=i-1;
 					while (vars->bVars[index]) {
-						ScriptParser::parseScript(scriptText, vars, parameters, true, loopStart, loopStop);
+						XPINSParser::parseScript(scriptText, parameters, vars, true, loopStart, loopStop);
 					}
 				}
 			}
@@ -1107,23 +1109,32 @@ void XPINSParser::parseScript(char* scriptText,varSpace *vars,params *parameters
 			}
 		}
 	}
-	if(initialized_varSpace) delete vars;
-	else{//wipe declared variables
-		int bSize2=vars->bVars.size();
-		int iSize2=vars->iVars.size();
-		int fSize2=vars->fVars.size();
-		int vSize2=vars->vVars.size();
-		int pSize2=vars->pVars.size();
+	//wipe declared variables
+	if(initialized_varSpace) {
+		vars->bVars.resize(0);
+		vars->iVars.resize(0);
+		vars->fVars.resize(0);
+		for (int j=vars->vVars->size()-1; j>=0; ++j) {
+			delete vars->vVars[j];
+		}
+		vars->vVars.resize(0);
+		for (int j=vars->pVars->size()-1; j>=0; ++j) {
+			if(vars->pVars[j]->shouldDelete)delete vars->pVars[j];
+		}
+		vars->pVars.resize(0);
+		delete vars;
+	}
+	else{
 		vars->bVars.resize(bSize);
 		vars->iVars.resize(iSize);
 		vars->fVars.resize(fSize);
+		for (int j=vars->vVars->size()-1; j>=vSize; ++j) {
+			delete vars->vVars[j];
+		}
 		vars->vVars.resize(vSize);
+		for (int j=vars->pVars->size()-1; j>=pSize; ++j) {
+			if(vars->pVars[j]->shouldDelete)delete vars->pVars[j];
+		}
 		vars->pVars.resize(pSize);
-		vars->bVars.resize(bSize2);
-		vars->iVars.resize(iSize2);
-		vars->fVars.resize(fSize2);
-		vars->vVars.resize(vSize2);
-		vars->pVars.resize(pSize2);
-		
 	}
 }
