@@ -10,23 +10,24 @@
 #define __XPINS__XPINSBridge__
 
 #include <iostream>
+#include <string>
 #include "XPINSParser.h"
-/*include your custom classes*/
 
+using namespace std;
+/*include your custom classes*/
+struct XPINSParams{
+	/*Define Your Custom Parameters*/
+	
+};
 
 namespace XPINSBridge{
-	struct params{
-		/*Define Your Custom Parameters*/
-		
-		
-	};
-	//Primary Method
+	//Bridge Function
 	//PARAM: the Index of the function
 	//PARAM: custom parameters passed to the script
 	//PARAM: a varSpace object used to store script variables
 	//PARAM: the script text
 	//PARAM: the current index of the script (index of the '(')
 	//PARAM: return pointer
-	void bridgeFunction(int,params,XPINSParser::varSpace*,char*, int*,void*);
+	void bridgeFunction(int,string,XPINSParams*, XPINSParser::varSpace*,int*,void*);
 }
 #endif /* defined(__XPINS__XPINSBridge__) */

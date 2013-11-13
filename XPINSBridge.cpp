@@ -8,6 +8,7 @@
 
 #include "XPINSBridge.h"
 #include "XPINSScriptableMath.h"
+using namespace std;
 /*include your own headers*/
 
 /*Write your own Scriptable Functions*/
@@ -19,12 +20,14 @@
 
 
 //PRIMARY METHOD
-void XPINSBridge::bridgeFunction(int fNum,XPINSBridge::params parameters,XPINSParser::varSpace* vars,char* script,int* index,void* rett){
+
+void XPINSBridge::bridgeFunction(int fNum,string script,XPINSParams* parameters,XPINSParser::varSpace* vars,int* index,void* rett){
 	/*Declare Pointers to Your Custom Functions*/
 	
 	/*Bridge Your Custom Functions*/
 	switch (fNum) {
-		
+
+	
 	}
 
 }

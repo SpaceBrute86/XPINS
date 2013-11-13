@@ -7,11 +7,17 @@
 
 #include <iostream>
 #include <vector>
+#include <string>
 #include "XPINSScriptableMath.h"
-#include "XPINSBridge.h"
 
 
 using namespace std;
+class XPINSCustomStruct {
+public:
+	bool shouldDelete;
+	void* obj;
+};
+struct XPINSParams;
 namespace XPINSParser{
 	//Variable space
 	struct varSpace{
@@ -19,7 +25,7 @@ namespace XPINSParser{
 		vector<int> iVars;//int variables
 		vector<float> fVars;//float variables
 		vector<XPINSScriptableMath::Vector *> vVars;//Vector Variables
-		vector<void *> pVars;//Custom type variables
+		vector<XPINSCustomStruct> pVars;//Custom type variables
 	};
 	//PARAMETER PARSING:
 	//All of these functions have same params, just different return types
@@ -27,11 +33,11 @@ namespace XPINSParser{
 	//PARAM: a varSpace object used to store script variables
 	//PARAM: current index
 	//PARAM: expected end
-	bool parseBoolArg(char *,varSpace*,int*,char);
-	int parseIntArg(char *,varSpace*,int*,char);
-	float parseFloatArg(char *,varSpace*,int*,char);
-	XPINSScriptableMath::Vector parseVecArg(char *,varSpace*,int*,char);
-	void* parsePointerArg(char *,varSpace*,int*,char);
+	bool parseBoolArg(string,XPINSParams*,varSpace*,int*,char);
+	int parseIntArg(string,XPINSParams*,varSpace*,int*,char);
+	float parseFloatArg(string,XPINSParams*,varSpace*,int*,char);
+	XPINSScriptableMath::Vector* parseVecArg(string,XPINSParams*,varSpace*,int*,char);
+	XPINSCustomStruct parsePointerArg(string,XPINSParams*,varSpace*,int*,char);
 
 	//Primary Method
 	//PARAM: the script text
@@ -40,7 +46,7 @@ namespace XPINSParser{
 	//PARAM: false unless calling recursively to use a WHILE loop
 	//PARAM: Start index if reading while loop
 	//PARAM: Stop index if reading while loop
-	void parseScript(char *,varSpace*,XPINSBridge::params*,bool,int,int);
+	void parseScript(string,XPINSParams*,varSpace*,bool,int,int);
 }
 
 #endif /* defined(__Script__ScriptParser__) */
