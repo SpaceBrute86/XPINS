@@ -26,13 +26,8 @@ void XPINSBridge::bridgeFunction(int fNum,string script,XPINSParams* parameters,
 	
 	/*Bridge Your Custom Functions*/
 	switch (fNum) {
-		case 1:{
-			int i=XPINSParser::parseIntArg(script,parameters,vars,index,')');
-			cout<<i<<"\t";
-		}break;
-		case 2:{
-			cout<<endl;
-		}break;
+
+	
 	}
 
 }

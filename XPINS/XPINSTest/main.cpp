@@ -4,6 +4,8 @@
 //
 //  Created by Robbie Markwick on 11/12/13.
 //
+//this program is designed to allow you to test your scripts
+//The sample script displays a multiplication table.
 //
 
 #include <iostream>
