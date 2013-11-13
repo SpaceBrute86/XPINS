@@ -9,6 +9,7 @@ XPINSScriptableMath::Vector::Vector(float x,float y){
 	this->x=x;
 	this->y=y;
 }
+
 XPINSScriptableMath::Vector* XPINSScriptableMath::Vector::copy(){
 	return new Vector(x,y);
 }

@@ -21,15 +21,14 @@ The first part of every XPINS file are two version compatibility statements. The
 @PARSER[0.6]
 Only the first two components of the version numbers are used for compatibility statements, even though the version numbers for the compiler and the parser have three components. This is because the third number is used for bug fixes. In order to be compatible with a certain verison of the compiler or parser, the script's Major version number must match that of the software and the Minor version number must be less than or equal to that of the software. For example, a script that states a compiler version number of 1.2 will be compatible with all versions of the compiler from 1.2.0 until 2.0.0.
 
-
 FUNCTION BLOCKS:
 The second part of every XPINS file is a function block. XPINS is designed to interact with your code. In order to do this, you must write additional functions in the parser to interact with your code. In order to call these functions within your XPINS scripts, you must declare them so that XPINS can compile your code properly. A simple function block would look like this:
 @FUNC
 INT MAGIC_NUMBER(FLOAT,BOOL);
 @END
-A function block starts with @FUNC and ends with @END, each of these getting their own line. Between the two are all of the function declarartions, with one line per function declaration. A function declaration starts with its return type.  Starting with XPINS Parser 0.6, the return type is required, and requires compiler 0.3 or later. The name you write in the function blockis the name you use to call your function in code. If you spell it incorrectly, your script will not execute properly. After the name of your function come the paramaters. Paramaters follow the format of (...). Like the return type, the parameters are currently of no meaning to the compiler, so as long as the parentheses are present you could leave them out. The function block below is equivalnt to the one above:
+A function block starts with @FUNC and ends with @END, each of these getting their own line. Between the two are all of the function declarartions, with one line per function declaration. A function declaration starts with its return type.  Starting with XPINS Parser 0.6, the return type is required, and requires compiler 0.3 or later. The name you write in the function blockis the name you use to call your function in code. If you spell it incorrectly, your script will not execute properly. After the name of your function come the paramaters. Paramaters follow the format of (...). The parameters are currently of no meaning to the compiler, so as long as the parentheses are present you can leave them out. For this reason no two functions can have the same name (no overloading). The function block below is equivalnt to the one above:
 @FUNC
- MAGIC_NUMBER()
+INT MAGIC_NUMBER()
 @END
 In XPINS, semicolons are optional and removed at compile time. The reason for this is that removing the semicolons does help slightly with both size and performance, but since the parser is written in C++, most developers using XPINS would be comfortable using semicolons.
 
@@ -58,7 +57,7 @@ After the while loop, we declare a genaric pionter variable. In this case, it mo
 Using XPINS, you can script almost anything you can do in C/C++.
 
 
-Exressions:
+EXPRESSIONS:
 In C++, there are expressions and operators that make it very easy to perform calculations. In XPINS, there are functions for addition, subtraction, etc, but those take a lot of time to write (and also use more memory). XPINS has expressions that allow mathematical calculations to performded easier. Here is a sample expression:
 ?B($Var1<$Var2)?
 An expression always starts and ends with a '?'. At the beginning of the epxression is the return type: B, I,  F, or V (there is no support for  Pointer expressions). After the type is a pair of parentheses contaning the input and operator. The inputs can be constants, variables, or even other expressions. The operator goes before the last input. Valid operators at this point in time are listed below. The format is: <op> : <Use> (<Return types>):(<1st Input types>),(<2nd Input types>),...
@@ -82,7 +81,7 @@ An expression always starts and ends with a '?'. At the beginning of the epxress
 	|| : Or (B):(B),(B)
 	&& : Or (B):(B),(B)
 
-
+BRIDGING:
 In order to make XPINS useful, you must implement the Bridging code:
 -Include any of your own headers
 -Declare custom parameters
@@ -110,14 +109,14 @@ Once you declare the fuction pointer, you must call it. Follow these steps:
 -Find parameters
 -call function.
 
-Detect function:
+DETECT FUNCTION CALLS:
 there is a switch statement in the bridgeFunction Mehtod.  For each function you declare, you need a case statement. It should look like this:
 case __:{...}break;
 the __ should be the same number as f__ for the given function. (e.g. for f26, case 26:{...}break;)
 the ... is where the code for the remaining steps goes.
 
 
-Finding Parmeters:
+FIND PARAMETERS:
 Ok, now that we have detected a function, we need to figure out what parameters were passed. Good News: The parser does all of the heavy lifting. Here is what your code looks like:
 ___ param__=parse___Arg(script,vars,index,___);
 
@@ -130,7 +129,7 @@ XPINSScriptableMath::Vector param2=vars->vVars[readFuncParameter(scriptText,inde
 For functions that don't take parameters, simply use this line of code:
 while(scriptText[*index]!=')')(*index)++;
 
-Calling the Function (Woohoo!):
+CALLING THE C++ FUNCTION
 Finally, the most important part: calling your functions. This actually is only one line of code (per function), and it goes right after the code for Finding the parameters:
 *rett=f__(...)____;
 -the first blank is the number for the function (e.g. if it is the first function declared, then f1)
@@ -142,8 +141,8 @@ So if I have function F11 that takes two parameters and the custom parameters an
 *rett=f11(parameters,param1,param2);
 That's really all there is to bridging your functions.
 
-Compiling Scripts
-The first thing you need to do to run a script is compile the Script so that the parser can interpret the variables correctly. 
+COMPILING SCRIPTS
+The first thing you need to do to run a script is compile the Script so that the parser can interpret the variables correctly.
 The following Script:
 @COMPILER[0.3]
 @PARSER[0.6]
@@ -185,7 +184,7 @@ To compile on a server or at runtime: Include XPINSCompiler.h in whatever file y
 	}
 	The compiler will write to the same object that you passed to it instead of creating a new string object
 
-Running Scripts
+RUNNING SCRIPTS
 To run the script, write the following line of code:
 XPINSParser::parseScript(___,_____,NULL,false,0,0);
 the first blank is the string object containing the script

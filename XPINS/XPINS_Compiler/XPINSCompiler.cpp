@@ -22,22 +22,22 @@ namespace XPINSCompileUtil {
 //Compile Script
 bool XPINSCompiler::compileScript(string* input){
 	string scriptText=*input;
-	cout<<endl<<"Validating Version..."<<endl;
+//	cout<<endl<<"Validating Version..."<<endl;
 	if(!checkVersion(&scriptText))return false;
-	cout<<"Version Compatilbe!";
-	cout<<endl<<"About To Compile Script:\n"<<scriptText<<endl;
+//	cout<<"Version Compatilbe!";
+//	cout<<endl<<"About To Compile Script:\n"<<scriptText<<endl;
 	if(!removeComments(&scriptText))return false;
-	cout<<endl<<"Comments and ';'s Removed:\n"<<scriptText<<endl;
+//	cout<<endl<<"Comments and ';'s Removed:\n"<<scriptText<<endl;
 	if(!renameFunctions(&scriptText))return false;
-	cout<<endl<<"User Functions Renamed:\n"<<scriptText<<endl;
+//	cout<<endl<<"User Functions Renamed:\n"<<scriptText<<endl;
 	if(!renameTypes(&scriptText))return false;
-	cout<<endl<<"Variable Types Renamed:\n"<<scriptText<<endl;
+//	cout<<endl<<"Variable Types Renamed:\n"<<scriptText<<endl;
 	if(!renameVars(&scriptText))return false;
-	cout<<endl<<"Variables Renamed:\n"<<scriptText<<endl;
+//	cout<<endl<<"Variables Renamed:\n"<<scriptText<<endl;
 	if(!renameBuiltIns(&scriptText))return false;
-	cout<<endl<<"Built-in Functions Renamed:\n"<<scriptText<<endl;
+//	cout<<endl<<"Built-in Functions Renamed:\n"<<scriptText<<endl;
 	if(!cleanUp(&scriptText))return false;
-	cout<<endl<<"Cleaned Up:\n"<<scriptText;
+//	cout<<endl<<"Cleaned Up:\n"<<scriptText;
 	*input=scriptText;
 	return true;
 }
@@ -116,22 +116,24 @@ bool XPINSCompiler::renameFunctions(string *text){
 	string input=*text;
 	string output="";
 	char ch;
-	int i=0;
+	string intermediate1="";
+	string intermediate2="";
 	//Locate Function block
+	int i=0;
 	while(input[i]!='@'||input[i+1]!='F'){
-		i++;
+		intermediate1+=input[i++];
 	}
 	if(input[i+1]!='F'||input[i+2]!='U'||input[i+3]!='N'||input[i+4]!='C'){
 		cerr<<"Invalid Script: Missing @FUNC.\nEXITING";
 		return false;
 	}
 	i+=5;
-	string intermediate1="";
-	string intermediate2="";
+
 	//Initialize first intermediate
 	int j=0;
 	while (input[j]!='@'||input[j+1]!='C') {
 		j++;
+		
 	}
 	for(;j<input.length();j++){
 		ch=input[j];
@@ -370,7 +372,7 @@ bool XPINSCompiler::renameVars(string *text){
 					if(XPINSCompileUtil::stringsMatch(j, intermediate1, varName)){
 						intermediate2+=varType;
 						intermediate2+=XPINSCompileUtil::strRepresentationOfInt(varNum);
-						while(intermediate1[j]!=')'&&intermediate1[j]!='='&&intermediate1[j]!=','&&intermediate1[j]!=']'){//Find '('
+						while(intermediate1[j]!=')'&&intermediate1[j]!='='&&intermediate1[j]!=','&&intermediate1[j]!='<'&&intermediate1[j]!='>'&&intermediate1[j]!='|'&&intermediate1[j]!='&'&&intermediate1[j]!='!'&&intermediate1[j]!='+'&&intermediate1[j]!='-'&&intermediate1[j]!='*'&&intermediate1[j]!='/'&&intermediate1[j]!='%'&&intermediate1[j]!=']'){//Find '('
 							j++;
 						}
 					}
@@ -401,7 +403,7 @@ bool XPINSCompiler::cleanUp(string *text){
 	string intermediate1="";
 	//Remove excess whitespace
 	for(int i=0;i<input.length();i++){
-		if((input[i]!='\n'||input[i+1]!='\n')&&input[i]!='\t')intermediate1+=input[i];
+		if((input[i]!='\n'&&input[i+1]!='\n')||input[i]!='\t')intermediate1+=input[i];
 	}
 	//Double Check Ending (strip after @END)
 	for(int i=0;i<intermediate1.length();i++){
