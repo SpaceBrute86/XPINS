@@ -463,7 +463,8 @@ bool XPINSParser::parseBoolArg(string scriptText,XPINSParams* params,XPINSParser
 		return false;
 	}
 	if(scriptText[i]=='$'){//Variable
-		int index=readFuncParameter(scriptText, &i, 'B', expectedEnd);
+		i+=2;
+		int index=readVarIndex(scriptText, &i, expectedEnd);
 		retVal=vars->bVars[index];
 	}
 	else if(scriptText[i]=='^'){//constant
@@ -563,7 +564,8 @@ int XPINSParser::parseIntArg(string scriptText,XPINSParams* params,XPINSParser::
 	int retVal=0;
 	while (i<scriptText.length()&&scriptText[i]!='$'&&scriptText[i]!='^'&&scriptText[i]!='?'&&scriptText[i]!='#'&&scriptText[i]!='X') ++i;
 	if(scriptText[i]=='$'){
-		int index=readFuncParameter(scriptText, &i, 'I', expectedEnd);
+		i+=2;
+		int index=readVarIndex(scriptText, &i, expectedEnd);
 		retVal=vars->iVars[index];
 	}
 	else if(scriptText[i]=='^'){
@@ -641,7 +643,8 @@ float XPINSParser::parseFloatArg(string scriptText,XPINSParams* params, varSpace
 	float retVal=0;
 	while (scriptText[i]!='$'&&scriptText[i]!='^'&&scriptText[i]!='?'&&scriptText[i]!='#'&&scriptText[i]!='X') ++i;
 	if(scriptText[i]=='$'){
-		int index=readFuncParameter(scriptText, &i, 'F', expectedEnd);
+		i+=2;
+		int index=readVarIndex(scriptText, &i, expectedEnd);
 		retVal=vars->fVars[index];
 	}
 	else if(scriptText[i]=='^'){
@@ -794,7 +797,8 @@ XPINSScriptableMath::Vector* XPINSParser::parseVecArg(string scriptText,XPINSPar
 	XPINSScriptableMath::Vector* retVal=NULL;
 	while (scriptText[i]!='$'&&scriptText[i]!='^'&&scriptText[i]!='?'&&scriptText[i]!='#'&&scriptText[i]!='X') ++i;
 	if(scriptText[i]=='$'){//variable
-		int index=readFuncParameter(scriptText, &i, 'V', expectedEnd);
+		i+=2;
+		int index=readVarIndex(scriptText, &i, expectedEnd);
 		retVal=vars->vVars[index]->copy();
 	}
 	else if(scriptText[i]=='^'){//constant (can contain varialbes, though)
@@ -893,17 +897,17 @@ XPINSScriptableMath::Vector* XPINSParser::parseVecArg(string scriptText,XPINSPar
 	*start=i;
 	return retVal;
 }
-XPINSCustomStruct* XPINSParser::parsePointerArg(string scriptText,XPINSParams* params,XPINSParser::varSpace* vars,int* start,char expectedEnd){
+XPINSCustomStruct XPINSParser::parsePointerArg(string scriptText,XPINSParams* params,XPINSParser::varSpace* vars,int* start,char expectedEnd){
 	int i=*start;
-	XPINSCustomStruct* retVal=NULL;
+	XPINSCustomStruct retVal=XPINSCustomStruct();
 	while (scriptText[i]!='$'&&scriptText[i]!='#') ++i;
 	if(scriptText[i]=='$'){//variable
-		int index=readFuncParameter(scriptText, &i, 'V', expectedEnd);
+		i+=2;
+		int index=readVarIndex(scriptText, &i, expectedEnd);
 		retVal=vars->pVars[index];
 	}
 	else if(scriptText[i]=='#'){//User-defined Function
 		if(scriptText[i+1]!='P'||scriptText[i+2]!='F'){
-			retVal=NULL;
 		}
 		else{
 			i+=3;
@@ -947,7 +951,7 @@ void XPINSParser::parseScript(string scriptText,XPINSParams *parameters,XPINSPar
 		vars->iVars=vector<int>();
 		vars->fVars=vector<float>();
 		vars->vVars=vector<XPINSScriptableMath::Vector*>();
-		vars->pVars=vector<XPINSCustomStruct*>();
+		vars->pVars=vector<XPINSCustomStruct>();
 		initialized_varSpace=true;
 	}
 	int bSize=vars->bVars.size();
@@ -982,7 +986,7 @@ void XPINSParser::parseScript(string scriptText,XPINSParams *parameters,XPINSPar
 		if(!(scriptText[i]!='@'||
 			scriptText[i+1]!='E'||
 			scriptText[i+2]!='N'||
-			scriptText[i+3]!='D')||
+			 scriptText[i+3]!='D')||
 		   (isRECURSIVE&&i>=stop)){
 			break;
 		}
@@ -1038,7 +1042,7 @@ void XPINSParser::parseScript(string scriptText,XPINSParams *parameters,XPINSPar
 				i++;
 				int index=readVarIndex(scriptText, &i, '=');
 				i++;
-				if(vars->pVars.size()>index+1||vars->pVars[index]->shouldDelete)delete vars->pVars[index];
+				if(vars->pVars.size()>index+1||vars->pVars[index].shouldDelete) delete vars->pVars[index].obj;
 				vars->pVars[index]=XPINSParser::parsePointerArg(scriptText, parameters, vars, &i,'\n');
 			}
 			if(i>=scriptText.length())break;
@@ -1073,7 +1077,7 @@ void XPINSParser::parseScript(string scriptText,XPINSParams *parameters,XPINSPar
 						i++;
 					}
 					while (scriptText[i]!='\n')i++;
-					//skip Else
+					//skiip Else
 					if(scriptText[i]=='@'&&scriptText[i+1]=='E'&&scriptText[i+2]=='L'&&scriptText[i+3]=='S'&&scriptText[i+4]=='E'){
 						while (scriptText[i]!='{')i++;
 						--i;
@@ -1177,7 +1181,7 @@ void XPINSParser::parseScript(string scriptText,XPINSParams *parameters,XPINSPar
 		}
 		vars->vVars.resize(0);
 		for (int j=vars->pVars.size()-1; j>=0; ++j) {
-			if(vars->pVars[j]->shouldDelete)delete vars->pVars[j];
+			if(vars->pVars[j].shouldDelete)delete vars->pVars[j].obj;
 		}
 		vars->pVars.resize(0);
 		delete vars;
@@ -1191,8 +1195,10 @@ void XPINSParser::parseScript(string scriptText,XPINSParams *parameters,XPINSPar
 		}
 		vars->vVars.resize(vSize);
 		for (int j=vars->pVars.size()-1; j>=pSize; ++j) {
-			if(vars->pVars[j]->shouldDelete)delete vars->pVars[j];
+			if(vars->pVars[j].shouldDelete)delete vars->pVars[j].obj;
 		}
 		vars->pVars.resize(pSize);
 	}
+
+
 }

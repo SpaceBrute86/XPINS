@@ -47,7 +47,7 @@ $COND=X_ILESS($MYVAR2,^90);
 #SET_FIRE_ANGLE($AIPLAYER,$MYVAR2);
 @END
 The first thing this script does is define a few variables. The format for declaring a variable is: TYPE $NAME=VALUE;
-There are five types in XPINS: BOOL, INT, and FLOAT all correspond directly to their C++ cousins, VEC, which represents a Vector object that allows you to perform vector (Math/Science vector, not C++ vector) arithmetic without needing to write custom code, and the Generic pointer type, declared as *____. The Generic Pointer Type stores a pointer to any C++ structure that inherits from XPINSCustomStruct.
+There are five types in XPINS: BOOL, INT, and FLOAT all correspond directly to their C++ cousins, VEC, which represents a Vector object that allows you to perform vector (Math/Science vector, not C++ vector) arithmetic without needing to write custom code, and the Generic pointer type, declared as *____. The Generic Pointer Type stores a pointer to any C++ class in a struct of type XPINSCustomStruct.
 When you declare a variable, you can assign it one of three things: a constant (BOOL/INT/FLOAT only), a copy of another variable, or the return value of a function (more on functions later). Constants are all preceeded by '^'. BOOLs can be assigned values of ^T or ^F. INTs and FLOATs can be assigned ^X, where X is any number permitted by that type (i.e. ^1.2 could not be assigned to an INT variable). Assigning a new value to a variable works the same way as declaring the variable, except that you don't specify the variable type (i.e. $NAME=VALUE;)
 In the sample script, once we assign two constants to variables, we create a third variable, and assign to it the return value of the MAGIC_NUMBER function shown in the function block. Calling a user defined function looks like this: #FUNCTION_NAME($Var1,$Var2,...);. You as the developer get to decide how many parameters need to be passed to the function. To pass a constant as a parameter, just pass ^0.4 instead of $Var. You can also pass expression and function results as parameters. Calling any user function is indicated by a '#'. Functions do not need to have a return type. a common example is near the end of your script when you set some custom value on some object.
 After Declaring a few more constants, we declare a BOOL that is assigned the return value of a built in function. Instead of being preceeded by a '#', Built in functions follow the format X_NAME(...). There are a variet of built in functions, ranging from boolean logic and Number comparison to trigonometry and Vector arithmetic. There is a list of built in functions in another document.
@@ -94,9 +94,13 @@ The XPINS parser is set up so that you can "pass parameters" to a script. In XPI
 Before you execute a script, create a params variable and fill it with whatever you want, then pass it to the parser. To access these custom parameters in your script, you must use custom functions.
 
 In XPINSBridge.cpp, there is a comment that says /*Write your own Scriptable Functions*/. In the whitespace after that, implement your custom functions just as you would implement any other function. Well, almost...
-If you want to write a function that takes a VEC variable as a parameter, it will be passed as an object of type XPINSScriptableMath::Vector. BOOL, INT, and FLOAT will be passed as their C/C++ cousins. For *___ (generic pointer type), you must write the function to receive a variable of type XPINSCustomStruct*. You can then cast it to the desired type:
-MyType *var=(MyType*)arg1;
-If your function returns a generic pointer, set shouldDelete (declared in XPINSCustomStruct) to true, unless the function's purpose is to get a value given either the parameters or another struct passed to the function.
+If you want to write a function that takes a VEC variable as a parameter, it will be passed as an object of type XPINSScriptableMath::Vector. BOOL, INT, and FLOAT will be passed as their C/C++ cousins. For *___ (generic pointer type), you must write the function to receive a variable of type XPINSCustomStruct. You can then extract the desired value:
+MyType *var=(MyType*)arg1.obj;
+If your function returns a generic pointer, set up an XPINSCustomStruct like this:
+XPINSCustomStruct str=XPINSCustomStruct();
+str.shouldDelete=true;
+str.obj=myValue;
+myValue must be a pointer (or preceed it with '&'). Change true to false if this object is taken directly from the Script Parameters.
 If you need to access the parameters, the first argument for your function should be a params variable. This doesn't effect how you write your scripts. You'll add this argument when you bridge the scripts.
 
 BRIDGING CUSTOM FUNCTIONS
@@ -175,7 +179,7 @@ $B0=XI_ILESS($I0,^90);
 There are three options for compiling:
 	-Build and Run the compiler on your computer, and ship the compiled script with your program.
 	-Compile the script at runtime.
-	-Compile on a server and have the app check for updates (update checking not covered by this document)
+	-Compile on a server and have the program check for updates (update checking is not covered by this document)
 The first and third options are better than the second option for devices with limited processing power (such as smartphones), but the second option is a little easier for you as a developer.
 To compile during build: Compile the compiler and run it on your machine. Making sure that the script file has the extension .XPINS, enter in the full path for your script. The compiler will write the compiled script to a file with the extension .XPINSX. If it doesn't but displays a compiled script, copy that into a .XPINSX file. Ship the .XPINSX file with your program, and load it into a String object at runtime.
 To compile on a server or at runtime: Include XPINSCompiler.h in whatever file you wish to use XPINS with (make sure to compile the compiler and parser as part of your program) Ship the uncompiled XPINS file with your program, and Load it in at runtime to a string object. then add the following code (___ is the string object containing the script):

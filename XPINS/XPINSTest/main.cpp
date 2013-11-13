@@ -14,7 +14,7 @@
 int main(int argc, const char * argv[])
 {
 	string script="@COMPILER[0.3]\n";
-	script+="@PARSER[0.6]\n";
+	script+="@PARSER[0.7]\n";
 	script+="@FUNC\n";
 	script+="VOID PRINTNUM(INT);\n";
 	script+="VOID PRINTLN();\n";
@@ -22,8 +22,13 @@ int main(int argc, const char * argv[])
 	script+="@CODE\n";
 	script+="INT $X=^1;\n";
 	script+="@WHILE[?B($X<=^10)?]{\n";
-	script+="#PRINTNUM($X);\n";
+	script+="INT $Y=^1;\n";
+	script+="@WHILE[?B($Y<=^10)?]{\n";
+	script+="#PRINTNUM(?I($X*$Y)?);\n";
+	script+="$Y=?I($Y+^1)?;\n";
+	script+="}\n";
 	script+="$X=?I($X+^1)?;\n";
+	script+="#PRINTLN();\n";
 	script+="}\n";
 	script+="@END\n";
 	cout<<"Uncompiled Script:\n"<<script;
@@ -32,7 +37,7 @@ int main(int argc, const char * argv[])
 		cout<<"\n\n\nCompiled Script:\n"<<script<<endl<<endl;
 		cout<<"RUNNING SCRIPT:\n\n";
 		XPINSParams *params=new XPINSParams();
-		XPINSParser::parseScript(script, params, NULL,false,0,0);
+		XPINSParser::parseScript(script, params,NULL,false,0,0);
 	}
 
     return 0;

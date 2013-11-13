@@ -15,6 +15,7 @@ using namespace std;
 class XPINSCustomStruct {
 public:
 	bool shouldDelete;
+	void* obj;
 };
 struct XPINSParams;
 namespace XPINSParser{
@@ -24,7 +25,7 @@ namespace XPINSParser{
 		vector<int> iVars;//int variables
 		vector<float> fVars;//float variables
 		vector<XPINSScriptableMath::Vector *> vVars;//Vector Variables
-		vector<XPINSCustomStruct *> pVars;//Custom type variables
+		vector<XPINSCustomStruct> pVars;//Custom type variables
 	};
 	//PARAMETER PARSING:
 	//All of these functions have same params, just different return types
@@ -36,7 +37,7 @@ namespace XPINSParser{
 	int parseIntArg(string,XPINSParams*,varSpace*,int*,char);
 	float parseFloatArg(string,XPINSParams*,varSpace*,int*,char);
 	XPINSScriptableMath::Vector* parseVecArg(string,XPINSParams*,varSpace*,int*,char);
-	XPINSCustomStruct* parsePointerArg(string,XPINSParams*,varSpace*,int*,char);
+	XPINSCustomStruct parsePointerArg(string,XPINSParams*,varSpace*,int*,char);
 
 	//Primary Method
 	//PARAM: the script text

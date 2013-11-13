@@ -292,7 +292,6 @@ bool XPINSCompiler::renameTypes(string *text){
 bool XPINSCompiler::renameVars(string *text){
 	string input=*text;
 	string output="";
-	char ch;
 	int i=0;
 	//Locate Code block
 	while(input[i]!='@'||input[i+1]!='C'){
@@ -403,7 +402,7 @@ bool XPINSCompiler::cleanUp(string *text){
 	string intermediate1="";
 	//Remove excess whitespace
 	for(int i=0;i<input.length();i++){
-		if((input[i]!='\n'&&input[i+1]!='\n')||input[i]!='\t')intermediate1+=input[i];
+		if((input[i]!='\n'||input[i+1]!='\n')&&input[i]!='\t')intermediate1+=input[i];
 	}
 	//Double Check Ending (strip after @END)
 	for(int i=0;i<intermediate1.length();i++){
