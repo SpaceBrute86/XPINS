@@ -1,0 +1,18 @@
+@COMPILER[0.3]
+@PARSER[0.6]
+@FUNC
+VOID PRINTNUM(INT);
+VOID PRINTLN();
+@END
+@CODE
+INT $X=^1;
+@WHILE[?B($X<=^10)?]{
+	INT $Y=^1;
+	@WHILE[?B($Y<=^10)?]{
+		PRINTNUM(?I($X*$Y)?);
+		$Y=?I($Y+^1)?;
+	}
+	PRINTLN();
+	$X=?I($X+^1)?;
+}
+@END

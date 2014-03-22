@@ -24,7 +24,7 @@ namespace XPINSParser{
 		vector<bool> bVars;//bool variables
 		vector<int> iVars;//int variables
 		vector<float> fVars;//float variables
-		vector<XPINSScriptableMath::Vector *> vVars;//Vector Variables
+		vector<XPINSScriptableMath::Vector> vVars;//Vector Variables
 		vector<XPINSCustomStruct> pVars;//Custom type variables
 	};
 	//PARAMETER PARSING:
@@ -36,7 +36,7 @@ namespace XPINSParser{
 	bool parseBoolArg(string,XPINSParams*,varSpace*,int*,char);
 	int parseIntArg(string,XPINSParams*,varSpace*,int*,char);
 	float parseFloatArg(string,XPINSParams*,varSpace*,int*,char);
-	XPINSScriptableMath::Vector* parseVecArg(string,XPINSParams*,varSpace*,int*,char);
+	XPINSScriptableMath::Vector parseVecArg(string,XPINSParams*,varSpace*,int*,char);
 	XPINSCustomStruct parsePointerArg(string,XPINSParams*,varSpace*,int*,char);
 
 	//Primary Method

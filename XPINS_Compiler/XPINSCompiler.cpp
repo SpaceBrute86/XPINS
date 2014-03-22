@@ -7,6 +7,8 @@
 //
 
 #include "XPINSCompiler.h"
+#include <vector>
+
 using namespace std;
 
 const int kMajor=0;
@@ -92,7 +94,7 @@ bool XPINSCompiler::removeComments(string* text){
 				while (input[i+1]!='\n'||i+1==input.length())i++;
 			}
 		}
-		else if(ch!=';') output+=ch;//No semicolons :(
+		else if(ch!=';'&&ch!='\t') output+=ch;//No semicolons or tabs in compiled script
 	}
 	bool hitFirstEND=false;
 	string intermediate1=""+output;
@@ -345,26 +347,25 @@ bool XPINSCompiler::renameVars(string *text){
 			//Replace Var name
 			intermediate2="";
 			j=0;
-			int blockCount=0;
+			bool declared=false;
+			//while (j<i)
+			//	intermediate2+=intermediate1[++j];
 			while(j<intermediate1.length()){
 				//CHECK FOR @END
 				if(intermediate1[j]=='@'&&intermediate1[j+1]=='E'&&intermediate1[j+2]=='N'&&intermediate1[j+3]=='D'){
 					intermediate2+="@END";
 					break;
 				}
-				//Check for block end
-				if(intermediate1[j]=='{')blockCount++;
-				else if(intermediate1[j]=='}'){
-					if(blockCount==0){
-						while(!(intermediate1[j]=='@'&&intermediate1[j+1]=='E'&&intermediate1[j+2]=='N'&&intermediate1[j+3]=='D')&&j+3<intermediate1.length())intermediate2+=intermediate1[j];
-						intermediate2+="@END";
-						break;
-					}
-					else blockCount--;
-					
+				if((intermediate1[j]=='B'||intermediate1[j]=='I'||intermediate1[j]=='F'||intermediate1[j]=='V'||intermediate1[j]=='*')&&intermediate1[j+2]=='$'&&XPINSCompileUtil::stringsMatch(j+3, intermediate1, varName))
+				{
+					if(declared)
+						j+=2;
+					else
+						declared=true;
 				}
 				//Find start of Var
 				if(intermediate1[j]=='$'){
+					//j+=2;
 					intermediate2+='$';
 					j++;
 					//Check for match

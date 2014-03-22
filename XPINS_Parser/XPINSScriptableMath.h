@@ -8,24 +8,29 @@ namespace XPINSScriptableMath{
 	class Vector{
 	public:
 		//creating vectors
-		Vector (float, float);
-		static Vector* PolarVector(float,float);
-		Vector *copy();
+		Vector (float, float,float);
+		static Vector PolarVector(float,float,float);
+		static Vector SphericalVector(float,float,float);
+		Vector copy();
 		//getting coordinate data
-		void RectCoords(float*,float*);//X,Y
-		void PolarCoords(float*,float*);//R,Theta
+		void RectCoords(float*,float*,float*);//X,Y,Z
+		void PolarCoords(float*,float*,float*);//R,Theta,Z
+		void SphericalCoords(float*,float*,float*);//Rho, Theta, Phi
 		float magnitude();
 		float direction();
+		float altitude();
 		//Vector manipulations.
-		static Vector* addVectors(Vector*,Vector*);
-		static Vector* addVectorArr(Vector**,int);
-		static Vector* scaledVector(Vector*, float);
-		static float angleBetweenVectors(Vector*,Vector*);
-		static float dotProduct(Vector*,Vector*);
-		static Vector* projectionInDirection(Vector*,float);
+		static Vector addVectors(Vector,Vector);
+		static Vector addVectorArr(Vector*,int);
+		static Vector scaledVector(Vector, float);
+		static float angleBetweenVectors(Vector,Vector);
+		static float dotProduct(Vector,Vector);
+		static Vector crossProduct(Vector,Vector);
+		static Vector projectionInDirection(Vector,float,float);
 	private:
 		float x;
 		float y;
+		float z;
 	};
 	float addPolar(float,float);
 	float dist(float,float);
