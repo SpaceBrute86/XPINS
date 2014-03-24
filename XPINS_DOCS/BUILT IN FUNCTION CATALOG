@@ -293,3 +293,123 @@ X_VPROJ(VEC $A, FLOAT $B)
 	Description: Finds the projection of a vector onto a generic vector in a given direction
 	Parameters: The vector from whihc the projection is to be taken, and the direction of the result.
 	Return: VEC, returns the projection of A onto a vector in direction.	Return: VEC, returns a vector in the same direction as A with the magnitude multiplied by B
+	
+	
+MATRIX CREATION
+
+X_MMAKE(INT $A, INT $B)
+	Available in XPINS Parser: 0.9.0
+	Description: Create a Zero Matrix
+	Parameters: The number of rows and columns, respecitvely
+	Return: MAT, returns a zero matrix of size AxB.
+	
+X_MID(INT $A)
+	Available in XPINS Parser: 0.9.0
+	Description: Create an Identity Matrix of size A
+	Parameters: The number of rows and columns.
+	Return: MAT, returns a Identity matrix of size AxA.
+	
+X_MROT(FLOAT $A, VEC $B)
+	Available in XPINS Parser: 0.9.0
+	Description: Create an Rotation Matrix of A radians around B
+	Parameters: A is the angle the Matrix will rotate a vector, and B is the vector that it should be rotated around
+	Return: MAT, returns a Rotation matrix A radains around B.
+	
+	
+MATRIX ACCESS
+
+X_MGET(MAT $A, INT $B, INT$C)
+	Available in XPINS Parser: 0.9.0
+	Description: Gets a value from a Matrix
+	Parameters: A is the matrix, B is the row, and C is the column
+	Return: FLOAT, Value from A at B,C
+	
+X_MSET(MAT $A, FLOAT $B, INT $C, INT $D)
+	Available in XPINS Parser: 0.9.0
+	Description: Sets a value in a Matrix
+	Parameters: A is the matrix, B is the new value, C is the row, and D is the column
+	Return: NONE
+	
+
+MATRIX-VECTOR CONVERSTION
+
+
+X_MMTV(MAT $A)
+	Available in XPINS Parser: 0.9.0
+	Description: Converts Matrix into Vector
+	Parameters: The Matrix to be converted
+	Return: VEC, Vector from Matrix A
+	
+X_MVTM(VEC $A)
+	Available in XPINS Parser: 0.9.0
+	Description: Converts Vector into Matrix
+	Parameters: The Vector to be converted
+	Return: MAT, Matrix from Vector A
+	
+	
+MATRIX ARITHMETIC
+
+X_MADD(MAT $A, MAT $B)
+	Available in XPINS Parser: 0.9.0
+	Description: Adds two Matrices
+	Parameters: The Matrices to be added
+	Return: MAT, Sum of the two Matrices
+	
+X_MSUB(MAT $A, MAT $B)
+	Available in XPINS Parser: 0.9.0
+	Description: Subtracts two Matrices
+	Parameters: The Matrices to be subtracted
+	Return: MAT, Difference of the two Matrices
+	
+X_MSCALE(MAT $A, FLOAT $B)
+	Available in XPINS Parser: 0.9.0
+	Description: Multiplies a Matrix by a scalar
+	Parameters: The Matrix and the Scalar
+	Return: MAT, Product of a Scalar and  a Matrix
+
+X_MMULT(MAT $A, MAT $B)
+	Available in XPINS Parser: 0.9.0
+	Description: Multiplies two Matrices
+	Parameters: The Matrices to be multiplied
+	Return: MAT, product of the two Matrices
+
+X_MVMULT(MAT $A, VEC $B)
+	Available in XPINS Parser: 0.9.0
+	Description: Multiplies a Matrix and a Vector
+	Parameters: The Matrix and Vector to be multiplied
+	Return: VEC, product of the Matrix and the Vector
+	
+
+ADVANCED MATRIX OPERATIONS
+
+X_MDET(MAT $A)
+	Available in XPINS Parser: 0.9.0
+	Description: Finds the determinant of a Matrix
+	Parameters: The Matrix for which the determinant is desired
+	Return: FLOAT, the Determinant of the Matrix
+	
+X_MINV(MAT $A)
+	Available in XPINS Parser: 0.9.0
+	Description: Finds the inverse of a Matrix
+	Parameters: The Matrix for which the inverse is desired
+	Return: MAT, the inverse of the Matrix
+	
+X_MTRANS(MAT $A)
+	Description: Finds the transposition of a Matrix
+	Parameters: The Matrix for which the transposition is desired
+	Return: FLOAT, the transposition of the Matrix
+
+
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+
+	

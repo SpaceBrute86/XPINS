@@ -12,6 +12,7 @@ namespace XPINSScriptableMath{
 	friend class Matrix;
 	public:
 		//creating vectors
+		Vector ();//Zero Vector
 		Vector (float, float,float);
 		static Vector PolarVector(float,float,float);
 		static Vector SphericalVector(float,float,float);
@@ -39,6 +40,7 @@ namespace XPINSScriptableMath{
 
 	public:
 		//creating Matrices
+		Matrix ();
 		Matrix (size_t rows, size_t cols);
 		//Accessing Components
 		float ValueAtPosition(size_t,size_t);
@@ -52,8 +54,9 @@ namespace XPINSScriptableMath{
 		static Vector VectorForMatrix(Matrix);
 		static Matrix MatrixForVector(Vector);
 		//Matrix Operations
-		static Matrix AddMatrices(Matrix,Matrix);
-		static Matrix MultiplyMatrices(Matrix,Matrix);
+		static Matrix Add(Matrix,Matrix);
+		static Matrix Scale(Matrix,float);
+		static Matrix Multiply(Matrix,Matrix);
 		static Vector MultiplyMatrixVector(Matrix,Vector);
 		static Matrix Invert(Matrix);
 		static Matrix Transpose(Matrix);
@@ -67,4 +70,4 @@ namespace XPINSScriptableMath{
 	float addPolar(float,float);
 	float dist(float,float);
 }
-#endif /* defined(__SailingGame__SLNVector__) */
+#endif

@@ -20,7 +20,8 @@ struct XPINSParams{
 	
 };
 
-namespace XPINSBridge{
+namespace XPINSBridge
+{
 	//Bridge Function
 	//PARAM: the Index of the function
 	//PARAM: custom parameters passed to the script
@@ -28,6 +29,6 @@ namespace XPINSBridge{
 	//PARAM: the script text
 	//PARAM: the current index of the script (index of the '(')
 	//PARAM: return pointer
-	void bridgeFunction(int,string,XPINSParams*, XPINSParser::varSpace*,int*,void*);
+	void BridgeFunction(int,string,XPINSParams*, XPINSParser::varSpace*,int*,void*);
 }
 #endif /* defined(__XPINS__XPINSBridge__) */

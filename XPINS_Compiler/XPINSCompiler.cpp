@@ -80,6 +80,7 @@ bool XPINSCompiler::checkVersion(string* script){
 bool XPINSCompiler::removeComments(string* text){
 	string input=*text;
 	string output="";
+	int matcount=0;
 	char ch;
 	for(int i=0;i<input.length();i++){
 		ch=input[i];
@@ -94,7 +95,10 @@ bool XPINSCompiler::removeComments(string* text){
 				while (input[i+1]!='\n'||i+1==input.length())i++;
 			}
 		}
-		else if(ch!=';'&&ch!='\t') output+=ch;//No semicolons or tabs in compiled script
+		else if((ch!=';'||matcount>0)&&ch!='\t') output+=ch;//No semicolons or tabs in compiled script
+		else if(ch=='[')++matcount;
+		else if(ch==']')--matcount;
+		if(ch==';'&&matcount==0&&input[i+1]!='\n')output+='\n';
 	}
 	bool hitFirstEND=false;
 	string intermediate1=""+output;
@@ -162,6 +166,10 @@ bool XPINSCompiler::renameFunctions(string *text){
 			case 'F':
 			case 'f':
 				functionType='F';
+				break;
+			case 'M':
+			case 'm':
+				functionType='M';
 				break;
 			case '*':
 				functionType='P';
@@ -274,7 +282,7 @@ bool XPINSCompiler::renameTypes(string *text){
 	string intermediate1="";
 	//Rename Types
 	for(int i=0;i<input.length();i++){
-		if((input[i]=='B'||input[i]=='I'||input[i]=='F'||input[i]=='V'||input[i]=='*')&&input[i-1]=='\n'){
+		if((input[i]=='B'||input[i]=='I'||input[i]=='F'||input[i]=='V'||input[i]=='M'||input[i]=='*')&&input[i-1]=='\n'){
 			intermediate1+=input[i];
 			while (input[i]!=' ')i++;
 		}
@@ -301,7 +309,7 @@ bool XPINSCompiler::renameVars(string *text){
 	}
 	if(input[i+1]!='C'||input[i+2]!='O'||input[i+3]!='D'||input[i+4]!='E'){
 		cerr<<"Invalid Script: Missing @CODE.\nEXITING";
-		return false;;
+		return false;
 	}
 	i+=5;
 	//Initialize intermediates
@@ -313,6 +321,7 @@ bool XPINSCompiler::renameVars(string *text){
 	int xi=-1;
 	int xf=-1;
 	int xv=-1;
+	int xm=-1;
 	int xp=-1;
 	char varType='P';
 	while(i<input.length()&&(input[i]!='@'||input[i+1]!='E')){
@@ -333,6 +342,9 @@ bool XPINSCompiler::renameVars(string *text){
 					break;
 				case 'V':
 					varNum=++xv;
+					break;
+				case 'M':
+					varNum=++xm;
 					break;
 				case 'P':
 					varNum=++xp;
@@ -356,7 +368,7 @@ bool XPINSCompiler::renameVars(string *text){
 					intermediate2+="@END";
 					break;
 				}
-				if((intermediate1[j]=='B'||intermediate1[j]=='I'||intermediate1[j]=='F'||intermediate1[j]=='V'||intermediate1[j]=='*')&&intermediate1[j+2]=='$'&&XPINSCompileUtil::stringsMatch(j+3, intermediate1, varName))
+				if((intermediate1[j]=='B'||intermediate1[j]=='I'||intermediate1[j]=='F'||intermediate1[j]=='V'||intermediate1[j]=='M'||intermediate1[j]=='*')&&intermediate1[j+1]==' '&&intermediate1[j+2]=='$'&&XPINSCompileUtil::stringsMatch(j+3, intermediate1, varName))
 				{
 					if(declared)
 						j+=2;
@@ -445,6 +457,8 @@ char XPINSCompileUtil::charForBuiltin(string name){
 	if(name.compare("VDIST")==0)return 'F';
 	if(name.compare("VX")==0)return 'F';
 	if(name.compare("VY")==0)return 'F';
+	if(name.compare("MGET")==0)return 'F';
+	if(name.compare("MDET")==0)return 'F';
 	if(name.compare("VMAG")==0)return 'F';
 	if(name.compare("VDIR")==0)return 'F';
 	if(name.compare("VANG")==0)return 'F';
@@ -455,7 +469,22 @@ char XPINSCompileUtil::charForBuiltin(string name){
 	if(name.compare("VSUB")==0)return 'V';
 	if(name.compare("VSCALE")==0)return 'V';
 	if(name.compare("VPROJ")==0)return 'V';
-	return 'K';
+	if(name.compare("MMTV")==0)return 'V';
+	if(name.compare("MVMULT")==0)return 'V';
+	if(name.compare("MMAKE")==0)return 'M';
+	if(name.compare("MID")==0)return 'M';
+	if(name.compare("MROT")==0)return 'M';
+	if(name.compare("MADD")==0)return 'M';
+	if(name.compare("MSUB")==0)return 'M';
+	if(name.compare("MSCALE")==0)return 'M';
+	if(name.compare("MMULT")==0)return 'M';
+	if(name.compare("MINV")==0)return 'M';
+	if(name.compare("MTRANS")==0)return 'M';
+	if(name.compare("MVTM")==0)return 'M';
+	if(name.compare("MSET")==0)return 'N';
+
+
+	return 'N';
 }
 int XPINSCompileUtil::readVarIndex(string scriptText,int *startIndex,char expectedEnd){
 	int i=*startIndex;

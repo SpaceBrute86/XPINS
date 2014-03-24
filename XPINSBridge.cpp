@@ -21,12 +21,12 @@ using namespace std;
 
 //PRIMARY METHOD
 
-void XPINSBridge::bridgeFunction(int fNum,string script,XPINSParams* parameters,XPINSParser::varSpace* vars,int* index,void* rett){
+void XPINSBridge::BridgeFunction(int fNum,string script,XPINSParams* parameters,XPINSParser::varSpace* vars,int* index,void* rett){
 	/*Declare Pointers to Your Custom Functions*/
 
 	/*Bridge Your Custom Functions*/
 	switch (fNum) {
-		case 1: cout<<XPINSParser::parseIntArg(script, parameters, vars, index, ')')<<"\t";
+		case 1: cout<<XPINSParser::ParseIntArg(script, parameters, vars, index, ')')<<"\t";
 		break;
 		case 2: cout<<endl;break;
 	}

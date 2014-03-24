@@ -10,7 +10,12 @@ using namespace XPINSScriptableMath;
 #pragma mark Vector Library
 
 //Initializing Vectors
-Vector::Vector(float x,float y,float z){
+XPINSScriptableMath::Vector::Vector(){
+	this->x=0;
+	this->y=0;
+	this->z=0;
+}
+XPINSScriptableMath::Vector::Vector(float x,float y,float z){
 	this->x=x;
 	this->y=y;
 	this->z=z;
@@ -92,21 +97,23 @@ Vector Vector::ProjectionInDirection(Vector vec,float dir,float alt){
 }
 
 //Related Scalar functions
-float addPolar(float x,float y){
+float XPINSScriptableMath::addPolar(float x,float y){
 	float res=x+y;
 	while (res<0) res+=2*M_PI;
 	while (res>=2*M_PI) res-=2*M_PI;
 	return res;
 }
-float dist(float x, float y){
+float XPINSScriptableMath::dist(float x, float y){
 	return sqrtf(x*x+y*y);
 }
 
 #pragma mark Matrix Library
-/*
- static Matrix Invert(Matrix);
-*/
+
 //Initializing Matrices and Special Matrices
+Matrix::Matrix (){
+	values=std::vector<std::vector<float>>();
+	this->Resize(1, 1);
+}
 Matrix::Matrix (size_t rows, size_t cols){
 	values=std::vector<std::vector<float>>();
 	this->Resize(rows, cols);
@@ -182,7 +189,7 @@ Matrix Matrix::MatrixForVector(Vector v)
 }
 
 //Matrix Operations
-Matrix Matrix::AddMatrices(Matrix a,Matrix b)
+Matrix Matrix::Add(Matrix a,Matrix b)
 {
 	if (a.values.size()!=b.values.size()||a.values[0].size()!=b.values[0].size()) //Sizes don't match
 	{
@@ -201,7 +208,19 @@ Matrix Matrix::AddMatrices(Matrix a,Matrix b)
 	}
 	return m;
 }
-Matrix Matrix::MultiplyMatrices(Matrix a,Matrix b)
+Matrix Matrix::Scale(Matrix a,float b)
+{
+	Matrix m=Matrix(a.values.size(),a.values[0].size());
+	for (size_t i=0; i<a.values.size(); ++i)
+	{
+		for (size_t j=0; j<a.values[0].size(); ++j)
+		{
+			m.values[i][j]=a.values[i][j]*b;
+		}
+	}
+	return m;
+}
+Matrix Matrix::Multiply(Matrix a,Matrix b)
 {
 	if (a.values[0].size()!=b.values.size())//Compensate for size errors
 	{
@@ -223,7 +242,7 @@ Matrix Matrix::MultiplyMatrices(Matrix a,Matrix b)
 Vector Matrix::MultiplyMatrixVector(Matrix m,Vector v)
 {
 	Matrix vectorMatrix=MatrixForVector(v);
-	Matrix resultVectorMatrix=MultiplyMatrices(m, vectorMatrix);
+	Matrix resultVectorMatrix=Multiply(m, vectorMatrix);
 	return VectorForMatrix(resultVectorMatrix);
 }
 Matrix Matrix::Transpose(Matrix in)
@@ -294,4 +313,3 @@ Matrix Matrix::Invert(Matrix a)
 	}
 	return b;
 }
-
