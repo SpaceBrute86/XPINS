@@ -360,7 +360,7 @@ float parseFloatExp(string scriptText,XPINSParams* params,XPINSParser::varSpace*
 				++i;
 				XPINSScriptableMath::Vector v2=XPINSParser::parseVecArg(scriptText, params,vars, &i,')');
 				++i;
-				result=XPINSScriptableMath::Vector::dotProduct(v1, v2);
+				result=XPINSScriptableMath::Vector::DotProduct(v1, v2);
 			}
 			else{
 				if(scriptText[i]=='^'||scriptText[i+1]=='F')//Input 1 is float
@@ -407,15 +407,15 @@ XPINSScriptableMath::Vector parseVecExp(string scriptText,XPINSParams* params,XP
 			++i;
 			XPINSScriptableMath::Vector v2=XPINSParser::parseVecArg(scriptText, params,vars, &i,')');
 			++i;
-			result=XPINSScriptableMath::Vector::addVectors(v1, v2);
+			result=XPINSScriptableMath::Vector::Add(v1, v2);
 		}
 		else if (scriptText[j]=='-') {//subtraction
 			XPINSScriptableMath::Vector v1=XPINSParser::parseVecArg(scriptText, params,vars, &i,'-');
 			++i;
 			XPINSScriptableMath::Vector temp=XPINSParser::parseVecArg(scriptText, params,vars, &i,')');
-			XPINSScriptableMath::Vector v2=XPINSScriptableMath::Vector::scaledVector(temp, -1);
+			XPINSScriptableMath::Vector v2=XPINSScriptableMath::Vector::Scale(temp, -1);
 			++i;
-			result=XPINSScriptableMath::Vector::addVectors(v1, v2);
+			result=XPINSScriptableMath::Vector::Add(v1, v2);
 		}
 		else if (scriptText[j]=='*') {//multiplication
 			if(scriptText[i+1]=='V'){//Cross Produt
@@ -423,7 +423,7 @@ XPINSScriptableMath::Vector parseVecExp(string scriptText,XPINSParams* params,XP
 				++i;
 				XPINSScriptableMath::Vector v2=XPINSParser::parseVecArg(scriptText, params,vars, &i,')');
 				++i;
-				result=XPINSScriptableMath::Vector::crossProduct(v1, v2);
+				result=XPINSScriptableMath::Vector::CrossProduct(v1, v2);
 			}
 			else{
 				XPINSScriptableMath::Vector v1=XPINSParser::parseVecArg(scriptText, params,vars, &i,'*');
@@ -434,7 +434,7 @@ XPINSScriptableMath::Vector parseVecExp(string scriptText,XPINSParams* params,XP
 				else
 					k=parseIntArg(scriptText, params,vars, &i, ')');
 				++i;
-				result=XPINSScriptableMath::Vector::scaledVector(v1, k);
+				result=XPINSScriptableMath::Vector::Scale(v1, k);
 			}
 		}
 		else if (scriptText[j]=='/') {//division
@@ -446,7 +446,7 @@ XPINSScriptableMath::Vector parseVecExp(string scriptText,XPINSParams* params,XP
 			else
 				k=parseIntArg(scriptText, params,vars, &i, ')');
 			++i;
-			result=XPINSScriptableMath::Vector::scaledVector(v1, 1/k);
+			result=XPINSScriptableMath::Vector::Scale(v1, 1/k);
 		}
 	}
 	*start=i;
@@ -700,7 +700,7 @@ float XPINSParser::parseFloatArg(string scriptText,XPINSParams* params, varSpace
 		else if(scriptText[i+1]=='V'&&scriptText[i+2]=='M'&&scriptText[i+3]=='A'&&scriptText[i+4]=='G'){
 			i+=5;
 			XPINSScriptableMath::Vector param1=XPINSParser::parseVecArg(scriptText, params,vars, &i, ')');
-			retVal=param1.magnitude();
+			retVal=param1.Magnitude();
 		}
 		//XF_VR
 		else if(scriptText[i+1]=='V'&&scriptText[i+2]=='R'){
@@ -714,13 +714,13 @@ float XPINSParser::parseFloatArg(string scriptText,XPINSParams* params, varSpace
 		else if(scriptText[i+1]=='V'&&scriptText[i+2]=='T'&&scriptText[i+3]=='H'&&scriptText[i+4]=='E'&&scriptText[i+5]=='T'&&scriptText[i+6]=='A'){
 			i+=7;
 			XPINSScriptableMath::Vector param1=XPINSParser::parseVecArg(scriptText, params,vars, &i, ')');
-			retVal=param1.direction();
+			retVal=param1.Direction();
 		}
 		//XF_VPHI
 		else if(scriptText[i+1]=='V'&&scriptText[i+2]=='P'&&scriptText[i+3]=='H'&&scriptText[i+4]=='I'){
 			i+=5;
 			XPINSScriptableMath::Vector param1=XPINSParser::parseVecArg(scriptText, params,vars, &i, ')');
-			retVal=param1.altitude();
+			retVal=param1.Altitude();
 		}
 		//XF_VX
 		else if(scriptText[i+1]=='V'&&scriptText[i+2]=='X'){
@@ -752,14 +752,14 @@ float XPINSParser::parseFloatArg(string scriptText,XPINSParams* params, varSpace
 			i+=5;
 			XPINSScriptableMath::Vector param1=XPINSParser::parseVecArg(scriptText, params,vars, &i, ',');
 			XPINSScriptableMath::Vector param2=XPINSParser::parseVecArg(scriptText, params,vars, &i, ')');
-			retVal=XPINSScriptableMath::Vector::angleBetweenVectors(param1, param2);
+			retVal=XPINSScriptableMath::Vector::AngleBetweenVectors(param1, param2);
 		}
 		//XF_VDOT
 		else if(scriptText[i+1]=='V'&&scriptText[i+2]=='D'&&scriptText[i+3]=='O'&&scriptText[i+4]=='T'){
 			i+=5;
 			XPINSScriptableMath::Vector param1=XPINSParser::parseVecArg(scriptText, params,vars, &i, ',');
 			XPINSScriptableMath::Vector param2=XPINSParser::parseVecArg(scriptText, params,vars, &i, ')');
-			retVal=XPINSScriptableMath::Vector::dotProduct(param1, param2);
+			retVal=XPINSScriptableMath::Vector::DotProduct(param1, param2);
 		}
 		//XF_VADDPOLAR
 		else if(scriptText[i+1]=='V'&&scriptText[i+2]=='A'&&scriptText[i+3]=='D'&&scriptText[i+4]=='D'&&scriptText[i+5]=='P'&&scriptText[i+6]=='O'&&scriptText[i+7]=='L'&&scriptText[i+8]=='A'&&scriptText[i+9]=='R'){
@@ -821,7 +821,7 @@ XPINSScriptableMath::Vector XPINSParser::parseVecArg(string scriptText,XPINSPara
 	if(scriptText[i]=='$'){//variable
 		i+=2;
 		int index=readVarIndex(scriptText, &i, expectedEnd);
-		retVal=vars->vVars[index].copy();
+		retVal=vars->vVars[index];
 	}
 	else if(scriptText[i]=='^'){//constant (can contain varialbes, though)
 		++i;
@@ -895,28 +895,28 @@ XPINSScriptableMath::Vector XPINSParser::parseVecArg(string scriptText,XPINSPara
 				i+=5;
 				XPINSScriptableMath::Vector param1=XPINSParser::parseVecArg(scriptText, params,vars, &i, ',');
 				XPINSScriptableMath::Vector param2=XPINSParser::parseVecArg(scriptText, params,vars, &i, ')');
-				retVal=XPINSScriptableMath::Vector::addVectors(param1,param2);
+				retVal=XPINSScriptableMath::Vector::Add(param1,param2);
 			}
 		//X_VSUB
 			else if(scriptText[i+1]=='V'&&scriptText[i+2]=='S'&&scriptText[i+3]=='U'&&scriptText[i+4]=='B'){
 				i+=5;
 				XPINSScriptableMath::Vector param1=XPINSParser::parseVecArg(scriptText, params,vars, &i, ',');
 				XPINSScriptableMath::Vector param2=XPINSParser::parseVecArg(scriptText, params,vars, &i, ')');
-				XPINSScriptableMath::Vector temp=XPINSScriptableMath::Vector::scaledVector(param2, -1);
-				retVal=XPINSScriptableMath::Vector::addVectors(param1,temp);
+				XPINSScriptableMath::Vector temp=XPINSScriptableMath::Vector::Scale(param2, -1);
+				retVal=XPINSScriptableMath::Vector::Add(param1,temp);
 			}
 		//X_VSCALE
 			else if(scriptText[i+1]=='V'&&scriptText[i+2]=='S'&&scriptText[i+3]=='C'&&scriptText[i+4]=='A'&&scriptText[i+5]=='L'&&scriptText[i+6]=='E'){
 				i+=7;
 				XPINSScriptableMath::Vector param1=XPINSParser::parseVecArg(scriptText, params,vars, &i, ',');
 				float param2=parseFloatArg(scriptText, params,vars, &i, ')');
-				retVal=XPINSScriptableMath::Vector::scaledVector(param1,param2);
+				retVal=XPINSScriptableMath::Vector::Scale(param1,param2);
 			}
 			else if(scriptText[i+1]=='V'&&scriptText[i+2]=='C'&&scriptText[i+3]=='R'&&scriptText[i+4]=='O'&&scriptText[i+5]=='S'&&scriptText[i+6]=='S'){
 				i+=7;
 				XPINSScriptableMath::Vector param1=XPINSParser::parseVecArg(scriptText, params,vars, &i, ',');
 				XPINSScriptableMath::Vector param2=parseVecArg(scriptText, params,vars, &i, ')');
-				retVal=XPINSScriptableMath::Vector::crossProduct(param1,param2);
+				retVal=XPINSScriptableMath::Vector::CrossProduct(param1,param2);
 			}
 		//X_VPROJ
 			else if(scriptText[i+1]=='V'&&scriptText[i+2]=='P'&&scriptText[i+3]=='R'&&scriptText[i+4]=='O'&&scriptText[i+4]=='J'){
@@ -924,7 +924,7 @@ XPINSScriptableMath::Vector XPINSParser::parseVecArg(string scriptText,XPINSPara
 				XPINSScriptableMath::Vector param1=XPINSParser::parseVecArg(scriptText, params,vars, &i, ',');
 				float param2=parseFloatArg(scriptText, params,vars, &i, ',');
 				float param3=parseFloatArg(scriptText, params,vars, &i, ')');
-				retVal=XPINSScriptableMath::Vector::projectionInDirection(param1,param2,param3);
+				retVal=XPINSScriptableMath::Vector::ProjectionInDirection(param1,param2,param3);
 			}
 			else retVal=XPINSScriptableMath::Vector(0,0,0);
 	}
