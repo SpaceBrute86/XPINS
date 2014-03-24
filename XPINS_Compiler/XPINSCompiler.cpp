@@ -12,7 +12,7 @@
 using namespace std;
 
 const int kMajor=0;
-const int kMinor=3;
+const int kMinor=4;
 
 namespace XPINSCompileUtil {
 	string strRepresentationOfInt(int);

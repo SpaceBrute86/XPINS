@@ -45,6 +45,24 @@ namespace XPINSParser{
 	//PARAM: Start index if reading while loop
 	//PARAM: Stop index if reading while loop
 	void ParseScript(string,XPINSParams*,varSpace*,bool,int,int);
+	
+	//Built In Function/Expression Processing
+	namespace XPINSBuiltIn{
+		//Expression PARSING:
+		bool ParseBoolExp(string,XPINSParams*,varSpace*,int*);
+		int ParseIntExp(string,XPINSParams*,varSpace*,int*);
+		float ParseFloatExp(string,XPINSParams*,varSpace*,int*);
+		XPINSScriptableMath::Vector ParseVecExp(string,XPINSParams*,varSpace*,int*);
+		XPINSScriptableMath::Matrix ParseMatExp(string,XPINSParams*,varSpace*,int*);
+
+		//BIF (Built In Function) PARSING:
+		bool ParseBoolBIF(string,XPINSParams*,varSpace*,int*);
+		int ParseIntBIF(string,XPINSParams*,varSpace*,int*);
+		float ParseFloatBIF(string,XPINSParams*,varSpace*,int*);
+		XPINSScriptableMath::Vector ParseVecBIF(string,XPINSParams*,varSpace*,int*);
+		XPINSScriptableMath::Matrix ParseMatBIF(string,XPINSParams*,varSpace*,int*);
+		void ParseVoidBIF(string,XPINSParams*,varSpace*,int*);
+	}
 }
 
 #endif /* defined(__Script__ScriptParser__) */

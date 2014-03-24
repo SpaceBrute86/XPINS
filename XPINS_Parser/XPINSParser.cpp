@@ -94,416 +94,8 @@ int readFuncParameter(string scriptText,int *startIndex,char varType,char expect
 	return index;
 }
 
-//Expression Parsing
-bool parseBoolExp(string scriptText,XPINSParams* params,varSpace* vars, int* start){
-	bool result=false;
-	int i=*start;
-	while(scriptText[i++]!='?'){}
-	if(scriptText[i]!='B'){
-		//cerr<<"Could not parse XPINS expression, returning false\n";
-		return false;
-	}
-	else{
-		i+=2;
-		if (scriptText[i]=='!'&&scriptText[i+1]=='=') {//not
-			++i;
-			bool arg=ParseBoolArg(scriptText, params,vars, &i, ')');
-			result=!arg;
-			++i;
-		}
-		else {//two inputs
-			int j=i;
-			while (scriptText[j]!='|'&&scriptText[j]!='&'&&scriptText[j]!='<'&&scriptText[j]!='='&&scriptText[j]!='>'&&scriptText[j]!='!') ++j;
-			if(scriptText[j]=='|'&&scriptText[j+1]=='|'){//OR
-				bool arg1=ParseBoolArg(scriptText, params,vars, &i,'|');
-				if(arg1){
-					result=true;
-					while (scriptText[++i]!=')') {}
-					++i;
-				}
-				else{
-					i+=2;
-					bool arg2=ParseBoolArg(scriptText,params,vars, &i,')');
-					result=arg1||arg2;
-					++i;
-				}
-			}
-			else if(scriptText[j]=='&'&&scriptText[j+1]=='&'){//And
-				bool arg1=ParseBoolArg(scriptText, params,vars, &i,'|');
-				if(!arg1){
-					result=false;
-					while (scriptText[++i]!=')') {}
-					++i;
-				}
-				else{
-					i+=2;
-					bool arg2=ParseBoolArg(scriptText, params,vars, &i,')');
-					result=arg1&&arg2;
-					++i;
-				}
-			}
-			else if(scriptText[j]=='<'&&scriptText[j+1]!='='){//Less Than
-				float arg1=0,arg2=0;
-				if(scriptText[i]=='^'||scriptText[i+1]=='F')//Input 1 is float
-					arg1=ParseFloatArg(scriptText, params,vars, &i,'<');
-				else
-					arg1=ParseIntArg(scriptText, params,vars, &i, '<');
-				++i;
-				if(scriptText[i]=='^'||scriptText[i+1]=='F')//Input 2 is float
-					arg2=ParseFloatArg(scriptText, params,vars, &i,')');
-				else
-					arg2=ParseIntArg(scriptText, params,vars, &i, ')');
-				++i;
-				result=arg1<arg2;
-			}
-			else if(scriptText[j]=='<'&&scriptText[j+1]=='='){//Less Than or Equal
-				float arg1=0,arg2=0;
-				if(scriptText[i]=='^'||scriptText[i+1]=='F')//Input 1 is float
-					arg1=ParseFloatArg(scriptText, params,vars, &i,'<');
-				else
-					arg1=ParseIntArg(scriptText, params,vars, &i, '<');
-				i+=2;
-				if(scriptText[i]=='^'||scriptText[i+1]=='F')//Input 2 is float
-					arg2=ParseFloatArg(scriptText, params,vars, &i,')');
-				else
-					arg2=ParseIntArg(scriptText, params,vars, &i, ')');
-				++i;
-				result=arg1<=arg2;
-			}
-			else if(scriptText[j]=='>'&&scriptText[j+1]!='='){//Greater Than
-				float arg1=0,arg2=0;
-				if(scriptText[i]=='^'||scriptText[i+1]=='F')//Input 1 is float
-					arg1=ParseFloatArg(scriptText, params,vars, &i,'>');
-				else
-					arg1=ParseIntArg(scriptText, params,vars, &i, '>');
-				++i;
-				if(scriptText[i]=='^'||scriptText[i+1]=='F')//Input 2 is float
-					arg2=ParseFloatArg(scriptText, params,vars, &i,')');
-				else
-					arg2=ParseIntArg(scriptText, params,vars, &i, ')');
-				++i;
-				result=arg1>arg2;
-			}
-			else if(scriptText[j]=='>'&&scriptText[j+1]=='='){//Greater than Or equal
-				float arg1=0,arg2=0;
-				if(scriptText[i]=='^'||scriptText[i+1]=='F')//Input 1 is float
-					arg1=ParseFloatArg(scriptText, params,vars, &i,'>');
-				else
-					arg1=ParseIntArg(scriptText, params,vars, &i, '>');
-				i+=2;
-				if(scriptText[i]=='^'||scriptText[i+1]=='F')//Input 2 is float
-					arg2=ParseFloatArg(scriptText, params,vars, &i,')');
-				else
-					arg2=ParseIntArg(scriptText, params,vars, &i, ')');
-				++i;
-				result=arg1>=arg2;
-			}
-			else if(scriptText[j]=='!'&&scriptText[j+1]=='='){//Not Equal
-				float arg1=0,arg2=0;
-				if(scriptText[i]=='^'||scriptText[i+1]=='F')//Input 1 is float
-					arg1=ParseFloatArg(scriptText, params,vars, &i,'!');
-				else
-					arg1=ParseIntArg(scriptText, params,vars, &i, '!');
-				i+=2;
-				if(scriptText[i]=='^'||scriptText[i+1]=='F')//Input 2 is float
-					arg2=ParseFloatArg(scriptText, params,vars, &i,')');
-				else
-					arg2=ParseIntArg(scriptText, params,vars, &i, ')');
-				++i;
-				result=arg1!=arg2;
-			}
-			else if(scriptText[j]=='='&&scriptText[j+1]=='='){//Equal
-				float arg1=0,arg2=0;
-				if(scriptText[i]=='^'||scriptText[i+1]=='F')//Input 1 is float
-					arg1=ParseFloatArg(scriptText, params,vars, &i,'=');
-				else
-					arg1=ParseIntArg(scriptText, params,vars, &i, '=');
-				i+=2;
-				if(scriptText[i]=='^'||scriptText[i+1]=='F')//Input 2 is float
-					arg2=ParseFloatArg(scriptText, params,vars, &i,')');
-				else
-					arg2=ParseIntArg(scriptText, params,vars, &i, ')');
-				++i;
-				result=arg1==arg2;
-			}
-		}
-	}
-	*start=i;
-	return result;
-}
-int parseIntExp(string scriptText,XPINSParams* params,varSpace* vars, int* start){
-	int result=0;
-	int i=*start;
-	while(scriptText[i++]!='?'){}
-	if(scriptText[i]!='I'){
-		cerr<<"Could not parse XPINS expression, returning 0\n";
-		return 0;
-	}
-	else{
-		i+=2;
-		int j=i;
-		while (scriptText[j]!='+'&&scriptText[j]!='-'&&scriptText[j]!='*'&&scriptText[j]!='/'&&scriptText[j]!='%') ++j;
-		if (scriptText[j]=='+') {//addition
-			if(scriptText[i]=='^'||scriptText[i+1]=='F')//Input 1 is float
-				result=ParseFloatArg(scriptText, params,vars, &i,'+');
-			else
-				result=ParseIntArg(scriptText, params,vars, &i, '+');
-			++i;
-			if(scriptText[i]=='^'||scriptText[i+1]=='F')//Input 1 is float
-				result+=ParseFloatArg(scriptText, params,vars, &i,')');
-			else
-				result+=ParseIntArg(scriptText, params,vars, &i, ')');
-			++i;
-		}
-		else if (scriptText[j]=='-') {//subtraction
-			if(scriptText[i]=='^'||scriptText[i+1]=='F')//Input 1 is float
-				result=ParseFloatArg(scriptText, params,vars, &i,'-');
-			else
-				result=ParseIntArg(scriptText, params,vars, &i, '-');
-			++i;
-			if(scriptText[i]=='^'||scriptText[i+1]=='F')//Input 1 is float
-				result-=ParseFloatArg(scriptText, params,vars, &i,')');
-			else
-				result-=ParseIntArg(scriptText, params,vars, &i, ')');
-			++i;
-		}
-		else if (scriptText[j]=='*') {//multiplication
-			if(scriptText[i]=='^'||scriptText[i+1]=='F')//Input 1 is float
-				result=ParseFloatArg(scriptText, params,vars, &i,'*');
-			else
-				result=ParseIntArg(scriptText, params,vars, &i, '*');
-			++i;
-			if(scriptText[i]=='^'||scriptText[i+1]=='F')//Input 1 is float
-				result*=ParseFloatArg(scriptText, params,vars, &i,')');
-			else
-				result*=ParseIntArg(scriptText,params, vars, &i, ')');
-			++i;
-		}
-		else if (scriptText[j]=='/') {//division
-			if(scriptText[i]=='^'||scriptText[i+1]=='F')//Input 1 is float
-				result=ParseFloatArg(scriptText, params,vars, &i,'/');
-			else
-				result=ParseIntArg(scriptText, params,vars, &i, '/');
-			++i;
-			if(scriptText[i]=='^'||scriptText[i+1]=='F')//Input 1 is float
-				result/=ParseFloatArg(scriptText, params,vars, &i,')');
-			else
-				result/=ParseIntArg(scriptText, params,vars, &i, ')');
-			++i;
-		}
-		else if (scriptText[j]=='%') {//modulus
-			result=ParseIntArg(scriptText, params,vars, &i, '%');
-			++i;
-			result%=ParseIntArg(scriptText, params,vars, &i, ')');
-			++i;
-		}
-	}
-	*start=i;
-	return result;
-}
-float parseFloatExp(string scriptText,XPINSParams* params,varSpace* vars, int* start){
-	float result=0.0;
-	int i=*start;
-	while(scriptText[i++]!='?'){}
-	if(scriptText[i]!='F'){
-		cerr<<"Could not parse XPINS expression, returning 0.0\n";
-		return 0.0;
-	}
-	else{
-		i+=2;
-		int j=i;
-		while (scriptText[j]!='+'&&scriptText[j]!='-'&&scriptText[j]!='*'&&scriptText[j]!='/') ++j;
-		if (scriptText[j]=='+') {//addition
-			if(scriptText[i]=='^'||scriptText[i+1]=='F')//Input 1 is float
-				result=ParseFloatArg(scriptText,params, vars, &i,'+');
-			else
-				result=(float)ParseIntArg(scriptText,params, vars, &i, '+');
-			++i;
-			if(scriptText[i]=='^'||scriptText[i+1]=='F')//Input 1 is float
-				result+=ParseFloatArg(scriptText,params, vars, &i,')');
-			else
-				result+=(float)ParseIntArg(scriptText,params, vars, &i, ')');
-			++i;
-		}
-		else if (scriptText[j]=='-') {//subtraction
-			if(scriptText[i]=='^'||scriptText[i+1]=='F')//Input 1 is float
-				result=ParseFloatArg(scriptText, params,vars, &i,'-');
-			else
-				result=(float)ParseIntArg(scriptText, params,vars, &i, '-');
-			++i;
-			if(scriptText[i]=='^'||scriptText[i+1]=='F')//Input 1 is float
-				result-=ParseFloatArg(scriptText, params,vars, &i,')');
-			else
-				result-=(float)ParseIntArg(scriptText,params, vars, &i, ')');
-			++i;
-		}
-		else if (scriptText[j]=='*') {//multiplication
-			if(scriptText[i+1]=='V'){//Dot Produt
-				Vector v1=ParseVecArg(scriptText, params,vars, &i,'+');
-				++i;
-				Vector v2=ParseVecArg(scriptText, params,vars, &i,')');
-				++i;
-				result=Vector::DotProduct(v1, v2);
-			}
-			else{
-				if(scriptText[i]=='^'||scriptText[i+1]=='F')//Input 1 is float
-					result=ParseFloatArg(scriptText,params, vars, &i,'*');
-				else
-					result=(float)ParseIntArg(scriptText, params,vars, &i, '*');
-				++i;
-				if(scriptText[i]=='^'||scriptText[i+1]=='F')//Input 1 is float
-					result*=ParseFloatArg(scriptText, params,vars, &i,')');
-				else
-					result*=(float)ParseIntArg(scriptText,params, vars, &i, ')');
-				++i;
-			}
-		}
-		else if (scriptText[j]=='/') {//division
-			if(scriptText[i]=='^'||scriptText[i+1]=='F')//Input 1 is float
-				result=ParseFloatArg(scriptText, params,vars, &i,'/');
-			else
-				result=(float)ParseIntArg(scriptText, params,vars, &i, '/');
-			++i;
-			if(scriptText[i]=='^'||scriptText[i+1]=='F')//Input 1 is float
-				result/=ParseFloatArg(scriptText, params,vars, &i,')');
-			else
-				result/=(float)ParseIntArg(scriptText, params,vars, &i, ')');
-			++i;
-		}
-	}
-	*start=i;
-	return result;
-}
-Vector parseVecExp(string scriptText,XPINSParams* params,varSpace* vars, int* start){
-	Vector result=Vector();
-	int i=*start;
-	while(scriptText[i++]!='?'){}
-	if(scriptText[i]!='V'){
-		cerr<<"Could not parse XPINS expression, returning <0,0>\n";
-	}
-	else{
-		i+=2;
-		int j=i;
-		while (scriptText[j]!='+'&&scriptText[j]!='-'&&scriptText[j]!='*'&&scriptText[j]!='/') ++j;
-		if (scriptText[j]=='+') {//addition
-			Vector v1=ParseVecArg(scriptText, params,vars, &i,'+');
-			++i;
-			Vector v2=ParseVecArg(scriptText, params,vars, &i,')');
-			++i;
-			result=Vector::Add(v1, v2);
-		}
-		else if (scriptText[j]=='-') {//subtraction
-			Vector v1=ParseVecArg(scriptText, params,vars, &i,'-');
-			++i;
-			Vector temp=ParseVecArg(scriptText, params,vars, &i,')');
-			Vector v2=Vector::Scale(temp, -1);
-			++i;
-			result=Vector::Add(v1, v2);
-		}
-		else if (scriptText[j]=='*') {//multiplication
-			if(scriptText[i+1]=='M'||scriptText[i+2]=='['){//Cross Produt
-				Matrix m1=ParseMatArg(scriptText, params,vars, &i,'+');
-				++i;
-				Vector v2=ParseVecArg(scriptText, params,vars, &i,')');
-				++i;
-				result=Matrix::MultiplyMatrixVector(m1, v2);
-			}
-			else if(scriptText[j+2]=='V'||scriptText[j+2]=='<'){//Cross Produt
-				Vector v1=ParseVecArg(scriptText, params,vars, &i,'+');
-				++i;
-				Vector v2=ParseVecArg(scriptText, params,vars, &i,')');
-				++i;
-				result=Vector::CrossProduct(v1, v2);
-			}
-			else{
-				Vector v1=ParseVecArg(scriptText, params,vars, &i,'*');
-				++i;
-				float k=0;
-				if(scriptText[i]=='^'||scriptText[i+1]=='F')//Input 1 is float
-					k=ParseFloatArg(scriptText, params,vars, &i,')');
-				else
-					k=ParseIntArg(scriptText, params,vars, &i, ')');
-				++i;
-				result=Vector::Scale(v1, k);
-			}
-		}
-		else if (scriptText[j]=='/') {//division
-			Vector v1=ParseVecArg(scriptText, params, vars, &i,'*');
-			++i;
-			float k=0;
-			if(scriptText[i]=='^'||scriptText[i+1]=='F')//Input 1 is float
-				k=ParseFloatArg(scriptText,params, vars, &i,')');
-			else
-				k=ParseIntArg(scriptText, params,vars, &i, ')');
-			++i;
-			result=Vector::Scale(v1, 1/k);
-		}
-	}
-	*start=i;
-	return result;
-}
-Matrix parseMatExp(string scriptText,XPINSParams* params,varSpace* vars, int* start){
-	Matrix result=Matrix();
-	int i=*start;
-	while(scriptText[i++]!='?'){}
-	if(scriptText[i]!='V'){
-		cerr<<"Could not parse XPINS expression, returning <0,0>\n";
-	}
-	else{
-		i+=2;
-		int j=i;
-		while (scriptText[j]!='+'&&scriptText[j]!='-'&&scriptText[j]!='*'&&scriptText[j]!='/') ++j;
-		if (scriptText[j]=='+') {//addition
-			Matrix m1=ParseMatArg(scriptText, params,vars, &i,'+');
-			++i;
-			Matrix m2=ParseMatArg(scriptText, params,vars, &i,')');
-			++i;
-			result=Matrix::Add(m1, m2);
-		}
-		else if (scriptText[j]=='-') {//subtraction
-			Matrix m1=ParseMatArg(scriptText, params,vars, &i,'+');
-			++i;
-			Matrix temp=ParseMatArg(scriptText, params,vars, &i,')');
-			++i;
-			Matrix m2=Matrix::Scale(temp, -1);
-			result=Matrix::Add(m1, m2);
-		}
-		else if (scriptText[j]=='*') {//multiplication
-			if(scriptText[j+2]=='M'||scriptText[j+2]=='['){//Cross Produt
-				Matrix m1=ParseMatArg(scriptText, params,vars, &i,'+');
-				++i;
-				Matrix m2=ParseMatArg(scriptText, params,vars, &i,')');
-				++i;
-				result=Matrix::Add(m1, m2);
 
-			}
-			else{
-				Matrix m1=ParseMatArg(scriptText, params,vars, &i,'*');
-				++i;
-				float k=0;
-				if(scriptText[i]=='^'||scriptText[i+1]=='F')//Input 1 is float
-					k=ParseFloatArg(scriptText, params,vars, &i,')');
-				else
-					k=ParseIntArg(scriptText, params,vars, &i, ')');
-				++i;
-				result=Matrix::Scale(m1, k);
-			}
-		}
-		else if (scriptText[j]=='/') {//division
-			Matrix m1=ParseMatArg(scriptText, params, vars, &i,'*');
-			++i;
-			float k=0;
-			if(scriptText[i]=='^'||scriptText[i+1]=='F')//Input 1 is float
-				k=ParseFloatArg(scriptText,params, vars, &i,')');
-			else
-				k=ParseIntArg(scriptText, params,vars, &i, ')');
-			++i;
-			result=Matrix::Scale(m1, 1/k);
-		}
-	}
-	*start=i;
-	return result;
-}
+
 //parameter parsing
 bool XPINSParser::ParseBoolArg(string scriptText,XPINSParams* params,varSpace* vars,int* start,char expectedEnd){
 	int i=*start;
@@ -521,7 +113,7 @@ bool XPINSParser::ParseBoolArg(string scriptText,XPINSParams* params,varSpace* v
 		retVal=(scriptText[i+1]=='T');
 	}
 	else if(scriptText[i]=='?'){//expression
-		retVal=parseBoolExp(scriptText, params,vars, &i);
+		retVal=XPINSBuiltIn::ParseBoolExp(scriptText, params,vars, &i);
 	}
 	else if(scriptText[i]=='#'){//User-defined Function
 		if(scriptText[i+1]!='B'||scriptText[i+2]!='F'){
@@ -538,72 +130,7 @@ bool XPINSParser::ParseBoolArg(string scriptText,XPINSParams* params,varSpace* v
 		if(scriptText[i-1]!='_'||scriptText[i-2]!='B'){
 			retVal=false;
 		}
-		//XB_AND
-		else if(scriptText[i+1]=='A'&&scriptText[i+2]=='N'&&scriptText[i+3]=='D'){
-			i+=4;
-			bool param1=ParseBoolArg(scriptText, params,vars, &i, ',');
-			bool param2=ParseBoolArg(scriptText, params,vars, &i, ')');
-			retVal=param1&&param2;
-		}
-		//XB_OR
-		else if(scriptText[i+1]=='O'&&scriptText[i+2]=='R'){
-			i+=3;
-			bool param1=ParseBoolArg(scriptText, params,vars, &i, ',');
-			bool param2=ParseBoolArg(scriptText, params,vars, &i, ')');
-			retVal=param1||param2;
-		}
-		//XB_NOT
-		else if(scriptText[i+1]=='N'&&scriptText[i+2]=='O'&&scriptText[i+3]=='T'){
-			i+=4;
-			bool param1=ParseBoolArg(scriptText, params,vars, &i, ')');
-			retVal=!param1;
-		}
-		//XB_ILESS
-		else if(scriptText[i+1]=='I'&&scriptText[i+2]=='L'&&scriptText[i+3]=='E'&&scriptText[i+4]=='S'&&scriptText[i+5]=='S'){
-			i+=6;
-			int param1=ParseIntArg(scriptText, params,vars, &i, ',');
-			int param2=ParseIntArg(scriptText, params,vars, &i, ')');
-			retVal=param1<param2;
-		}
-		//XB_FLESS
-		else if(scriptText[i+1]=='F'&&scriptText[i+2]=='L'&&scriptText[i+3]=='E'&&scriptText[i+4]=='S'&&scriptText[i+5]=='S'){
-			i+=6;
-			float param1=ParseFloatArg(scriptText, params,vars, &i, ',');
-			float param2=ParseFloatArg(scriptText, params,vars, &i, ')');
-			retVal=param1<param2;
-			
-		}
-		//XB_IMORE
-		else if(scriptText[i+1]=='I'&&scriptText[i+2]=='M'&&scriptText[i+3]=='O'&&scriptText[i+4]=='R'&&scriptText[i+5]=='E'){
-			i+=6;
-			int param1=ParseIntArg(scriptText, params,vars, &i, ',');
-			int param2=ParseIntArg(scriptText, params,vars, &i, ')');
-			retVal=param1>param2;
-		}
-		//XB_FMORE
-		else if(scriptText[i+1]=='F'&&scriptText[i+2]=='M'&&scriptText[i+3]=='O'&&scriptText[i+4]=='R'&&scriptText[i+5]=='E'){
-			i+=6;
-			float param1=ParseFloatArg(scriptText, params,vars, &i, ',');
-			float param2=ParseFloatArg(scriptText, params,vars, &i, ')');
-			retVal=param1>param2;
-		}
-		//XB_IEQUAL
-		else if(scriptText[i+1]=='I'&&scriptText[i+2]=='E'&&scriptText[i+3]=='Q'&&scriptText[i+4]=='U'&&scriptText[i+5]=='A'&&scriptText[i+5]=='L'){
-			i+=7;
-			int param1=ParseIntArg(scriptText, params,vars, &i, ',');
-			int param2=ParseIntArg(scriptText, params,vars, &i, ')');
-			retVal=param1==param2;
-		}
-		//XB_FEQUAL
-		else if(scriptText[i+1]=='F'&&scriptText[i+2]=='E'&&scriptText[i+3]=='Q'&&scriptText[i+4]=='U'&&scriptText[i+5]=='A'&&scriptText[i+5]=='L'){
-			i+=7;
-			float param1=ParseFloatArg(scriptText, params,vars, &i, ',');
-			float param2=ParseFloatArg(scriptText, params,vars, &i, ')');
-			retVal=param1==param2;
-		}
-		else{
-			retVal=false;
-		}
+		else retVal=XPINSBuiltIn::ParseBoolBIF(scriptText, params, vars, &i);
 	}
 	while(scriptText[i]!=expectedEnd)++i;
 	*start=i;
@@ -623,7 +150,7 @@ int XPINSParser::ParseIntArg(string scriptText,XPINSParams* params,varSpace* var
 		retVal=readInt(scriptText, &i, expectedEnd);
 	}
 	else if(scriptText[i]=='?'){
-		retVal=parseIntExp(scriptText, params,vars, &i);
+		retVal=XPINSBuiltIn::ParseIntExp(scriptText, params,vars, &i);
 	}
 	else if(scriptText[i]=='#'){//User-defined Function
 		if(scriptText[i+1]!='I'||scriptText[i+2]!='F'){
@@ -640,49 +167,7 @@ int XPINSParser::ParseIntArg(string scriptText,XPINSParams* params,varSpace* var
 		if(scriptText[i-1]!='_'||scriptText[i-2]!='I'){
 			retVal=0;
 		}
-		//XI_IADD
-		else if(scriptText[i+1]=='I'&&scriptText[i+2]=='A'&&scriptText[i+3]=='D'&&scriptText[i+4]=='D'){
-			i+=5;
-			int param1=ParseIntArg(scriptText, params,vars, &i, ',');
-			int param2=ParseIntArg(scriptText, params,vars, &i, ')');
-			retVal=param1+param2;
-		}
-		//XI_ISUB
-		else if(scriptText[i+1]=='I'&&scriptText[i+2]=='S'&&scriptText[i+3]=='U'&&scriptText[i+4]=='B'){
-			i+=5;
-			int param1=ParseIntArg(scriptText, params,vars, &i, ',');
-			int param2=ParseIntArg(scriptText, params, vars, &i, ')');
-			retVal=param1-param2;
-		}
-		//XI_IMULT
-		else if(scriptText[i+1]=='I'&&scriptText[i+2]=='M'&&scriptText[i+3]=='U'&&scriptText[i+4]=='L'&&scriptText[i+4]=='T'){
-			i+=6;
-			int param1=ParseIntArg(scriptText, params,vars, &i, ',');
-			int param2=ParseIntArg(scriptText, params,vars, &i, ')');
-			retVal=param1*param2;
-		}
-		//XI_IDIV
-		else if(scriptText[i+1]=='I'&&scriptText[i+2]=='D'&&scriptText[i+3]=='I'&&scriptText[i+4]=='V'){
-			i+=5;
-			int param1=ParseIntArg(scriptText, params,vars, &i, ',');
-			int param2=ParseIntArg(scriptText, params,vars, &i, ')');
-			retVal=param1/param2;
-		}
-		//XI_IMOD
-		else if(scriptText[i+1]=='I'&&scriptText[i+2]=='M'&&scriptText[i+3]=='O'&&scriptText[i+4]=='D'){
-			i+=5;
-			int param1=ParseIntArg(scriptText, params,vars, &i, ',');
-			int param2=ParseIntArg(scriptText, params,vars, &i, ')');
-			retVal=param1%param2;
-		}
-		//XI_RAND
-		else if(scriptText[i+1]=='R'&&scriptText[i+2]=='A'&&scriptText[i+3]=='N'&&scriptText[i+3]=='D'){
-			i+=5;
-			int param1=ParseIntArg(scriptText, params,vars, &i, ',');
-			int param2=ParseIntArg(scriptText, params,vars, &i, ')');
-			retVal=arc4random()%(param2-param1)+param1;
-		}
-		else retVal=0;
+		else retVal=XPINSBuiltIn::ParseIntBIF(scriptText, params, vars, &i);		
 	}
 	while(i<scriptText.length()&&scriptText[i]!=expectedEnd)++i;
 	*start=i;
@@ -702,7 +187,7 @@ float XPINSParser::ParseFloatArg(string scriptText,XPINSParams* params, varSpace
 		retVal=readFloat(scriptText, &i, expectedEnd);
 	}
 	else if(scriptText[i]=='?'){
-		retVal=parseFloatExp(scriptText, params,vars, &i);
+		retVal=XPINSBuiltIn::ParseFloatExp(scriptText, params,vars, &i);
 	}
 	else if(scriptText[i]=='#'){//User-defined Function
 		if(scriptText[i+1]!='F'||scriptText[i+2]!='F'){
@@ -719,168 +204,7 @@ float XPINSParser::ParseFloatArg(string scriptText,XPINSParams* params, varSpace
 		if(scriptText[i-1]!='_'||scriptText[i-2]!='F'){
 			retVal=0;
 		}
-		//XF_FADD
-		else if(scriptText[i+1]=='F'&&scriptText[i+2]=='A'&&scriptText[i+3]=='D'&&scriptText[i+4]=='D'){
-			i+=5;
-			float param1=ParseFloatArg(scriptText, params,vars, &i, ',');
-			float param2=ParseFloatArg(scriptText, params,vars, &i, ')');
-			retVal=param1+param2;
-		}
-		//XF_FSUB
-		else if(scriptText[i+1]=='F'&&scriptText[i+2]=='S'&&scriptText[i+3]=='U'&&scriptText[i+4]=='B'){
-			i+=5;
-			float param1=ParseFloatArg(scriptText, params,vars, &i, ',');
-			float param2=ParseFloatArg(scriptText, params,vars, &i, ')');
-			retVal=param1-param2;
-		}
-		//XF_FMULT
-		else if(scriptText[i+1]=='F'&&scriptText[i+2]=='M'&&scriptText[i+3]=='U'&&scriptText[i+4]=='L'&&scriptText[i+4]=='T'){
-			i+=6;
-			float param1=ParseFloatArg(scriptText, params,vars, &i, ',');
-			float param2=ParseFloatArg(scriptText, params,vars, &i, ')');
-			retVal=param1*param2;
-		}
-		//XF_FDIV
-		else if(scriptText[i+1]=='F'&&scriptText[i+2]=='D'&&scriptText[i+3]=='I'&&scriptText[i+4]=='V'){
-			i+=5;
-			float param1=ParseFloatArg(scriptText, params,vars, &i, ',');
-			float param2=ParseFloatArg(scriptText, params,vars, &i, ')');
-			retVal=param1/param2;
-		}
-		//XF_VMAG
-		else if(scriptText[i+1]=='V'&&scriptText[i+2]=='M'&&scriptText[i+3]=='A'&&scriptText[i+4]=='G'){
-			i+=5;
-			Vector param1=ParseVecArg(scriptText, params,vars, &i, ')');
-			retVal=param1.Magnitude();
-		}
-		//XF_VR
-		else if(scriptText[i+1]=='V'&&scriptText[i+2]=='R'){
-			i+=3;
-			Vector param1=ParseVecArg(scriptText, params,vars, &i, ')');
-			float f=0;
-			param1.PolarCoords(&f, NULL,NULL);
-			retVal=f;
-		}
-		//XF_VTHETA
-		else if(scriptText[i+1]=='V'&&scriptText[i+2]=='T'&&scriptText[i+3]=='H'&&scriptText[i+4]=='E'&&scriptText[i+5]=='T'&&scriptText[i+6]=='A'){
-			i+=7;
-			Vector param1=ParseVecArg(scriptText, params,vars, &i, ')');
-			retVal=param1.Direction();
-		}
-		//XF_VPHI
-		else if(scriptText[i+1]=='V'&&scriptText[i+2]=='P'&&scriptText[i+3]=='H'&&scriptText[i+4]=='I'){
-			i+=5;
-			Vector param1=ParseVecArg(scriptText, params,vars, &i, ')');
-			retVal=param1.Altitude();
-		}
-		//XF_VX
-		else if(scriptText[i+1]=='V'&&scriptText[i+2]=='X'){
-			i+=3;
-			Vector param1=ParseVecArg(scriptText, params,vars, &i, ')');
-			float f=0;
-			param1.RectCoords(&f, NULL,NULL);
-			retVal=f;
-		}
-		//XF_VY
-		else if(scriptText[i+1]=='V'&&scriptText[i+2]=='Y'){
-			i+=3;
-			Vector param1=ParseVecArg(scriptText, params,vars, &i, ')');
-			float f=0;
-			param1.RectCoords(NULL, &f,NULL);
-			retVal=f;
-		}
-		//XF_VZ
-		else if(scriptText[i+1]=='V'&&scriptText[i+2]=='Z'){
-			i+=3;
-			Vector param1=ParseVecArg(scriptText, params,vars, &i, ')');
-			float f=0;
-			param1.RectCoords(NULL, NULL,&f);
-			retVal=f;
-		}
-
-		//XF_VANG
-		else if(scriptText[i+1]=='V'&&scriptText[i+2]=='A'&&scriptText[i+3]=='N'&&scriptText[i+4]=='G'){
-			i+=5;
-			Vector param1=ParseVecArg(scriptText, params,vars, &i, ',');
-			Vector param2=ParseVecArg(scriptText, params,vars, &i, ')');
-			retVal=Vector::AngleBetweenVectors(param1, param2);
-		}
-		//XF_VDOT
-		else if(scriptText[i+1]=='V'&&scriptText[i+2]=='D'&&scriptText[i+3]=='O'&&scriptText[i+4]=='T'){
-			i+=5;
-			Vector param1=ParseVecArg(scriptText, params,vars, &i, ',');
-			Vector param2=ParseVecArg(scriptText, params,vars, &i, ')');
-			retVal=Vector::DotProduct(param1, param2);
-		}
-		//XF_VADDPOLAR
-		else if(scriptText[i+1]=='V'&&scriptText[i+2]=='A'&&scriptText[i+3]=='D'&&scriptText[i+4]=='D'&&scriptText[i+5]=='P'&&scriptText[i+6]=='O'&&scriptText[i+7]=='L'&&scriptText[i+8]=='A'&&scriptText[i+9]=='R'){
-			i+=10;
-			float param1=ParseFloatArg(scriptText, params,vars, &i, ',');
-			float param2=ParseFloatArg(scriptText, params,vars, &i, ')');
-			retVal=addPolar(param1, param2);
-		}
-		//XF_VDIST
-		else if(scriptText[i+1]=='V'&&scriptText[i+2]=='D'&&scriptText[i+3]=='I'&&scriptText[i+4]=='S'&&scriptText[i+5]=='T'){
-			i+=6;
-			float param1=ParseFloatArg(scriptText, params,vars, &i, ',');
-			float param2=ParseFloatArg(scriptText, params,vars, &i, ')');
-			retVal=dist(param1, param2);
-		}
-		//XF_TSIN
-		else if(scriptText[i+1]=='T'&&scriptText[i+2]=='S'&&scriptText[i+3]=='I'&&scriptText[i+4]=='N'){
-			i+=5;
-			float param1=ParseFloatArg(scriptText, params,vars, &i, ')');
-			retVal=sinf(param1);
-		}
-		//XF_TCOS
-		else if(scriptText[i+1]=='T'&&scriptText[i+2]=='C'&&scriptText[i+3]=='O'&&scriptText[i+4]=='S'){
-			i+=5;
-			float param1=ParseFloatArg(scriptText, params,vars, &i, ')');
-			retVal=cosf(param1);
-		}
-		//XF_TTAN
-		else if(scriptText[i+1]=='T'&&scriptText[i+2]=='T'&&scriptText[i+3]=='A'&&scriptText[i+4]=='N'){
-			i+=5;
-			float param1=ParseFloatArg(scriptText, params,vars, &i, ')');
-			retVal=tanf(param1);
-		}
-		//XF_TATAN
-		else if(scriptText[i+1]=='T'&&scriptText[i+2]=='A'&&scriptText[i+3]=='T'&&scriptText[i+4]=='A'&&scriptText[i+5]=='N'){
-			i+=6;
-			float param1=ParseFloatArg(scriptText, params,vars, &i, ',');
-			float param2=ParseFloatArg(scriptText, params,vars, &i, ')');
-			retVal=atan2f(param1, param2);
-		}
-		//XF_POW
-		else if(scriptText[i+1]=='P'&&scriptText[i+2]=='O'&&scriptText[i+3]=='W'){
-			i+=4;
-			float param1=ParseFloatArg(scriptText, params,vars, &i, ',');
-			float param2=ParseFloatArg(scriptText, params,vars, &i, ')');
-			retVal=powf(param1, param2);
-		}
-		//XF_POW
-		else if(scriptText[i+1]=='P'&&scriptText[i+2]=='O'&&scriptText[i+3]=='W'){
-			i+=4;
-			float param1=ParseFloatArg(scriptText, params,vars, &i, ',');
-			float param2=ParseFloatArg(scriptText, params,vars, &i, ')');
-			retVal=powf(param1, param2);
-		}
-		//XF_MGET
-		else if(scriptText[i+1]=='M'&&scriptText[i+2]=='G'&&scriptText[i+3]=='E'&&scriptText[i+4]=='T'){
-			i+=5;
-			Matrix param1=ParseMatArg(scriptText, params,vars, &i, ',');
-			int param2=ParseIntArg(scriptText, params,vars, &i, ',');
-			int param3=ParseIntArg(scriptText, params,vars, &i, ')');
-			retVal=param1.ValueAtPosition(param2, param3);
-			
-		}
-		//XF_MDET
-		else if(scriptText[i+1]=='M'&&scriptText[i+2]=='D'&&scriptText[i+3]=='E'&&scriptText[i+4]=='T'){
-			i+=5;
-			Matrix param1=ParseMatArg(scriptText, params,vars, &i, ')');
-			retVal=Matrix::Determinant(param1);
-		}
-		else retVal=0;
+		else retVal=XPINSBuiltIn::ParseFloatBIF(scriptText, params, vars, &i);
 	}
 	while(scriptText[i]!=expectedEnd)++i;
 	*start=i;
@@ -924,7 +248,7 @@ Vector XPINSParser::ParseVecArg(string scriptText,XPINSParams* params,varSpace* 
 		}
 	}
 	else if(scriptText[i]=='?'){
-		retVal=parseVecExp(scriptText, params, vars, &i);
+		retVal=XPINSBuiltIn::ParseVecExp(scriptText, params, vars, &i);
 	}
 	else if(scriptText[i]=='#'){//User-defined Function
 		if(scriptText[i+1]=='V'&&scriptText[i+2]=='F')
@@ -939,73 +263,9 @@ Vector XPINSParser::ParseVecArg(string scriptText,XPINSParams* params,varSpace* 
 		if(scriptText[i-1]!='_'||scriptText[i-2]!='V'){
 			retVal=Vector();
 		}
-		else //XV_VREC
-			if(scriptText[i+1]=='V'&&scriptText[i+2]=='R'&&scriptText[i+3]=='E'&&scriptText[i+4]=='C'){
-				i+=5;
-				float param1=ParseFloatArg(scriptText, params,vars, &i, ',');
-				float param2=ParseFloatArg(scriptText, params,vars, &i, ',');
-				float param3=ParseFloatArg(scriptText, params,vars, &i, ')');
-				retVal=Vector(param1,param2,param3);
-			}
-		//XV_VPOL
-			else if(scriptText[i+1]=='V'&&scriptText[i+2]=='R'&&scriptText[i+3]=='E'&&scriptText[i+4]=='C'){
-				i+=5;
-				float param1=ParseFloatArg(scriptText, params,vars, &i, ',');
-				float param2=ParseFloatArg(scriptText, params,vars, &i, ',');
-				float param3=ParseFloatArg(scriptText, params,vars, &i, ')');
-				retVal=Vector::PolarVector(param1,param2,param3);
-			}
-		//XV_VSPHERE
-			else if(scriptText[i+1]=='V'&&scriptText[i+2]=='S'&&scriptText[i+3]=='H'&&scriptText[i+4]=='E'&&scriptText[i+5]=='R'&&scriptText[i+6]=='E'){
-				i+=7;
-				float param1=ParseFloatArg(scriptText, params,vars, &i, ',');
-				float param2=ParseFloatArg(scriptText, params,vars, &i, ',');
-				float param3=ParseFloatArg(scriptText, params,vars, &i, ')');
-				retVal=Vector::SphericalVector(param1,param2,param3);
-			}
-		//XV_VADD
-			else if(scriptText[i+1]=='V'&&scriptText[i+2]=='A'&&scriptText[i+3]=='D'&&scriptText[i+4]=='D'){
-				i+=5;
-				Vector param1=ParseVecArg(scriptText, params,vars, &i, ',');
-				Vector param2=ParseVecArg(scriptText, params,vars, &i, ')');
-				retVal=Vector::Add(param1,param2);
-			}
-		//X_VSUB
-			else if(scriptText[i+1]=='V'&&scriptText[i+2]=='S'&&scriptText[i+3]=='U'&&scriptText[i+4]=='B'){
-				i+=5;
-				Vector param1=ParseVecArg(scriptText, params,vars, &i, ',');
-				Vector param2=ParseVecArg(scriptText, params,vars, &i, ')');
-				Vector temp=Vector::Scale(param2, -1);
-				retVal=Vector::Add(param1,temp);
-			}
-		//X_VSCALE
-			else if(scriptText[i+1]=='V'&&scriptText[i+2]=='S'&&scriptText[i+3]=='C'&&scriptText[i+4]=='A'&&scriptText[i+5]=='L'&&scriptText[i+6]=='E'){
-				i+=7;
-				Vector param1=ParseVecArg(scriptText, params,vars, &i, ',');
-				float param2=ParseFloatArg(scriptText, params,vars, &i, ')');
-				retVal=Vector::Scale(param1,param2);
-			}
-			else if(scriptText[i+1]=='V'&&scriptText[i+2]=='C'&&scriptText[i+3]=='R'&&scriptText[i+4]=='O'&&scriptText[i+5]=='S'&&scriptText[i+6]=='S'){
-				i+=7;
-				Vector param1=ParseVecArg(scriptText, params,vars, &i, ',');
-				Vector param2=ParseVecArg(scriptText, params,vars, &i, ')');
-				retVal=Vector::CrossProduct(param1,param2);
-			}
-		//X_VPROJ
-			else if(scriptText[i+1]=='V'&&scriptText[i+2]=='P'&&scriptText[i+3]=='R'&&scriptText[i+4]=='O'&&scriptText[i+4]=='J'){
-				i+=6;
-				Vector param1=ParseVecArg(scriptText, params,vars, &i, ',');
-				float param2=ParseFloatArg(scriptText, params,vars, &i, ',');
-				float param3=ParseFloatArg(scriptText, params,vars, &i, ')');
-				retVal=Vector::ProjectionInDirection(param1,param2,param3);
-			}
-		//XV_MMTV
-			else if(scriptText[i+1]=='M'&&scriptText[i+2]=='M'&&scriptText[i+3]=='T'&&scriptText[i+4]=='V'){
-				i+=5;
-				Matrix param1=ParseMatArg(scriptText, params,vars, &i, ')');
-				retVal=Matrix::VectorForMatrix(param1);
-			}
-			else retVal=Vector();
+		else retVal=XPINSBuiltIn::ParseVecBIF(scriptText, params, vars, &i);
+
+		
 	}
 	while(scriptText[i]!=expectedEnd)++i;
 	*start=i;
@@ -1049,7 +309,7 @@ Matrix XPINSParser::ParseMatArg(string scriptText,XPINSParams* params,varSpace* 
 		return m;
 	}
 	else if(scriptText[i]=='?'){
-		return Matrix();//retVal=parseVecExp(scriptText, params, vars, &i);
+		retVal=XPINSBuiltIn::ParseMatExp(scriptText, params, vars, &i);
 	}
 	else if(scriptText[i]=='#'){//User-defined Function
 		if(scriptText[i+1]=='M'&&scriptText[i+2]=='F')
@@ -1064,78 +324,7 @@ Matrix XPINSParser::ParseMatArg(string scriptText,XPINSParams* params,varSpace* 
 		if(scriptText[i-1]!='_'||scriptText[i-2]!='M'){
 			retVal=Matrix();
 		}
-		//XM_MMAKE
-		else if(scriptText[i+1]=='M'&&scriptText[i+2]=='M'&&scriptText[i+3]=='A'&&scriptText[i+4]=='K'&&scriptText[i+5]=='E'){
-			i+=6;
-			int param1=ParseIntArg(scriptText, params,vars, &i, ',');
-			int param2=ParseIntArg(scriptText, params,vars, &i, ')');
-			retVal=Matrix(param1,param2);
-		}
-		//XM_MID
-		else if(scriptText[i+1]=='M'&&scriptText[i+2]=='I'&&scriptText[i+3]=='D'){
-			i+=4;
-			int param1=ParseIntArg(scriptText, params,vars, &i, ')');
-			retVal=Matrix::IdentityMatrixOfSize(param1);
-		}
-		//XM_MROT
-		else if(scriptText[i+1]=='M'&&scriptText[i+2]=='R'&&scriptText[i+3]=='O'&&scriptText[i+4]=='T'){
-			i+=5;
-			float param1=ParseFloatArg(scriptText, params,vars, &i, ',');
-			Vector param2=ParseVecArg(scriptText, params,vars, &i, ')');
-			retVal=Matrix::RotationMatrixWithAngleAroundVector(param2,param1);
-		}
-		//XM_MVTM
-		else if(scriptText[i+1]=='M'&&scriptText[i+2]=='V'&&scriptText[i+3]=='T'&&scriptText[i+4]=='M'){
-			i+=5;
-			Vector param1=ParseVecArg(scriptText, params,vars, &i, ')');
-			retVal=Matrix::MatrixForVector(param1);
-		}
-		//XM_MADD
-		else if(scriptText[i+1]=='M'&&scriptText[i+2]=='A'&&scriptText[i+3]=='D'&&scriptText[i+4]=='D'){
-			i+=5;
-			Matrix param1=ParseMatArg(scriptText, params,vars, &i, ',');
-			Matrix param2=ParseMatArg(scriptText, params,vars, &i, ')');
-			retVal=Matrix::Add(param1,param2);
-
-		}
-		//XM_MSUB
-		else if(scriptText[i+1]=='M'&&scriptText[i+2]=='S'&&scriptText[i+3]=='U'&&scriptText[i+4]=='B'){
-			i+=5;
-			Matrix param1=ParseMatArg(scriptText, params,vars, &i, ',');
-			Matrix temp=ParseMatArg(scriptText, params,vars, &i, ')');
-			Matrix param2=Matrix::Scale(temp, -1);
-			retVal=Matrix::Add(param1,param2);
-			
-		}
-		//XM_MSCALE
-		else if(scriptText[i+1]=='M'&&scriptText[i+2]=='S'&&scriptText[i+3]=='C'&&scriptText[i+4]=='A'&&scriptText[i+4]=='L'&&scriptText[i+4]=='E'){
-			i+=6;
-			Matrix param1=ParseMatArg(scriptText, params,vars, &i, ',');
-			float param2=ParseFloatArg(scriptText, params,vars, &i, ')');
-			retVal=Matrix::Scale(param1,param2);
-			
-		}
-		//XM_MMULT
-		else if(scriptText[i+1]=='M'&&scriptText[i+2]=='M'&&scriptText[i+3]=='U'&&scriptText[i+4]=='L'&&scriptText[i+5]=='T'){
-			i+=6;
-			Matrix param1=ParseMatArg(scriptText, params,vars, &i, ',');
-			Matrix param2=ParseMatArg(scriptText, params,vars, &i, ')');
-			retVal=Matrix::Multiply(param1,param2);
-		}
-		//XM_MINV
-		else if(scriptText[i+1]=='M'&&scriptText[i+2]=='I'&&scriptText[i+3]=='N'&&scriptText[i+4]=='V'){
-			i+=5;
-			Matrix param1=ParseMatArg(scriptText, params,vars, &i, ')');
-			retVal=Matrix::Invert(param1);
-			
-		}
-		//XM_MTRANS
-		else if(scriptText[i+1]=='M'&&scriptText[i+2]=='T'&&scriptText[i+3]=='R'&&scriptText[i+4]=='A'&&scriptText[i+5]=='N'&&scriptText[i+6]=='S'){
-			i+=7;
-			Matrix param1=ParseMatArg(scriptText, params,vars, &i, ')');
-			retVal=Matrix::Transpose(param1);
-		}
-		else retVal=Matrix();
+		else retVal=XPINSBuiltIn::ParseMatBIF(scriptText, params, vars, &i);
 	}
 	while(scriptText[i]!=expectedEnd)++i;
 	*start=i;
@@ -1163,20 +352,6 @@ void* XPINSParser::ParsePointerArg(string scriptText,XPINSParams* params,varSpac
 	while(scriptText[i]!=expectedEnd)++i;
 	*start=i;
 	return retVal;
-}
-void BuiltInVoidFunction(string scriptText,XPINSParams* params,varSpace* vars,int* start,char expectedEnd){
-	int i=*start;
-	//XN_MSET
-	if(scriptText[i+1]=='M'&&scriptText[i+2]=='S'&&scriptText[i+3]=='E'&&scriptText[i+4]=='T'){
-		i+=5;
-		Matrix param1=ParseMatArg(scriptText, params,vars, &i, ',');
-		float param2=ParseFloatArg(scriptText, params,vars, &i, ',');
-		int param3=ParseIntArg(scriptText, params,vars, &i, ',');
-		int param4=ParseIntArg(scriptText, params,vars, &i, ')');
-		param1.SetValueAtPosition(param2, param3, param4);
-	}
-	while(scriptText[i]!=expectedEnd)++i;
-	*start=i;
 }
 //Check to make sure script is compatible
 // script: the script
@@ -1312,7 +487,7 @@ void XPINSParser::ParseScript(string scriptText,XPINSParams *parameters,varSpace
 		else if(scriptText[i]=='X'){
 			i+=3;
 			if(scriptText[i-1]!='_'||scriptText[i-2]!='N')
-				BuiltInVoidFunction(scriptText, parameters, vars, &i,'\n');
+				XPINSBuiltIn::ParseVoidBIF(scriptText, parameters, vars, &i);
 		}
 		else if(scriptText[i]=='@'){
 			i++;
