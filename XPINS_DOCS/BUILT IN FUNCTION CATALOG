@@ -2,6 +2,7 @@ Copyright (c) 2013 Robert Markwick
 See the file license.txt for copying permission
 
 THIS DOCUMENT CONTAINS A LIST OF FUNCTIONS BUILT INTO XPINS
+NOTE: Any function that Takes a FLOAT can be passed an INT instead.
 
 BOOLEAN LOGIC
 
@@ -28,37 +29,20 @@ X_NOT(BOOL $A)
 
 NUMBER COMPARISON
 
-X_ILESS(INT $A,INT $B)
-	Available in XPINS Parser: 0.2.0
-	Description: Evaultes the expression A<B
-	Parameters: The INTs to be compared
-	Return: BOOL, returns true if A is less than B
-	
-X_FLESS(FLOAT $A,FLOAT $B)
+X_LESS(FLOAT $A,FLOAT $B)
 	Available in XPINS Parser: 0.2.0
 	Description: Evaultes the expression A<B
 	Parameters: The FLOATs to be compared
 	Return: BOOL, returns true if A is less than B
 	
-X_IMORE(INT $A,INT $B)
-	Available in XPINS Parser: 0.2.0
-	Description: Evaultes the expression A>B
-	Parameters: The INTs to be compared
-	Return: BOOL, returns true if A is greater than B
-	
-X_FMORE(FLOAT $A,FLOAT $B)
+X_MORE(FLOAT $A,FLOAT $B)
 	Available in XPINS Parser: 0.2.0
 	Description: Evaultes the expression A>B
 	Parameters: The FLOATs to be compared
 	Return: BOOL, returns true if A is greater than B
+
 	
-X_IEQUAL(INT $A,INT $B)
-	Available in XPINS Parser: 0.2.0
-	Description: Evaultes the expression A==B
-	Parameters: The INTs to be compared
-	Return: BOOL, returns true if A is equal to B
-	
-X_FEQUAL(FLOAT $A,FLOAT $B)
+X_EQUAL(FLOAT $A,FLOAT $B)
 	Available in XPINS Parser: 0.2.0
 	Description: Evaultes the expression A==B
 	Parameters: The FLOATs to be compared
@@ -69,55 +53,31 @@ X_FEQUAL(FLOAT $A,FLOAT $B)
 
 ARITHMETIC
 
-X_IADD(INT $A, INT $B)
-	Available in XPINS Parser: 0.2.0
-	Description: Evaultes the expression A+B
-	Parameters: The INTs to be added
-	Return: INT, returns the sum of A and B
-	
-X_FADD(FLOAT $A, FLOAT $B)
+X_ADD(FLOAT $A, FLOAT $B)
 	Available in XPINS Parser: 0.2.0
 	Description: Evaultes the expression A+B
 	Parameters: The FLOATs to be added
 	Return: FLOAT, returns the sum of A and B
 	
-X_ISUB(INT $A, INT $B)
-	Available in XPINS Parser: 0.2.0
-	Description: Evaultes the expression A-B
-	Parameters: The INTs to be subtracted
-	Return: INT, returns the difference of A and B
-	
-X_FSUB(FLOAT $A, FLOAT $B)
+X_SUB(FLOAT $A, FLOAT $B)
 	Available in XPINS Parser: 0.2.0
 	Description: Evaultes the expression A-B
 	Parameters: The FLOATs to be subtracted
 	Return: FLOAT, returns the difference of A and B
 
-X_IMULT(INT $A, INT $B)
-	Available in XPINS Parser: 0.2.0
-	Description: Evaultes the expression A*B
-	Parameters: The INTs to be multiplied
-	Return: INT, returns the product of A and B
-	
-X_FMULT(FLOAT $A, FLOAT $B)
+X_MULT(FLOAT $A, FLOAT $B)
 	Available in XPINS Parser: 0.2.0
 	Description: Evaultes the expression A*B
 	Parameters: The FLOATs to be multiplied
 	Return: FLOAT, returns the product of A and B
 
-X_IDIV(INT $A, INT $B)
-	Available in XPINS Parser: 0.2.0
-	Description: Evaultes the expression A/B
-	Parameters: The INTs to be divided
-	Return: INT, returns the quotient of A and B
-	
-X_FDIV(FLOAT $A, FLOAT $B)
+X_DIV(FLOAT $A, FLOAT $B)
 	Available in XPINS Parser: 0.2.0
 	Description: Evaultes the expression A/B
 	Parameters: The FLOATs to be divided
 	Return: FLOAT, returns the quotient of A and B
 					
-X_IMOD(INT $A, INT $B)
+X_MOD(INT $A, INT $B)
 	Available in XPINS Parser: 0.4.0
 	Description: Evaultes the expression A%B
 	Parameters: The INTs to be modulated
@@ -168,11 +128,11 @@ X_POW(FLOAT $A, FLOAT $B)
 	Parameters: FLOATs representing the base and exponent, respectively
 	Return: FLOAT, returns the result of the power exrpession
 
-X_VDIST(FLOAT $A, FLOAT $B)
+X_VDIST(FLOAT $A, FLOAT $B, FLOAT $C)
 	Available in XPINS Parser: 0.2.0
 	Description: Finds distance between two points given the components
-	Parameters: The X and Y deltas
-	Return: FLOAT, returns sqrt(x^2+y^2)
+	Parameters: The X, Y, and Z deltas
+	Return: FLOAT, returns sqrt(x^2+y^2+z^2);
 
 X_RAND(INT $A, INT$B)
 	Available in XPINS Parser: 0.2.0
@@ -224,7 +184,7 @@ X_VZ(VEC $A)
 	Parameters: The vector for which the Z component is desired
 	Return: FLOAT, returns the Z component of the vector
 
-X_VMAG(VEC $A)
+X_VRHO(VEC $A)
 	Available in XPINS Parser: 0.2.0
 	Description: Gets the Magnitude (RHO) of a Vector
 	Parameters: The vector for which the Magnitude is desired

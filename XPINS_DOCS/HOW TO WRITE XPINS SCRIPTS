@@ -123,62 +123,67 @@ the __ should be the same number as f__ for the given function. (e.g. for f26, c
 the ... is where the code for the remaining steps goes.
 
 
-FIND PARAMETERS:
+FIND ARGUMENTS:
 Ok, now that we have detected a function, we need to figure out what parameters were passed. Good News: The parser does all of the heavy lifting. Here is what your code looks like:
-___ param__=parse___Arg(script,vars,index,___);
+___ arg__=parse___Arg(script,data,i,___);
 
-Only four blanks. The first blank is the type of the parameter. this should be one of the following, depending on what your function takes for the parameter: bool, int, float, XPINSScriptableMath::Vector, or void*
-The second blank should be the number of the parameter, so the variable is called param1, param2, etc. (It is Your choice on whether or not to zero-index, just be consistent. In this documentation I will not be zero-indexing.).
+Only four blanks. The first blank is the type of the argument. This should be one of the following, depending on what your function takes for the parameter: bool, int, float, XPINSScriptableMath::Vector, or void*
+The second blank should be the number of the argument, so the variable is called param1, param2, etc. (It is Your choice on whether or not to zero-index, just be consistent. In this documentation I will not be zero-indexing.).
 The third blank should match the type: Bool, Int, Float, Vec, Mat, or Pointer.
-The final blank is the expected end character. This is ',' unless it is the final parameter for a function, in which case it is ')'.
-So for a VEC parameter that is the 2nd but not last parameter in a function, the code would look like this:
-XPINSScriptableMath::Vector param2=vars->vVars[readFuncParameter(scriptText,index,'V',',')];
-For functions that don't take parameters, simply use this line of code:
+The final blank is the expected end character. This is ',' unless it is the final argument for a function, in which case it is ')'.
+So for a VEC argument that is the 2nd but not last argument in a function, the code would look like this:
+XPINSScriptableMath::Vector arg2=parseVecArg(script,parameters,vars,index,',');
+For functions that don't take arguments, simply use this line of code:
 while(scriptText[*index]!=')')(*index)++;
+
+For help with Function Briding, look at XPINSBuiltIn.cpp. Built in Functions are processed almost the same way that your functions are bridged.
 
 CALLING THE C++ FUNCTION
 Finally, the most important part: calling your functions. This actually is only one line of code (per function), and it goes right after the code for Finding the parameters:
-*rett=f__(...)____;
+*returnVal=f__(...);
 -the first blank is the number for the function (e.g. if it is the first function declared, then f1)
--the "..." is the parameters, comma-separated as usual:
+-the "..." is the arguments, comma-separated as usual:
 	-If you want to pass your custom parameters, write "parameters" as your first (and/or only) argument.
-	-All other parameters: these are simply the param__ variables you declared in the previous step, in the order you declared them.
--for the final blank, if the return type is VEC and the value is taken directly from a custom object, write ->copy(). Otherwise leave this blank.
+	-All other arguments: these are simply the arg__ variables you declared in the previous step, in the order you declared them.
 So if I have function F11 that takes two parameters and the custom parameters and returns a bool:
-*rett=f11(parameters,param1,param2);
+*returnVal=f11(parameters,param1,param2);
 That's really all there is to bridging your functions.
 
 COMPILING SCRIPTS
 The first thing you need to do to run a script is compile the Script so that the parser can interpret the variables correctly.
+
 The following Script:
-@COMPILER[0.3]
-@PARSER[0.8]
+@COMPILER[0.4]
+@PARSER[0.9]
 @FUNC
 	INT MAGIC_NUMBER(FLOAT,BOOL);
 	*MYPLAYER AI_PLAYER_FUNC();
 @END
 @CODE
 	INT $MYVAR2=#MAGIC_NUMBER(^0.2,^T);
-	@WHILE[X_ILESS($MYVAR2,^90)]
+	@WHILE[X_LESS($MYVAR2,^90)]
 	{
-		$MYVAR2=X_IADD($MYVAR2,^10);
+		$MYVAR2=X_ADD($MYVAR2,^10);
 	}
 	*MYPLAYER $AIPLAYER=#AI_PLAYER_FUNC();
 	#SET_FIRE_ANGLE($AIPLAYER,$MYVAR2);
 @END
+
 Would look like this once compiled:
-@PARSER[0.8]
+@PARSER[0.9]
+@VAR B1 I1 F0 V0 M0 P1
 @CODE
-I $I0=#IF1(^0.2,^T);
-B $B0=XI_ILESS($I0,^90);
+$I0=#IF1(^0.2,^T);
+$B0=XB3($I0,^90);
 @WHILE[$B0]
 {
-$I0=XI_IADD($I0,^10);
-$B0=XI_ILESS($I0,^90);
+$I0=XF0($I0,^10);
+$B0=XB3($I0,^90);
 }
-* $P0=#PF2();
+$P0=#PF2();
 #F3($P0,$I0);
 @END
+
 There are three options for compiling:
 	-Build and Run the compiler on your computer, and ship the compiled script with your program.
 	-Compile the script at runtime.
@@ -193,7 +198,7 @@ To compile on a server or at runtime: Include XPINSCompiler.h in whatever file y
 
 RUNNING SCRIPTS
 To run the script, write the following line of code:
-XPINSParser::parseScript(___,_____,NULL,false,0,0);
+XPINSParser::ParseScript(____, ____);
 the first blank is the string object containing the script
 The second blank is the custom parameters struct you pass to the script.
 

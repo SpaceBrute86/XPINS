@@ -29,6 +29,6 @@ namespace XPINSBridge
 	//PARAM: the script text
 	//PARAM: the current index of the script (index of the '(')
 	//PARAM: return pointer
-	void BridgeFunction(int,string,XPINSParams*, XPINSParser::varSpace*,int*,void*);
+	void BridgeFunction(int,string,XPINSParser::XPINSDataRef data,int&,void*);
 }
 #endif /* defined(__XPINS__XPINSBridge__) */

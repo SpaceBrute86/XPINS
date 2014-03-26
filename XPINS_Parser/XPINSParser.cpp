@@ -13,19 +13,14 @@ using namespace XPINSScriptableMath;
 const int kPMajor=0;
 const int kPMinor=9;
 
+void ParseCode(string,XPINSDataRef,int,int);
 
-//Helper functions
+#pragma mark Text to Number
 
 //Read an int constant
-//Can be used to parse script as well (accessing variable indexes)
-// scriptText: the script
-// startIndex: the starting index of the INT
-// expectedEnd: the character expected immediately after the INT
-int readInt(string scriptText,int *startIndex,char expectedEnd)
+int readInt(string scriptText,int& i,char expectedEnd)
 {
-	int i=*startIndex;
 	int index=0;
-	bool isNeg=scriptText[i]=='-';//Make negative if approrpriate
 	while(i<scriptText.length()&&scriptText[i]!=expectedEnd)
 	{
 		index*=10;
@@ -38,20 +33,20 @@ int readInt(string scriptText,int *startIndex,char expectedEnd)
 		else if(scriptText[i]=='7')index+=7;
 		else if(scriptText[i]=='8')index+=8;
 		else if(scriptText[i]=='9')index+=9;
+		else if(scriptText[i]=='.')
+		{
+			index/=10;
+			break;
+		}
 		else if(scriptText[i]!='0')index/=10;
-		i++;
+		++i;
 	}
-	if(isNeg)index*=-1;
-	*startIndex=i;
 	return index;
 }
+
 //read a float constant
-// scriptText: the script
-// startIndex: the starting index of the FLOAT
-// expectedEnd: the character expected immediately after the FLOAT
-float readFloat(string scriptText,int *startIndex,char expectedEnd)
+float readFloat(string scriptText,int& i,char expectedEnd)
 {
-	int i=*startIndex;
 	int index=0;
 	int fpartDig=0;
 	bool fpart=false;
@@ -77,295 +72,285 @@ float readFloat(string scriptText,int *startIndex,char expectedEnd)
 		fpartDig--;
 	}
 	if(isNeg)index*=-1;
-	*startIndex=i;
-	return index;
-}
-//Read Variable Index for Function Parameters
-int readFuncParameter(string scriptText,int *startIndex,char varType,char expectedEnd){
-	int i=*startIndex;
-	++i;
-	if (scriptText[i]!='$'||scriptText[i+1]!=varType) {
-		// printf("\nERROR:INVALID SCRIPT:INVALID PARAMETER FORMAT!\n");
-		return 0;
-	}
-	i+=2;
-	int index=readInt(scriptText, &i, expectedEnd);
-	*startIndex=i;
 	return index;
 }
 
+#pragma mark Argument Parsing
 
-
-//parameter parsing
-bool XPINSParser::ParseBoolArg(string scriptText,XPINSParams* params,varSpace* vars,int* start,char expectedEnd){
-	int i=*start;
+bool XPINSParser::ParseBoolArg(string scriptText,XPINSDataRef data,int& i,char expectedEnd)
+{
 	bool retVal=false;
-	while (i<scriptText.length()&&scriptText[i]!='$'&&scriptText[i]!='^'&&scriptText[i]!='?'&&scriptText[i]!='#'&&scriptText[i]!='X') ++i;
-	if (i>=scriptText.length()) {
-		return false;
-	}
-	if(scriptText[i]=='$'){//Variable
-		i+=2;
-		int index=readInt(scriptText, &i, expectedEnd);
-		retVal=vars->bVars[index];
-	}
-	else if(scriptText[i]=='^'){//constant
-		retVal=(scriptText[i+1]=='T');
-	}
-	else if(scriptText[i]=='?'){//expression
-		retVal=XPINSBuiltIn::ParseBoolExp(scriptText, params,vars, &i);
-	}
-	else if(scriptText[i]=='#'){//User-defined Function
-		if(scriptText[i+1]!='B'||scriptText[i+2]!='F'){
-			retVal=false;
-		}
-		else{
-			i+=3;
-			int fNum=readInt(scriptText, &i, '(');
-			XPINSBridge::BridgeFunction(fNum, scriptText, params, vars,  &i, &retVal);
-		}
-	}
-	else if(scriptText[i]=='X'){//Built-in Function
-		i+=3;
-		if(scriptText[i-1]!='_'||scriptText[i-2]!='B'){
-			retVal=false;
-		}
-		else retVal=XPINSBuiltIn::ParseBoolBIF(scriptText, params, vars, &i);
-	}
-	while(scriptText[i]!=expectedEnd)++i;
-	*start=i;
-	return retVal;
-}
-int XPINSParser::ParseIntArg(string scriptText,XPINSParams* params,varSpace* vars,int* start,char expectedEnd){
-	int i=*start;
-	int retVal=0;
-	while (i<scriptText.length()&&scriptText[i]!='$'&&scriptText[i]!='^'&&scriptText[i]!='?'&&scriptText[i]!='#'&&scriptText[i]!='X') ++i;
-	if(scriptText[i]=='$'){
-		i+=2;
-		int index=readInt(scriptText, &i, expectedEnd);
-		retVal=vars->iVars[index];
-	}
-	else if(scriptText[i]=='^'){
-		++i;
-		retVal=readInt(scriptText, &i, expectedEnd);
-	}
-	else if(scriptText[i]=='?'){
-		retVal=XPINSBuiltIn::ParseIntExp(scriptText, params,vars, &i);
-	}
-	else if(scriptText[i]=='#'){//User-defined Function
-		if(scriptText[i+1]!='I'||scriptText[i+2]!='F'){
-			retVal=NULL;
-		}
-		else{
-			i+=3;
-			int fNum=readInt(scriptText, &i, '(');
-			XPINSBridge::BridgeFunction(fNum, scriptText,params, vars,  &i, &retVal);
-		}
-	}
-	else if(scriptText[i]=='X'){//Built-in Function
-		i+=3;
-		if(scriptText[i-1]!='_'||scriptText[i-2]!='I'){
-			retVal=0;
-		}
-		else retVal=XPINSBuiltIn::ParseIntBIF(scriptText, params, vars, &i);		
-	}
-	while(i<scriptText.length()&&scriptText[i]!=expectedEnd)++i;
-	*start=i;
-	return retVal;
-}
-float XPINSParser::ParseFloatArg(string scriptText,XPINSParams* params, varSpace* vars,int* start,char expectedEnd){
-	int i=*start;
-	float retVal=0;
-	while (scriptText[i]!='$'&&scriptText[i]!='^'&&scriptText[i]!='?'&&scriptText[i]!='#'&&scriptText[i]!='X') ++i;
-	if(scriptText[i]=='$'){
-		i+=2;
-		int index=readInt(scriptText, &i, expectedEnd);
-		retVal=vars->fVars[index];
-	}
-	else if(scriptText[i]=='^'){
-		++i;
-		retVal=readFloat(scriptText, &i, expectedEnd);
-	}
-	else if(scriptText[i]=='?'){
-		retVal=XPINSBuiltIn::ParseFloatExp(scriptText, params,vars, &i);
-	}
-	else if(scriptText[i]=='#'){//User-defined Function
-		if(scriptText[i+1]!='F'||scriptText[i+2]!='F'){
-			retVal=NULL;
-		}
-		else{
-			i+=3;
-			int fNum=readInt(scriptText, &i, '(');
-			XPINSBridge::BridgeFunction(fNum, scriptText,params, vars,  &i, &retVal);
-		}
-	}
-	else if(scriptText[i]=='X'){//Built-in Function
-		i+=3;
-		if(scriptText[i-1]!='_'||scriptText[i-2]!='F'){
-			retVal=0;
-		}
-		else retVal=XPINSBuiltIn::ParseFloatBIF(scriptText, params, vars, &i);
-	}
-	while(scriptText[i]!=expectedEnd)++i;
-	*start=i;
-	return retVal;
-}
-Vector XPINSParser::ParseVecArg(string scriptText,XPINSParams* params,varSpace* vars,int* start,char expectedEnd){
+	while (i<scriptText.length()&&scriptText[i]!='$'&&scriptText[i]!='^'&&scriptText[i]!='?'&&scriptText[i]!='#'&&scriptText[i]!='X') ++i;//Get to Key Character
+	if (i>=scriptText.length()) return false;
 
-	int i=*start;
-	Vector retVal=Vector();
-	while (scriptText[i]!='$'&&scriptText[i]!='^'&&scriptText[i]!='?'&&scriptText[i]!='#'&&scriptText[i]!='X') ++i;
-	if(scriptText[i]=='$'){//variable
+	if(scriptText[i]=='$')//Variable
+	{
 		i+=2;
-		int index=readInt(scriptText, &i, expectedEnd);
-		retVal=vars->vVars[index];
+		int index=readInt(scriptText, i, expectedEnd);
+		retVal=data.scriptVars->bVars[index];
 	}
-	else if(scriptText[i]=='^'){//constant (can contain varialbes, though)
+	else if(scriptText[i]=='^')//constant
+		retVal=(scriptText[i+1]=='T');
+	else if(scriptText[i]=='?')//expression
+		retVal=XPINSBuiltIn::ParseBoolExp(scriptText, data, i);
+	else if(scriptText[i]=='#'&&(scriptText[i+1]=='B'&&scriptText[i+2]!='F'))//User-defined Function
+	{
+		i+=3;
+		int fNum=readInt(scriptText, i, '(');
+		XPINSBridge::BridgeFunction(fNum, scriptText,data, i, &retVal);
+	}
+	else if(scriptText[i]=='X'&&scriptText[i+1]=='B')//Built-in Function
+	{
+		i+=2;
+		int index=readInt(scriptText, i, '(');
+		retVal=XPINSBuiltIn::ParseBoolBIF(index,scriptText, data, i);
+	}
+	while(scriptText[i]!=expectedEnd)++i;
+	return retVal;
+}
+int XPINSParser::ParseIntArg(string scriptText,XPINSDataRef data,int& i,char expectedEnd)
+{
+	return ParseFloatArg(scriptText, data, i, expectedEnd);
+}
+float XPINSParser::ParseFloatArg(string scriptText, XPINSDataRef data,int& i,char expectedEnd)
+{
+	float retVal=0;
+	while (scriptText[i]!='$'&&scriptText[i]!='^'&&scriptText[i]!='?'&&scriptText[i]!='#'&&scriptText[i]!='X') ++i;//Get to Key Character
+	if(scriptText[i]=='$')//Variable
+	{
+		i+=2;
+		int index=readInt(scriptText, i, expectedEnd);
+		retVal=scriptText[i-1]=='F'?data.scriptVars->fVars[index]:data.scriptVars->iVars[index];
+	}
+	else if(scriptText[i]=='^')//Constant
+	{
 		++i;
-		if(scriptText[i]=='P'&&scriptText[i+1]=='<'){//Polar Vector
-				i+=2;
-				float r=ParseFloatArg(scriptText, params,vars, &i, ',');
-				float t=ParseFloatArg(scriptText, params,vars, &i, ',');
-				float z=ParseFloatArg(scriptText, params,vars, &i, '>');
-				retVal=Vector::PolarVector(r, t, z);
-		}
-		else if(scriptText[i]=='S'&&scriptText[i+1]=='<'){//Polar Vector
+		retVal=readFloat(scriptText, i, expectedEnd);
+	}
+	else if(scriptText[i]=='?')//Expression
+		retVal=scriptText[i+1]=='I'?
+			XPINSBuiltIn::ParseIntExp(scriptText, data, i):
+			XPINSBuiltIn::ParseFloatExp(scriptText, data, i);
+	else if(scriptText[i]=='#'&&(scriptText[i+1]=='F'||scriptText[i+1]=='I')&&scriptText[i+2]=='F')
+		//User-defined Function
+	{
+		i+=3;
+		int fNum=readInt(scriptText, i, '(');
+		XPINSBridge::BridgeFunction(fNum, scriptText,data,  i, &retVal);
+	}
+	else if(scriptText[i]=='X'&&(scriptText[i+1]=='I'||scriptText[i+1]=='F'))
+	//Built-in Function
+	{
+		bool isFloat=scriptText[i+1]=='F';
+		i+=2;
+		int index=readInt(scriptText, i, '(');
+		retVal=isFloat?
+			XPINSBuiltIn::ParseFloatBIF(index,scriptText, data, i):
+			XPINSBuiltIn::ParseIntBIF(index,scriptText, data, i);
+	}
+	while(scriptText[i]!=expectedEnd)++i;
+	return retVal;
+}
+Vector XPINSParser::ParseVecArg(string scriptText,XPINSDataRef data,int& i,char expectedEnd)
+{
+	Vector retVal=Vector();
+	while (scriptText[i]!='$'&&scriptText[i]!='^'&&scriptText[i]!='?'&&scriptText[i]!='#'&&scriptText[i]!='X') ++i;//Get to Key Character
+	if(scriptText[i]=='$')//variable
+	{
+		i+=2;
+		int index=readInt(scriptText, i, expectedEnd);
+		retVal=data.scriptVars->vVars[index];
+	}
+	else if(scriptText[i]=='^')//constant (can contain varialbes, though)
+	{
+		++i;
+		if(scriptText[i]=='P'&&scriptText[i+1]=='<')//Polar Vector
+		{
 			i+=2;
-			float r=ParseFloatArg(scriptText, params,vars, &i, ',');
-			float t=ParseFloatArg(scriptText, params,vars, &i, ',');
-			float p=ParseFloatArg(scriptText, params,vars, &i, '>');
+			float r=ParseFloatArg(scriptText, data, i, ',');
+			float t=ParseFloatArg(scriptText, data, i, ',');
+			float z=ParseFloatArg(scriptText, data, i, '>');
+			retVal=Vector::PolarVector(r, t, z);
+		}
+		else if(scriptText[i]=='S'&&scriptText[i+1]=='<')//Spherical Vector
+		{
+			i+=2;
+			float r=ParseFloatArg(scriptText, data, i, ',');
+			float t=ParseFloatArg(scriptText, data, i, ',');
+			float p=ParseFloatArg(scriptText, data, i, '>');
 			retVal=Vector::PolarVector(r, t ,p);
 		}
-		else if(scriptText[i]=='<'){//rectangular vector
+		else if(scriptText[i]=='<')//rectangular vector
+		{
 			++i;
-			float x=ParseFloatArg(scriptText, params,vars, &i, ',');
-			float y=ParseFloatArg(scriptText, params,vars, &i, ',');
-			float z=ParseFloatArg(scriptText, params,vars, &i, '>');
+			float x=ParseFloatArg(scriptText, data, i, ',');
+			float y=ParseFloatArg(scriptText, data, i, ',');
+			float z=ParseFloatArg(scriptText, data, i, '>');
 			retVal=Vector(x, y,z);
 		}
-		else{
-			retVal=Vector();
-		}
 	}
-	else if(scriptText[i]=='?'){
-		retVal=XPINSBuiltIn::ParseVecExp(scriptText, params, vars, &i);
-	}
-	else if(scriptText[i]=='#'){//User-defined Function
-		if(scriptText[i+1]=='V'&&scriptText[i+2]=='F')
-		{
+	else if(scriptText[i]=='?')
+		retVal=XPINSBuiltIn::ParseVecExp(scriptText, data, i);
+	else if(scriptText[i]=='#'&&scriptText[i+1]=='V'&&scriptText[i+2]=='F'){//User-defined Function
 			i+=3;
-			int fNum=readInt(scriptText, &i, '(');
-			XPINSBridge::BridgeFunction(fNum, scriptText,params, vars,  &i, &retVal);
-		}
+			int fNum=readInt(scriptText, i, '(');
+			XPINSBridge::BridgeFunction(fNum, scriptText,data,  i, &retVal);
 	}
-	else if(scriptText[i]=='X'){//Built-in Function
-		i+=3;
-		if(scriptText[i-1]!='_'||scriptText[i-2]!='V'){
-			retVal=Vector();
-		}
-		else retVal=XPINSBuiltIn::ParseVecBIF(scriptText, params, vars, &i);
-
-		
+	else if(scriptText[i]=='X'&&scriptText[i+1]=='V')//Built-in Function
+	{
+		i+=2;
+		int index=readInt(scriptText, i, '(');
+		retVal=XPINSBuiltIn::ParseVecBIF(index,scriptText, data, i);
 	}
 	while(scriptText[i]!=expectedEnd)++i;
-	*start=i;
 	return retVal;
 }
 
-Matrix XPINSParser::ParseMatArg(string scriptText,XPINSParams* params,varSpace* vars,int* start,char expectedEnd){
-	
-	int i=*start;
+Matrix XPINSParser::ParseMatArg(string scriptText,XPINSDataRef data,int& i,char expectedEnd)
+{
 	Matrix retVal=Matrix();
-	while (scriptText[i]!='$'&&scriptText[i]!='^'&&scriptText[i]!='?'&&scriptText[i]!='#'&&scriptText[i]!='X') ++i;
-	if(scriptText[i]=='$'){//variable
+	while (scriptText[i]!='$'&&scriptText[i]!='^'&&scriptText[i]!='?'&&scriptText[i]!='#'&&scriptText[i]!='X') ++i;//Get to Key Character
+	if(scriptText[i]=='$')//variable
+	{
 		i+=2;
-		int index=readInt(scriptText, &i, expectedEnd);
-		retVal=vars->mVars[index];
+		int index=readInt(scriptText, i, expectedEnd);
+		retVal=data.scriptVars->mVars[index];
 	}
-	else if(scriptText[i]=='^'){//constant (can contain varialbes, though)
-		while (scriptText[i]!='[') ++i;
-		size_t cols=1;
-		for (int j=i; scriptText[j]!=';'&&scriptText[j]!=']'; ++j) {
+	else if(scriptText[i]=='^')//constant (can contain varialbes, though)
+	{
+		while (scriptText[++i]!='[');
+		size_t rows=1,cols=1;
+		for (int j=i; scriptText[j]!=';'&&scriptText[j]!=']'; ++j)//Find Col Count
 			if(scriptText[j]==',')++cols;
-		}
-		size_t rows=1;
-		for (int j=i; scriptText[j]!=']'; ++j) {
-			if(scriptText[j]==';')++cols;
-		}
-		Matrix m=Matrix(rows,cols);
+		for (int j=i; scriptText[j]!=']'; ++j)//Find Row Count
+			if(scriptText[j]==';')++rows;
+		retVal=Matrix(rows,cols);//Create Matrix
 		int r=0,c=0;
-		while (scriptText[i]!=']')
+		while (scriptText[i]!=']')//Find Values
 		{
-			if(c==cols-1){
-				if(r==rows-1)m.SetValueAtPosition(ParseFloatArg(scriptText, params, vars, &i, ']'),r,c);
-				else m.SetValueAtPosition(ParseFloatArg(scriptText, params, vars, &i, ';'),r,c);
+			if(c==cols-1)
+			{
+				if(r==rows-1)retVal.SetValueAtPosition(ParseFloatArg(scriptText, data, i, ']'),r,c);
+				else retVal.SetValueAtPosition(ParseFloatArg(scriptText, data, i, ';'),r,c);
 				++r;
 				c=-1;
 			}
-			else m.SetValueAtPosition(ParseFloatArg(scriptText, params, vars, &i, ','),r,c);
+			else retVal.SetValueAtPosition(ParseFloatArg(scriptText, data, i, ','),r,c);
 			++c;
 			++i;
 		}
-		return m;
 	}
-	else if(scriptText[i]=='?'){
-		retVal=XPINSBuiltIn::ParseMatExp(scriptText, params, vars, &i);
-	}
-	else if(scriptText[i]=='#'){//User-defined Function
-		if(scriptText[i+1]=='M'&&scriptText[i+2]=='F')
-		{
+	else if(scriptText[i]=='?')
+		retVal=XPINSBuiltIn::ParseMatExp(scriptText, data, i);
+	else if(scriptText[i]=='#'&&scriptText[i+1]=='M'&&scriptText[i+2]=='F')//User-defined Function
+	{
 			i+=3;
-			int fNum=readInt(scriptText, &i, '(');
-			XPINSBridge::BridgeFunction(fNum, scriptText,params, vars,  &i, &retVal);
-		}
+			int fNum=readInt(scriptText, i, '(');
+			XPINSBridge::BridgeFunction(fNum, scriptText,data,  i, &retVal);
 	}
-	else if(scriptText[i]=='X'){//Built-in Function
-		i+=3;
-		if(scriptText[i-1]!='_'||scriptText[i-2]!='M'){
-			retVal=Matrix();
-		}
-		else retVal=XPINSBuiltIn::ParseMatBIF(scriptText, params, vars, &i);
+	else if(scriptText[i]=='X'&&scriptText[i+1]=='M')//Built-in Function
+	{
+		i+=2;
+		int index=readInt(scriptText, i, '(');
+		retVal=XPINSBuiltIn::ParseMatBIF(index,scriptText, data, i);
 	}
 	while(scriptText[i]!=expectedEnd)++i;
-	*start=i;
 	return retVal;
 }
 
-void* XPINSParser::ParsePointerArg(string scriptText,XPINSParams* params,varSpace* vars,int* start,char expectedEnd){
-	int i=*start;
+void* XPINSParser::ParsePointerArg(string scriptText,XPINSDataRef data,int& i,char expectedEnd){
 	void* retVal=NULL;
-	while (scriptText[i]!='$'&&scriptText[i]!='#') ++i;
-	if(scriptText[i]=='$'){//variable
+	while (scriptText[i]!='$'&&scriptText[i]!='#') ++i;//Get to Key Character
+	if(scriptText[i]=='$')//variable
+	{
 		i+=2;
-		int index=readInt(scriptText, &i, expectedEnd);
-		retVal=vars->pVars[index];
+		int index=readInt(scriptText, i, expectedEnd);
+		retVal=data.scriptVars->pVars[index];
 	}
-	else if(scriptText[i]=='#'){//User-defined Function
-		if(scriptText[i+1]!='P'||scriptText[i+2]!='F'){
-		}
-		else{
-			i+=3;
-			int fNum=readInt(scriptText, &i, '(');
-			XPINSBridge::BridgeFunction(fNum, scriptText,params, vars,  &i, &retVal);
-		}
+	else if(scriptText[i]=='#'&&scriptText[i+1]=='P'&&scriptText[i+2]=='F')//User-defined Function
+	{
+		i+=3;
+		int fNum=readInt(scriptText, i, '(');
+		XPINSBridge::BridgeFunction(fNum, scriptText,data,  i, &retVal);
 	}
 	while(scriptText[i]!=expectedEnd)++i;
-	*start=i;
 	return retVal;
 }
+
+#pragma mark Conditionals and Loops
+void skipBlock(string scriptText, int &i)
+{
+	while (scriptText[i]!='{')++i;
+	int num=1;
+	//skip if block
+	while(num>0){
+		if(++i>=scriptText.length())break;
+		if(scriptText[i]=='{')
+			++num;
+		else if(scriptText[i]=='}')
+			num--;
+	}
+}
+void ParseIf(string scriptText,XPINSDataRef data,int &i)
+{
+	while (scriptText[i]!='$'&&scriptText[i]!='?'&&scriptText[i]!='^'&&scriptText[i]!='#'&&scriptText[i]!='X') ++i;
+	if(scriptText[i+1]!='B'&&scriptText[i]!='^')//Bad Script
+	{
+		printf("WARNING:VARIABLE NOT BOOL, Assuming False");
+		skipBlock(scriptText, i);
+		while (scriptText[++i]!='\n');
+	}
+	else if(!ParseBoolArg(scriptText,data, i, ']'))//If was false
+	{
+		skipBlock(scriptText, i);
+		while (scriptText[++i]!='\n');
+		++i;
+		if(scriptText[i]=='@'&&scriptText[i+1]=='E'&&scriptText[i+2]=='L')
+		{
+			if (scriptText[i+3]=='I'&&scriptText[i+4]=='F') ParseIf(scriptText, data, i);//ELIF
+			else while (scriptText[++i]!='{');//ELSE
+		}
+	}
+	else while (scriptText[++i]!='{');//Execute if
+}
+void ParseLoop(string scriptText,XPINSDataRef data, int &i)
+{
+	while (scriptText[i]!='$'&&scriptText[i]!='?'&&scriptText[i]!='^'&&scriptText[i]!='#'&&scriptText[i]!='X') i++;
+	if(scriptText[i+1]!='B'&&scriptText[i]!='^')
+	{
+		printf("WARNING:VARIABLE NOT BOOL, SKIPPING WHILE LOOP");
+		skipBlock(scriptText, i);
+		while (scriptText[++i]!='\n');
+	}
+	else
+	{
+		int expressionIndex=i--;
+		while (scriptText[++i]!='{');
+		int loopStart=i;
+		skipBlock(scriptText, i);
+		int loopStop=i;
+		int temp=expressionIndex;
+		while (ParseBoolArg(scriptText, data, expressionIndex, ']')) {
+			expressionIndex=temp;
+			ParseCode(scriptText, data, loopStart, loopStop);
+		}
+	}
+}
+
+#pragma mark Script Execution
+
 //Check to make sure script is compatible
-// script: the script
-bool checkVersion(string script){
-	for(int i=0;i<script.length();i++){
-		if(script[i]=='@'&&script[i+1]=='P'&&script[i+2]=='A'&&script[i+3]=='R'&&script[i+4]=='S'&&script[i+5]=='E'&&script[i+6]=='R'){
-			while(script[i]!='[')i++;
-			int MAJOR=readInt(script, &i, '.');
-			int MINOR=readInt(script, &i, ']');
-			if(MAJOR!=kPMajor){
-				cout<<"INCOMPATIBLE VERSION. FAILING";
-				return false;
-			}
-			if(MINOR>kPMinor){
+bool checkVersion(string script)
+{
+	for(int i=0;i<script.length();i++)
+	{
+		if(script[i]=='@'&&script[i+1]=='P'&&script[i+2]=='A'&&script[i+3]=='R'&&script[i+4]=='S'&&script[i+5]=='E'&&script[i+6]=='R')
+		{
+			while(script[++i]!='[');
+			int MAJOR=readInt(script, i, '.');
+			int MINOR=readInt(script, i, ']');
+			if(MAJOR!=kPMajor||MINOR>kPMinor)
+			{
 				cout<<"INCOMPATIBLE VERSION. FAILING";
 				return false;
 			}
@@ -375,242 +360,115 @@ bool checkVersion(string script){
 	cout<<"SCRIPT MISSING VERSION. FAILING";
 	return false;
 }
-//Primary Function
-//See header for parameter descriptions
-void XPINSParser::ParseScript(string scriptText,XPINSParams *parameters,varSpace *vars,bool isRECURSIVE,int start,int stop){
-//	cout<<scriptText.length()<<endl<<endl;
-	//SET UP VAR SPACE
-	bool initialized_varSpace=false;
-	if(vars==NULL){
-		vars=new varSpace;
-		vars->bVars=vector<bool>();
-		vars->iVars=vector<int>();
-		vars->fVars=vector<float>();
-		vars->vVars=vector<Vector>();
-		vars->pVars=vector<void*>();
-		initialized_varSpace=true;
-	}
-	//RUN SCRIPT
-	int i=0;//index of char in script
-	if(isRECURSIVE)i=start;
-	//Validate start of script
-	if(!isRECURSIVE){
-		if(!checkVersion(scriptText))return;
-		while (scriptText[i]!='\n')i++;
-		while(scriptText[i]!='@')i++;
-		if(scriptText[i+1]!='C'||
-		   scriptText[i+2]!='O'||
-		   scriptText[i+3]!='D'||
-		   scriptText[i+4]!='E'){
-			printf("\nERROR:INVALID SCRIPT:MISSING @CODE!\n");
-			return;
-		}
-		++i;
-	}
+//Allocate Variable space
+XPINSVarSpace* allocVars(string scriptText)
+{
+	XPINSVarSpace* space=new XPINSVarSpace();
+	int i=0;
+	 while(scriptText[i]!='@'||scriptText[i+1]!='V')++i;
+	while(scriptText[i++]!='B');
+	space->bVars.resize(readInt(scriptText, i, ' '));
+	while(scriptText[i++]!='I');
+	space->iVars.resize(readInt(scriptText, i, ' '));
+	while(scriptText[i++]!='F');
+	space->fVars.resize(readInt(scriptText, i, ' '));
+	while(scriptText[i++]!='V');
+	space->vVars.resize(readInt(scriptText, i, ' '));
+	while(scriptText[i++]!='M');
+	space->mVars.resize(readInt(scriptText, i, ' '));
+	while(scriptText[i++]!='P');
+	space->pVars.resize(readInt(scriptText, i, ' '));
+	return space;
+}
+void XPINSParser::ParseScript(string script,XPINSParams* params)
+{
+	if(!checkVersion(script))return;//Check Script Version
+	//Set up Data Space
+	XPINSParser::XPINSDataRef data=XPINSParser::XPINSDataRef();
+	data.scriptParams=params;
+	data.scriptVars=allocVars(script);
+	//Run Script
+	ParseCode(script, data,0,-1);
+	//Clean up
+	delete data.scriptVars;
+}
+
+//This is the actual code parser (makes loops easier). Call ParseCode and it will call this.
+void ParseCode(string scriptText,XPINSDataRef data,int start,int stop)
+{
+	int i=start;
+	//Get to the start of the Script
+	if(stop<0) while(scriptText[i]!='@'||scriptText[i+1]!='C')++i;
 	while(true){
 		//get to next line
 		while(i<scriptText.length()&&scriptText[i++]!='\n'){}
 		if (i>=scriptText.length())break;
-		//cout<<scriptText[i];
-		//reaching the end of the Script
-		if(!(scriptText[i]!='@'||
-			scriptText[i+1]!='E'||
-			scriptText[i+2]!='N'||
-			 scriptText[i+3]!='D')||
-		   (isRECURSIVE&&i>=stop)){
-			break;
-		}
-		//Declaring new vars
-		if(scriptText[i]=='B'){
-			vars->bVars.resize(vars->bVars.size()+1);
-			while(scriptText[i]!='$')i++;
-		}
-		else if(scriptText[i]=='I'){
-			vars->iVars.resize(vars->iVars.size()+1);
-			while(scriptText[i]!='$')i++;
-		}
-		else if( scriptText[i]=='F'){
-			vars->fVars.resize(vars->fVars.size()+1);
-			while(scriptText[i]!='$')i++;
-		}
-		else if( scriptText[i]=='V'){
-			vars->vVars.resize(vars->vVars.size()+1);
-			while(scriptText[i]!='$')i++;
-		}
-		else if( scriptText[i]=='*'){
-			vars->pVars.resize(vars->pVars.size()+1);
-			while(scriptText[i]!='$')i++;
-		}
-		if(scriptText[i]=='$'){
-			i++;
-			if(scriptText[i]=='B'){
-				i++;
-				int index=readInt(scriptText, &i, '=');
-				i++;
-				vars->bVars[index]=ParseBoolArg(scriptText, parameters,vars, &i, '\n');
-			}
-			else if(scriptText[i]=='I'){
-				i++;
-				int index=readInt(scriptText, &i, '=');
-				i++;
-				vars->iVars[index]=ParseIntArg(scriptText, parameters,vars, &i, '\n');
-			}
-			else if(scriptText[i]=='F'){
-				i++;
-				int index=readInt(scriptText, &i, '=');
-				i++;
-				vars->fVars[index]=ParseFloatArg(scriptText, parameters,vars, &i, '\n');
-			}
-			else if(scriptText[i]=='V'){
-				i++;
-				int index=readInt(scriptText, &i, '=');
-				i++;
-				vars->vVars[index]=ParseVecArg(scriptText, parameters,vars, &i,'\n');
-			}
-			else if(scriptText[i]=='P'){
-				i++;
-				int index=readInt(scriptText, &i, '=');
-				i++;
-				vars->pVars[index]=ParsePointerArg(scriptText, parameters, vars, &i,'\n');
-			}
-			if(i>=scriptText.length())break;
-		}
-		else if(scriptText[i]=='#'){
-			if (scriptText[i+1]!='F') {
-				printf("\nERROR:INVALID SCRIPT:NOT A FUNCTION NAME!\n");
-			}
-			i+=2;
-			int fNum=readInt(scriptText, &i, '(');
-			XPINSBridge::BridgeFunction(fNum, scriptText,parameters, vars,  &i, 0);
-			if(i>=scriptText.length())break;
-		}
-		else if(scriptText[i]=='X'){
-			i+=3;
-			if(scriptText[i-1]!='_'||scriptText[i-2]!='N')
-				XPINSBuiltIn::ParseVoidBIF(scriptText, parameters, vars, &i);
-		}
-		else if(scriptText[i]=='@'){
-			i++;
-			//IF STATEMENT
-			if(scriptText[i]=='I'&&scriptText[i+1]=='F'){
-				while (scriptText[i]!='$'&&scriptText[i]!='?'&&scriptText[i]!='^'&&scriptText[i]!='#'&&scriptText[i]!='X') i++;
-				if(scriptText[i+1]!='B'&&scriptText[i]!='^'){
-					printf("WARNING:VARIABLE NOT BOOL, SKIPPING IF/ELSE\n");
-					while (scriptText[i]!='{')i++;
-					--i;
-					int num=0;
-					bool found=false;
-					//skip if block
-					while(!found||num>0){
-						if(i>=scriptText.length())break;
-						if(scriptText[i]=='{'){
-							num++;found=true;}
-						else if(scriptText[i]=='}')
-							num--;
+		if((scriptText[i]=='@'&&scriptText[i+1]=='E'&&scriptText[i+2]=='N'&&scriptText[i+3]=='D')||
+		   (stop>0&&i>=stop))break;
+		//Determine Key Character
+		switch (scriptText[i]) {
+			case '$':{//Variable
+				i+=2;
+				switch (scriptText[i-1]) {
+					case 'B':{//Bool Variable
+						int index=readInt(scriptText, i, '=');
 						i++;
-					}
-					while (scriptText[i]!='\n')i++;
-					//skiip Else
-					if(scriptText[i]=='@'&&scriptText[i+1]=='E'&&scriptText[i+2]=='L'&&scriptText[i+3]=='S'&&scriptText[i+4]=='E'){
-						while (scriptText[i]!='{')i++;
-						--i;
-						int num=0;
-						bool found=false;
-						//skip if block
-						while(!found||num>0){
-							if(i>=scriptText.length())break;
-							if(scriptText[i]=='{'){
-								num++;found=true;}
-							else if(scriptText[i]=='}')
-								num--;
-							i++;
-						}
-					}
-				}
-				else{
-					if(!ParseBoolArg(scriptText, parameters, vars, &i, ']')){
-						while (scriptText[i]!='{')i++;
-						--i;
-						int num=0;
-						bool found=false;
-						//skip if block
-						while(!found||num>0){
-							if(i>=scriptText.length())break;
-							if(scriptText[i]=='{'){
-								num++;found=true;}
-							else if(scriptText[i]=='}')
-								num--;
-							i++;
-						}
-						while (scriptText[i]!='\n')i++;
+						data.scriptVars->bVars[index]=ParseBoolArg(scriptText, data, i, '\n');
+					}break;
+					case 'I':{//INT variable
+						int index=readInt(scriptText, i, '=');
+						i++;
+						data.scriptVars->iVars[index]=ParseIntArg(scriptText, data, i, '\n');
+					}break;
+					case 'F':{//FLOAT variable
+						int index=readInt(scriptText, i, '=');
 						++i;
-						//execute else if applicable
-						if(scriptText[i]=='@'&&scriptText[i+1]=='E'&&scriptText[i+2]=='L'&&scriptText[i+3]=='S'&&scriptText[i+4]=='E'){
-							while (scriptText[i]!='{')i++;
-						}
-					}
-					else{
-						while (scriptText[i]!='{')i++;
-					}
+						data.scriptVars->fVars[index]=ParseFloatArg(scriptText, data, i, '\n');
+					}break;
+					case 'V':{//VEC variable
+						int index=readInt(scriptText, i, '=');
+						++i;
+						data.scriptVars->vVars[index]=ParseVecArg(scriptText, data, i, '\n');
+					}break;
+					case 'M':{//MAT variable
+						int index=readInt(scriptText, i, '=');
+						++i;
+						data.scriptVars->mVars[index]=ParseMatArg(scriptText, data, i, '\n');
+					}break;
+					case 'P':{//Pointer variable
+						int index=readInt(scriptText, i, '=');
+						++i;
+						data.scriptVars->pVars[index]=ParsePointerArg(scriptText, data, i, '\n');
+					}break;
 				}
-			}
-			//WHILE LOOP
-			else if(scriptText[i]=='W'&&scriptText[i+1]=='H'&&scriptText[i+2]=='I'&&scriptText[i+3]=='L'&&scriptText[i+4]=='E'){
-				while (scriptText[i]!='$'&&scriptText[i]!='?'&&scriptText[i]!='^'&&scriptText[i]!='#'&&scriptText[i]!='X') i++;
-				if(scriptText[i+1]!='B'&&scriptText[i]!='^'){
-					printf("WARNING:VARIABLE NOT BOOL, SKIPPING WHILE LOOP");
+			}break;
+			case '#':{
+				i+=2;
+				int fNum=readInt(scriptText, i, '(');
+				XPINSBridge::BridgeFunction(fNum, scriptText,data,  i, 0);
+			}break;
+			case 'X':{
+				i+=2;
+				int index=readInt(scriptText, i, '(');
+				XPINSBuiltIn::ParseVoidBIF(index,scriptText, data, i);
+			}break;
+			case '@':{
+				++i;
+				//IF STATEMENT
+				if(scriptText[i]=='I'&&scriptText[i+1]=='F'){
+					ParseIf(scriptText, data, i);
 				}
-				else{
-					int expIndex=i--;
-					while (scriptText[++i]!='{'){};
-					int loopStart=i;
-					int num=0;
-					bool found=false;
-					//skip if block
-					while(!found||num>0){
-						if(i>=scriptText.length())break;
-						if(scriptText[i]=='{'){
-							num++;found=true;}
-						else if(scriptText[i]=='}')
-							num--;
-						i++;
-					}
-					int loopStop=i;
-				//	for(int k=loopStart;k<=loopStop;++k)cout<<scriptText[k];
-					int temp=expIndex;
-					while (ParseBoolArg(scriptText, parameters, vars, &expIndex, ']')) {
-						expIndex=temp;
-						ParseScript(scriptText, parameters, vars, true, loopStart, loopStop);
-					}
+				//WHILE LOOP
+				else if(scriptText[i]=='W'&&scriptText[i+1]=='H'&&scriptText[i+2]=='I'&&scriptText[i+3]=='L'&&scriptText[i+4]=='E'){
+					ParseLoop(scriptText,data,i);
 				}
-			}
-			//ELSE (BYPASS because IF was executed)
-			else if(scriptText[i]=='E'&&scriptText[i+1]=='L'&&scriptText[i+2]=='S'&&scriptText[i+3]=='E'){
-				while (scriptText[i]!='{')i++;
-				--i;
-				int num=0;
-				bool found=false;
-				//skip if block
-				while(!found||num>0){
-					if(i>=scriptText.length())break;
-					if(scriptText[i]=='{'){
-						num++;found=true;}
-					else if(scriptText[i]=='}')
-						num--;
-					i++;
+				//ELSE/ELIF (BYPASS because IF was executed)
+				else if(scriptText[i]=='E'&&scriptText[i+1]=='L'){
+					skipBlock(scriptText, i);
+					while (scriptText[i]!='\n')i++;
 				}
-				
-			}
-			if(i>=scriptText.length())break;
+			}break;
 		}
-	}
-	//wipe declared variables
-	if(initialized_varSpace) {
-		vars->bVars.resize(0);
-		vars->iVars.resize(0);
-		vars->fVars.resize(0);
-		vars->vVars.resize(0);
-		vars->pVars.resize(0);
-		delete vars;
+		if(i>=scriptText.length())break;
 	}
 }

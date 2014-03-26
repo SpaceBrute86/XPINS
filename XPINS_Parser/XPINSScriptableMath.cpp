@@ -103,8 +103,8 @@ float XPINSScriptableMath::addPolar(float x,float y){
 	while (res>=2*M_PI) res-=2*M_PI;
 	return res;
 }
-float XPINSScriptableMath::dist(float x, float y){
-	return sqrtf(x*x+y*y);
+float XPINSScriptableMath::dist(float x, float y,float z){
+	return sqrtf(x*x+y*y+z*z);
 }
 
 #pragma mark Matrix Library

@@ -68,6 +68,6 @@ namespace XPINSScriptableMath{
 	};
 
 	float addPolar(float,float);
-	float dist(float,float);
+	float dist(float,float,float);
 }
 #endif

@@ -18,7 +18,7 @@ namespace XPINSCompileUtil {
 	string strRepresentationOfInt(int);
 	bool stringsMatch(int,string,string);
 	int readVarIndex(string,int *,char);
-	char charForBuiltin(string);
+	string nameForBuiltin(string);
 }
 
 //Compile Script
@@ -32,8 +32,6 @@ bool XPINSCompiler::compileScript(string* input){
 //	cout<<endl<<"Comments and ';'s Removed:\n"<<scriptText<<endl;
 	if(!renameFunctions(&scriptText))return false;
 //	cout<<endl<<"User Functions Renamed:\n"<<scriptText<<endl;
-	if(!renameTypes(&scriptText))return false;
-//	cout<<endl<<"Variable Types Renamed:\n"<<scriptText<<endl;
 	if(!renameVars(&scriptText))return false;
 //	cout<<endl<<"Variables Renamed:\n"<<scriptText<<endl;
 	if(!renameBuiltIns(&scriptText))return false;
@@ -60,7 +58,7 @@ bool XPINSCompiler::checkVersion(string* script){
 				cout<<"INCOMPATIBLE VERSION. EXITING";
 				return false;
 			}
-			if(MINOR<kMinor){
+			if(MINOR>kMinor){
 				cout<<"INCOMPATIBLE VERSION. EXITING";
 				return false;
 			}
@@ -215,7 +213,7 @@ bool XPINSCompiler::renameFunctions(string *text){
 				break;
 			}
 			//Find start of function
-			while(intermediate1[j]!='#'){
+			while(intermediate1.length()>j&&intermediate1[j]!='#'){
 				intermediate2+=intermediate1[j];
 				j++;
 			}
@@ -257,9 +255,7 @@ bool XPINSCompiler::renameBuiltIns(string *text){
 			i+=2;
 			string name="";
 			while (input[i]!='(') name+=input[i++];
-			output+=XPINSCompileUtil::charForBuiltin(name);
-			output+='_';
-			output+=name;
+			output+=XPINSCompileUtil::nameForBuiltin(name);
 			output+='(';
 		}
 	}
@@ -272,29 +268,6 @@ bool XPINSCompiler::renameBuiltIns(string *text){
 			break;
 		}
 		output+=inter[j];
-	}
-	*text=output;
-	return true;
-}
-bool XPINSCompiler::renameTypes(string *text){
-	string input=*text;
-	string output="";
-	string intermediate1="";
-	//Rename Types
-	for(int i=0;i<input.length();i++){
-		if((input[i]=='B'||input[i]=='I'||input[i]=='F'||input[i]=='V'||input[i]=='M'||input[i]=='*')&&input[i-1]=='\n'){
-			intermediate1+=input[i];
-			while (input[i]!=' ')i++;
-		}
-		intermediate1+=input[i];
-	}
-	//Double Check Ending (strip after @END)
-	for(int i=0;i<intermediate1.length();i++){
-		if(intermediate1[i]=='@'&&intermediate1[i+1]=='E'&&intermediate1[i+2]=='N'&&intermediate1[i+3]=='D'){
-			output+="@END\n";
-			break;
-		}
-		output+=intermediate1[i];
 	}
 	*text=output;
 	return true;
@@ -325,7 +298,8 @@ bool XPINSCompiler::renameVars(string *text){
 	int xp=-1;
 	char varType='P';
 	while(i<input.length()&&(input[i]!='@'||input[i+1]!='E')){
-		if(input[i-1]=='\n'&&(input[i]=='B'||input[i]=='I'||input[i]=='F'||input[i]=='V'||input[i]=='*'))
+		while (input[i++]!='\n');
+		if(input[i]=='B'||input[i]=='I'||input[i]=='F'||input[i]=='V'||input[i]=='M'||input[i]=='*')
 		{
 			//determine new variable name
 			varType=input[i]=='*'?'P':input[i];
@@ -351,15 +325,15 @@ bool XPINSCompiler::renameVars(string *text){
 					break;
 				default: varType='P';varNum=++xp;
 			}
+			while (input[i++]!='$');
 			//read Var name
 			string varName;
-			for(i+=3;i<input.length()&&input[i]!='=';i++){
-				varName+=input[i];
+			while(i<input.length()&&input[i]!='='){
+				varName+=input[i++];
 			}
 			//Replace Var name
 			intermediate2="";
 			j=0;
-			bool declared=false;
 			//while (j<i)
 			//	intermediate2+=intermediate1[++j];
 			while(j<intermediate1.length()){
@@ -367,13 +341,6 @@ bool XPINSCompiler::renameVars(string *text){
 				if(intermediate1[j]=='@'&&intermediate1[j+1]=='E'&&intermediate1[j+2]=='N'&&intermediate1[j+3]=='D'){
 					intermediate2+="@END";
 					break;
-				}
-				if((intermediate1[j]=='B'||intermediate1[j]=='I'||intermediate1[j]=='F'||intermediate1[j]=='V'||intermediate1[j]=='M'||intermediate1[j]=='*')&&intermediate1[j+1]==' '&&intermediate1[j+2]=='$'&&XPINSCompileUtil::stringsMatch(j+3, intermediate1, varName))
-				{
-					if(declared)
-						j+=2;
-					else
-						declared=true;
 				}
 				//Find start of Var
 				if(intermediate1[j]=='$'){
@@ -398,6 +365,31 @@ bool XPINSCompiler::renameVars(string *text){
 		}
 		i++;
 	}
+	//Add VarSize Statements
+	intermediate2="";
+	i=0;
+	while (intermediate1[i++]!='@');
+	intermediate2+='@';
+	while (intermediate1[i]!='@')intermediate2+=intermediate1[i++];
+	string varSizes="@VAR ";
+	varSizes+='B'+XPINSCompileUtil::strRepresentationOfInt(xb)+' ';
+	varSizes+='I'+XPINSCompileUtil::strRepresentationOfInt(xi)+' ';
+	varSizes+='F'+XPINSCompileUtil::strRepresentationOfInt(xf)+' ';
+	varSizes+='V'+XPINSCompileUtil::strRepresentationOfInt(xv)+' ';
+	varSizes+='M'+XPINSCompileUtil::strRepresentationOfInt(xm)+' ';
+	varSizes+='P'+XPINSCompileUtil::strRepresentationOfInt(xp)+' ';
+	intermediate2+=varSizes+'\n';
+	while (i<intermediate1.length()) intermediate2+=intermediate1[i++];
+	intermediate1=intermediate2;
+	//Remove Types
+	intermediate2="";
+	for(int i=0;i<intermediate1.length();++i){
+		if((intermediate1[i]=='B'||intermediate1[i]=='I'||intermediate1[i]=='F'||intermediate1[i]=='V'||intermediate1[i]=='M'||intermediate1[i]=='*')&&intermediate1[i-1]=='\n'){
+			while (intermediate1[++i]!='$');
+		}
+		intermediate2+=intermediate1[i];
+	}
+	intermediate1=intermediate2;
 	//Double Check Ending (strip after @END)
 	for(j=0;j<intermediate1.length();j++){
 		if(intermediate1[j]=='@'&&intermediate1[j+1]=='E'&&intermediate1[j+2]=='N'&&intermediate1[j+3]=='D'){
@@ -429,62 +421,59 @@ bool XPINSCompiler::cleanUp(string *text){
 	return true;
 }
 //UTILTY FUNCTIONS
-char XPINSCompileUtil::charForBuiltin(string name){
-	if(name.compare("AND")==0)return 'B';
-	if(name.compare("OR")==0)return 'B';
-	if(name.compare("NOT")==0)return 'B';
-	if(name.compare("ILESS")==0)return 'B';
-	if(name.compare("IMORE")==0)return 'B';
-	if(name.compare("FLESS")==0)return 'B';
-	if(name.compare("FMORE")==0)return 'B';
-	if(name.compare("IEQUAL")==0)return 'B';
-	if(name.compare("FEQUAL")==0)return 'B';
-	if(name.compare("IADD")==0)return 'I';
-	if(name.compare("ISUB")==0)return 'I';
-	if(name.compare("IMULT")==0)return 'I';
-	if(name.compare("IDIV")==0)return 'I';
-	if(name.compare("IMOD")==0)return 'I';
-	if(name.compare("FADD")==0)return 'F';
-	if(name.compare("FSUB")==0)return 'F';
-	if(name.compare("FMULT")==0)return 'F';
-	if(name.compare("FDIV")==0)return 'F';
-	if(name.compare("TSIN")==0)return 'F';
-	if(name.compare("TCOS")==0)return 'F';
-	if(name.compare("TTAN")==0)return 'F';
-	if(name.compare("TATAN")==0)return 'F';
-	if(name.compare("VADDPOLAR")==0)return 'F';
-	if(name.compare("POW")==0)return 'F';
-	if(name.compare("VDIST")==0)return 'F';
-	if(name.compare("VX")==0)return 'F';
-	if(name.compare("VY")==0)return 'F';
-	if(name.compare("MGET")==0)return 'F';
-	if(name.compare("MDET")==0)return 'F';
-	if(name.compare("VMAG")==0)return 'F';
-	if(name.compare("VDIR")==0)return 'F';
-	if(name.compare("VANG")==0)return 'F';
-	if(name.compare("VDOT")==0)return 'F';
-	if(name.compare("VREC")==0)return 'V';
-	if(name.compare("VPOL")==0)return 'V';
-	if(name.compare("VADD")==0)return 'V';
-	if(name.compare("VSUB")==0)return 'V';
-	if(name.compare("VSCALE")==0)return 'V';
-	if(name.compare("VPROJ")==0)return 'V';
-	if(name.compare("MMTV")==0)return 'V';
-	if(name.compare("MVMULT")==0)return 'V';
-	if(name.compare("MMAKE")==0)return 'M';
-	if(name.compare("MID")==0)return 'M';
-	if(name.compare("MROT")==0)return 'M';
-	if(name.compare("MADD")==0)return 'M';
-	if(name.compare("MSUB")==0)return 'M';
-	if(name.compare("MSCALE")==0)return 'M';
-	if(name.compare("MMULT")==0)return 'M';
-	if(name.compare("MINV")==0)return 'M';
-	if(name.compare("MTRANS")==0)return 'M';
-	if(name.compare("MVTM")==0)return 'M';
-	if(name.compare("MSET")==0)return 'N';
-
-
-	return 'N';
+string XPINSCompileUtil::nameForBuiltin(string name){
+	if(name.compare("AND")==0)return "B0";
+	if(name.compare("OR")==0)return "B1";
+	if(name.compare("NOT")==0)return "B2";
+	if(name.compare("LESS")==0)return "B3";
+	if(name.compare("MORE")==0)return "B4";
+	if(name.compare("EQUAL")==0)return "B5";
+	if(name.compare("MOD")==0)return "I0";
+	if(name.compare("RAND")==0)return "I1";
+	if(name.compare("ADD")==0)return "F0";
+	if(name.compare("SUB")==0)return "F1";
+	if(name.compare("MULT")==0)return "F2";
+	if(name.compare("DIV")==0)return "F3";
+	if(name.compare("TSIN")==0)return "F4";
+	if(name.compare("TCOS")==0)return "F5";
+	if(name.compare("TTAN")==0)return "F6";
+	if(name.compare("TATAN")==0)return "F7";
+	if(name.compare("POW")==0)return "F8";
+	if(name.compare("VADDPOLAR")==0)return "F9";
+	if(name.compare("VDIST")==0)return "F10";
+	if(name.compare("VX")==0)return "F11";
+	if(name.compare("VY")==0)return "F12";
+	if(name.compare("VZ")==0)return "F13";
+	if(name.compare("VR")==0)return "F14";
+	if(name.compare("VTHETA")==0)return "F15";
+	if(name.compare("VRHO")==0)return "F16";
+	if(name.compare("VPHI")==0)return "F17";
+	if(name.compare("VDOT")==0)return "F18";
+	if(name.compare("VANG")==0)return "F19";
+	if(name.compare("MGET")==0)return "F20";
+	if(name.compare("MDET")==0)return "F21";
+	if(name.compare("VREC")==0)return "V0";
+	if(name.compare("VPOL")==0)return "V1";
+	if(name.compare("VSHPERE")==0)return "V2";
+	if(name.compare("VADD")==0)return "V3";
+	if(name.compare("VSUB")==0)return "V4";
+	if(name.compare("VSCALE")==0)return "V5";
+	if(name.compare("VPROJ")==0)return "V6";
+	if(name.compare("VCROSS")==0)return "V7";
+	if(name.compare("MMTV")==0)return "V8";
+	if(name.compare("MVMULT")==0)return "V9";
+	if(name.compare("MMAKE")==0)return "M0";
+	if(name.compare("MID")==0)return "M1";
+	if(name.compare("MROT")==0)return "M2";
+	if(name.compare("MADD")==0)return "M3";
+	if(name.compare("MSUB")==0)return "M4";
+	if(name.compare("MSCALE")==0)return "M5";
+	if(name.compare("MMULT")==0)return "M6";
+	if(name.compare("MINV")==0)return "M7";
+	if(name.compare("MTRANS")==0)return "M8";
+	if(name.compare("MVTM")==0)return "M9";
+	if(name.compare("MSET")==0)return "_0";
+	return "_"+name;
 }
 int XPINSCompileUtil::readVarIndex(string scriptText,int *startIndex,char expectedEnd){
 	int i=*startIndex;
@@ -507,6 +496,7 @@ int XPINSCompileUtil::readVarIndex(string scriptText,int *startIndex,char expect
 	return index;
 }
 string XPINSCompileUtil::strRepresentationOfInt(int x){
+	if(x<0)return "0";
 	if(x/10==0){
 		switch (x) {
 			case 1:return "1";

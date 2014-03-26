@@ -20,9 +20,9 @@ namespace XPINSCompiler{
 	bool checkVersion(string*);
 	bool removeComments(string*);
 	bool renameFunctions(string*);
-	bool renameTypes(string*);
 	bool renameVars(string*);
 	bool renameBuiltIns(string*);
+	bool renameVars(string*);
 	bool cleanUp(string*);
 }
 #endif /* defined(__XPINS__XPINSCompiler__) */
