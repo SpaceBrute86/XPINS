@@ -12,8 +12,6 @@ Each XPINS file has the following components:
 XPINS files can also have comments. XPINS supports both Single and Multiline Comments.
 Single line comments: //...
 Multiline comments: /*...*/
-Comments must come after the Version Compatibility Statements
-
 
 VERSION COMPATIBILITY STATEMENTS:
 The first part of every XPINS file are two version compatibility statements. The first version compatibility statement states which version of the XPINS compiler the script is designed for, and the second one states which version of the XPINS parser the script is desgined for. The Compiler statement is always the first line of an XPINS file, and the Parser compabitiblity statement is the second. A set of Compatibility statements would look like this:
@@ -88,69 +86,69 @@ An expression always starts and ends with a '?'. At the beginning of the express
 	|| : Or (B):(B),(B)
 	&& : Or (B):(B),(B)
 
-BRIDGING:
-In order to make XPINS useful, you must implement the Bridging code:
--Include any of your own headers
--Declare custom parameters
+
+
+BINDING FUNCTIONS:
+In order to make XPINS useful, you must implement the Function Binding code:
+-Include your header files as necessary
+-Declare custom parameters for the script
 -Implement Custom Functions
--Bridge your custom functions
+-Write the actual Binding Code
 
-In order to interact with your code, the XPINSBridge.h and XPINSBridge.cpp must be able to see your code. You do this by including your header files. If you don't need a piece of code for your custom parameters, it is recommended that you include it in XPINSBridge.cpp.
+In order to interact with your code, you must subclass XPINSBindings. For your convenience XPINSLocalBindings is provided, but if you plan to run different scripts in the same program it is reccommended that each script have its own binding class. When you implement XPINSLocalBindings be sure to include any header files necessary, whether it is for parameter passing or for function implementation. Make sure that XPINSBindings.h is included in the header file for your subclass.
 
-The XPINS parser is set up so that you can "pass parameters" to a script. In XPINSBridge.h there is a struct type called params. In that struct, you can declare any custom parameters that you want. 
-Before you execute a script, create a params variable and fill it with whatever you want, then pass it to the parser. To access these custom parameters in your script, you must use custom functions.
+Through your subclass of XPINSBindings you can pass values to your script. For example, if you are using XPINS to script your game AI, you might have a reference to a particular character as one of the members of your subclass.
+When you are ready to execute a script, remember to give these references to your Bindings object. In order to access these values, you will need to use your bindings functions.
 
-In XPINSBridge.cpp, there is a comment that says /*Write your own Scriptable Functions*/. In the whitespace after that, implement your custom functions just as you would implement any other function. Well, almost...
+Once you have declared the data members for your bindings object, you must declare the scriptable functions. It is up to you as to what you should name them, but it is reccomended that you give them the same name you gave them when they were declared your @FUNC block. It is also reccomended that these functions are private functions.
+
 If you want to write a function that takes a VEC or MAT variable as a parameter, it will be passed as an object of type XPINSScriptableMath::Vector or XPINSScriptableMath::Matrix, respectively. BOOL, INT, and FLOAT will be passed as their C/C++ cousins. For *___ (generic pointer type), you must write the function to receive a void* pointer. You can then extract the desired value:
 MyType *var=(MyType*)arg1;
-If your function returns a custom type, it must be returned as a void* pointer. XPINS will not memory manage this for you and you must free the object later to avoid a leak.
-If you need to access the parameters, the first argument for your function should be a params variable. This doesn't effect how you write your scripts. You'll add this argument when you bridge the scripts.
+If your function returns a custom type, it must be returned as a void* pointer. By default XPINS will not memory manage this for you and you must free the object later to avoid a leak. If you want XPINS to memory manage this for you (i.e. delete it when the script is done executing), add the following line of code (My var is the pointer to the object):
+this->toDelete.push_back(myVar);
 
-BRIDGING CUSTOM FUNCTIONS
-So you've done all this work, but if you don't bridge your functions, the scripts will pretty much do nothing except consume resources. The first thing you have to do to bridge your functions are declare function pointers in the beginning of the bridgeFunction method in XPINSBridge.cpp:
-float (*f1)(void*)=GET_PLAYER_FIREANGLE_FUNCTION;
-The format looks something like this: type (*pointerName)(arg1,arg2,...)=ACTUAL_FUNCTION_NAME; You should declare your function pointers in the order that they appear in the Function block in your script, and name the pointers f1, f2, ..., as this is basically what the compiler does to your functions. The argument and return types must match your function (remember to pass the params object if necessary).
 
-Once you declare the fuction pointer, you must call it. Follow these steps:
--Detect Function
--Find parameters
--call function.
-
-DETECT FUNCTION CALLS:
-there is a switch statement in the bridgeFunction Mehtod.  For each function you declare, you need a case statement. It should look like this:
+In order know when to call your scripted functions, you must override BindFunction. In XPINSLocalBindings it looks like this:
+void XPINSLocalBindings::BindFunction(int fNum,string script,XPINSParser::XPINSVarSpace* data,int& i,void* returnVal){
+	switch(fNum){
+		...
+	}
+}
+Notic the switch statement.  For each function you declare, you need a case statement. It should look like this:
 case __:{...}break;
-the __ should be the same number as f__ for the given function. (e.g. for f26, case 26:{...}break;)
-the ... is where the code for the remaining steps goes.
+the __ should be the assigned number for your function. To determine this number, look in your @FUNC block for your script, and count the number of function you declared before it and add one. If your block looks like this:
+@FUNC
+	VOID myVoidFunc();
+	INT myIntFunc();
+	MAT myMatrixFunc();
+@END
+myVoidFunc will be 1, myIntFunc will be 2, and myMatrixFunc will be 3.
+Function 0 is reserved and may be useful in a future version of XPINS.
+You will replace the '...' with the code to find your arguments and call your functions.
 
-
-FIND ARGUMENTS:
-Ok, now that we have detected a function, we need to figure out what parameters were passed. Good News: The parser does all of the heavy lifting. Here is what your code looks like:
+Once you have determined which function was called you need to figure out what values were passed to it. Good News: The parser does all of the heavy lifting. Here is what your code looks like:
 ___ arg__=parse___Arg(script,data,i,___);
-
-Only four blanks. The first blank is the type of the argument. This should be one of the following, depending on what your function takes for the parameter: bool, int, float, XPINSScriptableMath::Vector, or void*
-The second blank should be the number of the argument, so the variable is called param1, param2, etc. (It is Your choice on whether or not to zero-index, just be consistent. In this documentation I will not be zero-indexing.).
+Only four blanks. The first blank is the type of the argument. This should be one of the following, depending on what your function takes for the argument: bool, int, float, XPINSScriptableMath::Vector, XPINSScriptableMath::Matrix, or void*
+The second blank should be the number of the argument, so the variable is called arg1, arg2, etc. (It is Your choice on whether or not to zero-index, just be consistent. In this documentation I will not be zero-indexing).
 The third blank should match the type: Bool, Int, Float, Vec, Mat, or Pointer.
 The final blank is the expected end character. This is ',' unless it is the final argument for a function, in which case it is ')'.
 So for a VEC argument that is the 2nd but not last argument in a function, the code would look like this:
 XPINSScriptableMath::Vector arg2=parseVecArg(script,parameters,vars,index,',');
 For functions that don't take arguments, simply use this line of code:
-while(scriptText[*index]!=')')(*index)++;
+while(scriptText[++i]!=')');
 
-For help with Function Briding, look at XPINSBuiltIn.cpp. Built in Functions are processed almost the same way that your functions are bridged.
-
-CALLING THE C++ FUNCTION
-Finally, the most important part: calling your functions. This actually is only one line of code (per function), and it goes right after the code for Finding the parameters:
+Finally, the most important part: calling your functions. This actually is only one line of code (per function), and it goes right after the code for Finding the arguments:
 *returnVal=f__(...);
 -the first blank is the number for the function (e.g. if it is the first function declared, then f1)
--the "..." is the arguments, comma-separated as usual:
-	-If you want to pass your custom parameters, write "parameters" as your first (and/or only) argument.
-	-All other arguments: these are simply the arg__ variables you declared in the previous step, in the order you declared them.
-So if I have function F11 that takes two parameters and the custom parameters and returns a bool:
-*returnVal=f11(parameters,param1,param2);
-That's really all there is to bridging your functions.
+-the "..." is the arguments for the functions (the arg_ variables you created earlier):
+So if I have function F11 that takes two arguments and returns a bool:
+*returnVal=f11(arg1,arg2);
+
+NOTE: For help with Function Binding, look at the Built In Function implementaitons in XPINSBuiltIn.cpp. Built in Functions are processed almost the same way that your functions are bridged (however many of those function calls are replaced with operators).
+
 
 COMPILING SCRIPTS
-The first thing you need to do to run a script is compile the Script so that the parser can interpret the variables correctly.
+The first thing you need to do to run a script is compile the Script so that the parser can interpret the variables and functions correctly.
 
 The following Script:
 @COMPILER[0.4]
@@ -174,32 +172,33 @@ Would look like this once compiled:
 @VAR B1 I1 F0 V0 M0 P1
 @CODE
 $I0=#IF1(^0.2,^T);
-$B0=XB3($I0,^90);
-@WHILE[$B0]
+@WHILE[XB3($I0,^90)]
 {
 $I0=XF0($I0,^10);
-$B0=XB3($I0,^90);
 }
 $P0=#PF2();
 #F3($P0,$I0);
 @END
 
-There are three options for compiling:
-	-Build and Run the compiler on your computer, and ship the compiled script with your program.
-	-Compile the script at runtime.
-	-Compile on a server and have the program check for updates (update checking is not covered by this document)
-The first and third options are better than the second option for devices with limited processing power (such as smartphones), but the second option is a little easier for you as a developer.
-To compile during build: Compile the compiler and run it on your machine. Making sure that the script file has the extension .XPINS, enter in the full path for your script. The compiler will write the compiled script to a file with the extension .XPINSX. If it doesn't but displays a compiled script, copy that into a .XPINSX file. Ship the .XPINSX file with your program, and load it into a String object at runtime.
-To compile on a server or at runtime: Include XPINSCompiler.h in whatever file you wish to use XPINS with (make sure to compile the compiler and parser as part of your program) Ship the uncompiled XPINS file with your program, and Load it in at runtime to a string object. then add the following code (___ is the string object containing the script):
-	if(!XPINSCompiler::compileScript(&__)){
+There are two options for compiling:
+	-Build and Run the compiler on one of your machines. You will need to distribute the compiled script (usually with your program, sometimes via your server).
+	-Distribute your uncompiled script and compile it at runtime.
+The first option is usually a better option if your program is running on a system with constrained resources (e.g. smartphones). It will also reduce your program size as (A) you do not have do include the code for the compiler and (B) compiled scripts tend to be smaller than uncompiled scripts. 
+However, the second option has a few important use cases. First, if you want to make the scripts user-modifiable, you need to compile them at runtime. Editing compiled scripts by hand is strongly discouraged and could cause your program to crash. Second, if your program is open source, you should consider distributing the script in its uncompiled from.
+
+
+To compile on your machine: Compile the compiler and run it on your machine. Making sure that the script file has the extension .XPINS, enter in the full path for your script. The compiler will write the compiled script to a file with the extension .XPINSX. If it doesn't write a file but displays a compiled script, copy that into a .XPINSX file. Ship the .XPINSX file with your program, and load it into a string object at runtime.
+To compile at runtime: Include XPINSCompiler.h in whatever file you wish to use XPINS with (make sure to adjust your build settings so that the compiler and parser are compiled as part of your program) Ship the uncompiled XPINS file with your program, and Load it in at runtime to a string object. then add the following code:
+	if(!XPINSCompiler::compileScript(&myScript)){
 		//script did not compile, work without script or exit.
 	}
 	The compiler will write to the same object that you passed to it instead of creating a new string object
 
 RUNNING SCRIPTS
-To run the script, write the following line of code:
-XPINSParser::ParseScript(____, ____);
-the first blank is the string object containing the script
-The second blank is the custom parameters struct you pass to the script.
+To run the script, inlcude XPINSParser.h and the header file for your bindings subclass, and add the following code:
+string myScript="...";//Make sure you have your script loaded into memory
+XPINSLocalBindings *myBindings=new XPINSLocalBindings();//replace with your subclass
+//Set up bindings object
+XPINSParser::ParseScript(myScript, myBindings);
 
 Have Fun with XPINS!

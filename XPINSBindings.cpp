@@ -6,7 +6,7 @@
 //  Copyright (c) 2013 Robbie Markwick. All rights reserved.
 //
 
-#include "XPINSBridge.h"
+#include "XPINSBindings.h"
 #include "XPINSScriptableMath.h"
 using namespace std;
 /*include your own headers*/
