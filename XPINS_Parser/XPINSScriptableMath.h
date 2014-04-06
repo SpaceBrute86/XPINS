@@ -30,6 +30,29 @@ namespace XPINSScriptableMath{
 		static float DotProduct(Vector,Vector);
 		static Vector CrossProduct(Vector,Vector);
 		static Vector ProjectionInDirection(Vector,float,float);
+		
+		//Operator Overloads:
+		Vector operator+(const Vector &v) const {
+			return Add(*this,v);
+		}
+		void operator+=(const Vector &v){
+			*this=*this+v;
+		}
+		Vector operator*(const float &f) const {
+			return Scale(*this,f);
+		}
+		void operator*=(const float &f){
+			*this=*this*f;
+		}
+		Vector operator-(const Vector &v) const {
+			return Add(*this,v*(-1));
+		}
+		void operator-=(const Vector &v){
+			*this=*this-v;
+		}
+		float operator*(const Vector &v) const {
+			return DotProduct(*this,v);
+		}
 	private:
 		float x;
 		float y;
@@ -61,6 +84,42 @@ namespace XPINSScriptableMath{
 		static Matrix Invert(Matrix);
 		static Matrix Transpose(Matrix);
 		static float Determinant(Matrix);
+		
+		//Operator Overloads:
+		Matrix operator+(const Matrix &m) const
+		{
+			return Add(*this,m);
+		}
+		void operator+=(const Matrix &m)
+		{
+			*this=*this+m;
+		}
+		Matrix operator*(const float &f) const
+		{
+			return Scale(*this,f);
+		}
+		void operator*=(const float &f){
+			*this=*this*f;
+		}
+		Matrix operator-(const Matrix &m) const
+		{
+			return Add(*this,m*(-1));
+		}
+		void operator-=(const Matrix &m)
+		{
+			*this=*this-m;
+		}
+		Matrix operator*(const Matrix &m) const
+		{
+			return Multiply(*this,m);
+		}
+		void operator*=(const Matrix &m)
+		{
+			*this=*this*m;
+		}
+		Vector operator*(const Vector &v) const {
+			return MultiplyMatrixVector(*this,v);
+		}
 	private:
 		std::vector< std::vector<float> > values;
 		static Matrix MinorMatrix(Matrix,size_t,size_t);

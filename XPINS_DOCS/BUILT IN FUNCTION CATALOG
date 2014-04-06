@@ -4,24 +4,31 @@ See the file license.txt for copying permission
 THIS DOCUMENT CONTAINS A LIST OF FUNCTIONS BUILT INTO XPINS
 NOTE: Any function that Takes a FLOAT can be passed an INT instead.
 
+STRING FUNCITONS
+X_PRINT(STR $A)
+	Available in XPINS Parser: 0.9.0
+	Description: Displays a string through std::cout
+	Arguments: the string you want to display
+	Return: NONE
+
 BOOLEAN LOGIC
 
 X_AND(BOOL $A,BOOL $B)
 	Available in XPINS Parser: 0.2.0
 	Description: Evaultes the statement A AND B
-	Parameters: The booleans to be tested for AND
+	Arguments: The booleans to be tested for AND
 	Return: BOOL, returns true if and only if both A and B are true.
 
 X_OR(BOOL $A,BOOL $B)
 	Available in XPINS Parser: 0.2.0
 	Description: Evaultes the statement A OR B
-	Parameters: The booleans to be tested for OR
+	Arguments: The booleans to be tested for OR
 	Return: BOOL, returns true if either A or B is true.
 
 X_NOT(BOOL $A)
 	Available in XPINS Parser: 0.2.0
 	Description: Evaultes the statement NOT A
-	Parameters: The booleans to be inverted
+	Arguments: The booleans to be inverted
 	Return: BOOL, returns true if and only if A is false
 					
 
@@ -32,20 +39,20 @@ NUMBER COMPARISON
 X_LESS(FLOAT $A,FLOAT $B)
 	Available in XPINS Parser: 0.2.0
 	Description: Evaultes the expression A<B
-	Parameters: The FLOATs to be compared
+	Arguments: The FLOATs to be compared
 	Return: BOOL, returns true if A is less than B
 	
 X_MORE(FLOAT $A,FLOAT $B)
 	Available in XPINS Parser: 0.2.0
 	Description: Evaultes the expression A>B
-	Parameters: The FLOATs to be compared
+	Arguments: The FLOATs to be compared
 	Return: BOOL, returns true if A is greater than B
 
 	
 X_EQUAL(FLOAT $A,FLOAT $B)
 	Available in XPINS Parser: 0.2.0
 	Description: Evaultes the expression A==B
-	Parameters: The FLOATs to be compared
+	Arguments: The FLOATs to be compared
 	Return: BOOL, returns true if A is equal to B
 						
 
@@ -56,31 +63,31 @@ ARITHMETIC
 X_ADD(FLOAT $A, FLOAT $B)
 	Available in XPINS Parser: 0.2.0
 	Description: Evaultes the expression A+B
-	Parameters: The FLOATs to be added
+	Arguments: The FLOATs to be added
 	Return: FLOAT, returns the sum of A and B
 	
 X_SUB(FLOAT $A, FLOAT $B)
 	Available in XPINS Parser: 0.2.0
 	Description: Evaultes the expression A-B
-	Parameters: The FLOATs to be subtracted
+	Arguments: The FLOATs to be subtracted
 	Return: FLOAT, returns the difference of A and B
 
 X_MULT(FLOAT $A, FLOAT $B)
 	Available in XPINS Parser: 0.2.0
 	Description: Evaultes the expression A*B
-	Parameters: The FLOATs to be multiplied
+	Arguments: The FLOATs to be multiplied
 	Return: FLOAT, returns the product of A and B
 
 X_DIV(FLOAT $A, FLOAT $B)
 	Available in XPINS Parser: 0.2.0
 	Description: Evaultes the expression A/B
-	Parameters: The FLOATs to be divided
+	Arguments: The FLOATs to be divided
 	Return: FLOAT, returns the quotient of A and B
 					
 X_MOD(INT $A, INT $B)
 	Available in XPINS Parser: 0.4.0
 	Description: Evaultes the expression A%B
-	Parameters: The INTs to be modulated
+	Arguments: The INTs to be modulated
 	Return: INT, returns the modulus of A and B
 
 
@@ -90,31 +97,31 @@ TRIGONOMETRY
 X_TSIN(FLOAT $A)
 	Available in XPINS Parser: 0.2.0
 	Description: Takes the sine of a given angle
-	Parameters: The FLOAT representing the angle
+	Arguments: The FLOAT representing the angle
 	Return: FLOAT, returns the sine of the angle
 
 X_TCOS(FLOAT $A)
 	Available in XPINS Parser: 0.2.0
 	Description: Takes the cosine of a given angle
-	Parameters: The FLOAT representing the angle
+	Arguments: The FLOAT representing the angle
 	Return: FLOAT, returns the cosine of the angle
 	
 X_TTAN(FLOAT $A)
 	Available in XPINS Parser: 0.2.0
 	Description: Takes the tangent of a given angle
-	Parameters: The FLOAT representing the angle
+	Arguments: The FLOAT representing the angle
 	Return: FLOAT, returns the tangent of the angle
 
 X_TATAN(FLOAT $A, FLOAT $B)
 	Available in XPINS Parser: 0.2.0
 	Description: Gets the base angle given the two legs of a right triangle
-	Parameters: The FLOATs representing Y and X, repsectiely
+	Arguments: The FLOATs representing Y and X, repsectiely
 	Return: FLOAT, returns the angle
 
 X_VADDPOLAR(FLOAT $A, FLOAT $B)
 	Available in XPINS Parser: 0.2.0
 	Description: Adds two numbers such that the sum is in the range of [0,2PI)
-	Parameters: The FLOATs to be added
+	Arguments: The FLOATs to be added
 	Return: FLOAT, returns the modified sum of A and B
 					
 
@@ -125,19 +132,19 @@ OTHER SCALAR MATH OPERATIONS
 X_POW(FLOAT $A, FLOAT $B)
 	Available in XPINS Parser: 0.2.0
 	Description: Evaluates A^B
-	Parameters: FLOATs representing the base and exponent, respectively
+	Arguments: FLOATs representing the base and exponent, respectively
 	Return: FLOAT, returns the result of the power exrpession
 
 X_VDIST(FLOAT $A, FLOAT $B, FLOAT $C)
 	Available in XPINS Parser: 0.2.0
 	Description: Finds distance between two points given the components
-	Parameters: The X, Y, and Z deltas
+	Arguments: The X, Y, and Z deltas
 	Return: FLOAT, returns sqrt(x^2+y^2+z^2);
 
 X_RAND(INT $A, INT$B)
 	Available in XPINS Parser: 0.2.0
 	Description: Generates a random number
-	Parameters: A is the lower bound and B is the upper bound
+	Arguments: A is the lower bound and B is the upper bound
 	Return: INT, returns a random number between A and B
 					
 
@@ -148,19 +155,19 @@ VECTOR CREATION
 X_VREC(FLOAT $A, FLOAT $B, FLOAT $C)
 	Available in XPINS Parser: 0.2.0
 	Description: Creates a vector using rectangular components
-	Parameters: FLOATs representing the X, Y, and Z components, respectively
+	Arguments: FLOATs representing the X, Y, and Z components, respectively
 	Return: VEC, returns a new vector with the given components
 	
 X_VPOL(FLOAT $A, FLOAT $B, FLOAT $C)
 	Available in XPINS Parser: 0.2.0
 	Description: Creates a vector using polar components
-	Parameters: FLOATs representing the R, THETA, and Z components, respectively
+	Arguments: FLOATs representing the R, THETA, and Z components, respectively
 	Return: VEC, returns a new vector with the given components
 	
 X_VSPHERE(FLOAT $A, FLOAT $B, FLOAT $C)
 	Available in XPINS Parser: 0.2.0
 	Description: Creates a vector using polar components
-	Parameters: FLOATs representing the RHO, THETA, and PHI components, respectively
+	Arguments: FLOATs representing the RHO, THETA, and PHI components, respectively
 	Return: VEC, returns a new vector with the given components
 
 
@@ -169,44 +176,44 @@ READING VECTORS
 X_VX(VEC $A)
 	Available in XPINS Parser: 0.2.0
 	Description: Gets the X component for a Vector
-	Parameters: The vector for which the X component is desired
+	Arguments: The vector for which the X component is desired
 	Return: FLOAT, returns the X component of the vector
 
 X_VY(VEC $A)
 	Available in XPINS Parser: 0.2.0
 	Description: Gets the Y component for a Vector
-	Parameters: The vector for which the Y component is desired
+	Arguments: The vector for which the Y component is desired
 	Return: FLOAT, returns the Y component of the vector
 
 X_VZ(VEC $A)
 	Available in XPINS Parser: 0.8.0
 	Description: Gets the Z component for a Vector
-	Parameters: The vector for which the Z component is desired
+	Arguments: The vector for which the Z component is desired
 	Return: FLOAT, returns the Z component of the vector
 
 X_VRHO(VEC $A)
 	Available in XPINS Parser: 0.2.0
 	Description: Gets the Magnitude (RHO) of a Vector
-	Parameters: The vector for which the Magnitude is desired
+	Arguments: The vector for which the Magnitude is desired
 	Return: FLOAT, returns the Magnitude of the vector
 	
 X_VR(VEC $A)
 	Available in XPINS Parser: 0.8.0
 	Description: Gets the Cylindrical R component of a Vector
-	Parameters: The vector for which the Cylindrical R component is desired
+	Arguments: The vector for which the Cylindrical R component is desired
 	Return: FLOAT, returns the Cylindrical R component of the vector
 
 
 X_VTHETA(VEC $A)
 	Available in XPINS Parser: 0.2.0
 	Description: Gets the THETA component of Vector
-	Parameters: The vector for which the THETA component is desired
+	Arguments: The vector for which the THETA component is desired
 	Return: FLOAT, returns the THETA component of the vector
 
 X_VPHI(VEC $A)
 	Available in XPINS Parser: 0.8.0
 	Description: Gets the PHI component for a Vector
-	Parameters: The vector for which the PHI component is desired
+	Arguments: The vector for which the PHI component is desired
 	Return: FLOAT, returns the PHI component of the vector
 
 
@@ -216,42 +223,42 @@ VECTOR OPERATIONS
 X_VANG(VEC $A, VEC$B)
 	Available in XPINS Parser: 0.2.0
 	Description: Finds the angle between two vectors
-	Parameters: The vectors for which you want to find the angle between
+	Arguments: The vectors for which you want to find the angle between
 	Return: FLOAT, returns the Angle between the Vectors
 
 X_VADD(VEC $A, VEC $B)
 	Available in XPINS Parser: 0.2.0
 	Description: Adds two vectors
-	Parameters: The vectors to be added
+	Arguments: The vectors to be added
 	Return: VEC, returns the sum of the two vectors
 	
 X_VSUB(VEC $A, VEC $B)
 	Available in XPINS Parser: 0.2.0
 	Description: Subtracts two vectors
-	Parameters: The vectors to be subtracted
+	Arguments: The vectors to be subtracted
 	Return: VEC, returns the difference of the two vectors
 	
 X_VSCALE(VEC $A, FLOAT $B)
 	Available in XPINS Parser: 0.2.0
 	Description: Scales a vector
-	Parameters: The vector to be scaled, and the FLOAT by which to scale it
+	Arguments: The vector to be scaled, and the FLOAT by which to scale it
 	
 X_VDOT(VEC $A, VEC $B)
 	Available in XPINS Parser: 0.3.0
 	Description: Finds the dot product of two vectors
-	Parameters: The vectors for which the dot product will be found
+	Arguments: The vectors for which the dot product will be found
 	Return: FLOAT, returns A dot B.
 
 X_VCROSS(VEC $A, VEC $B)
 	Available in XPINS Parser: 0.8.0
 	Description: Finds the cross product of two vectors
-	Parameters: The vectors for which the cross product will be found
+	Arguments: The vectors for which the cross product will be found
 	Return: VEC, returns A cross B.
 
 X_VPROJ(VEC $A, FLOAT $B)
 	Available in XPINS Parser: 0.3.0
 	Description: Finds the projection of a vector onto a generic vector in a given direction
-	Parameters: The vector from whihc the projection is to be taken, and the direction of the result.
+	Arguments: The vector from whihc the projection is to be taken, and the direction of the result.
 	Return: VEC, returns the projection of A onto a vector in direction.	Return: VEC, returns a vector in the same direction as A with the magnitude multiplied by B
 	
 	
@@ -260,19 +267,19 @@ MATRIX CREATION
 X_MMAKE(INT $A, INT $B)
 	Available in XPINS Parser: 0.9.0
 	Description: Create a Zero Matrix
-	Parameters: The number of rows and columns, respecitvely
+	Arguments: The number of rows and columns, respecitvely
 	Return: MAT, returns a zero matrix of size AxB.
 	
 X_MID(INT $A)
 	Available in XPINS Parser: 0.9.0
 	Description: Create an Identity Matrix of size A
-	Parameters: The number of rows and columns.
+	Arguments: The number of rows and columns.
 	Return: MAT, returns a Identity matrix of size AxA.
 	
 X_MROT(FLOAT $A, VEC $B)
 	Available in XPINS Parser: 0.9.0
 	Description: Create an Rotation Matrix of A radians around B
-	Parameters: A is the angle the Matrix will rotate a vector, and B is the vector that it should be rotated around
+	Arguments: A is the angle the Matrix will rotate a vector, and B is the vector that it should be rotated around
 	Return: MAT, returns a Rotation matrix A radains around B.
 	
 	
@@ -281,13 +288,13 @@ MATRIX ACCESS
 X_MGET(MAT $A, INT $B, INT$C)
 	Available in XPINS Parser: 0.9.0
 	Description: Gets a value from a Matrix
-	Parameters: A is the matrix, B is the row, and C is the column
+	Arguments: A is the matrix, B is the row, and C is the column
 	Return: FLOAT, Value from A at B,C
 	
 X_MSET(MAT $A, FLOAT $B, INT $C, INT $D)
 	Available in XPINS Parser: 0.9.0
 	Description: Sets a value in a Matrix
-	Parameters: A is the matrix, B is the new value, C is the row, and D is the column
+	Arguments: A is the matrix, B is the new value, C is the row, and D is the column
 	Return: NONE
 	
 
@@ -297,13 +304,13 @@ MATRIX-VECTOR CONVERSTION
 X_MMTV(MAT $A)
 	Available in XPINS Parser: 0.9.0
 	Description: Converts Matrix into Vector
-	Parameters: The Matrix to be converted
+	Arguments: The Matrix to be converted
 	Return: VEC, Vector from Matrix A
 	
 X_MVTM(VEC $A)
 	Available in XPINS Parser: 0.9.0
 	Description: Converts Vector into Matrix
-	Parameters: The Vector to be converted
+	Arguments: The Vector to be converted
 	Return: MAT, Matrix from Vector A
 	
 	
@@ -312,31 +319,31 @@ MATRIX ARITHMETIC
 X_MADD(MAT $A, MAT $B)
 	Available in XPINS Parser: 0.9.0
 	Description: Adds two Matrices
-	Parameters: The Matrices to be added
+	Arguments: The Matrices to be added
 	Return: MAT, Sum of the two Matrices
 	
 X_MSUB(MAT $A, MAT $B)
 	Available in XPINS Parser: 0.9.0
 	Description: Subtracts two Matrices
-	Parameters: The Matrices to be subtracted
+	Arguments: The Matrices to be subtracted
 	Return: MAT, Difference of the two Matrices
 	
 X_MSCALE(MAT $A, FLOAT $B)
 	Available in XPINS Parser: 0.9.0
 	Description: Multiplies a Matrix by a scalar
-	Parameters: The Matrix and the Scalar
+	Arguments: The Matrix and the Scalar
 	Return: MAT, Product of a Scalar and  a Matrix
 
 X_MMULT(MAT $A, MAT $B)
 	Available in XPINS Parser: 0.9.0
 	Description: Multiplies two Matrices
-	Parameters: The Matrices to be multiplied
+	Arguments: The Matrices to be multiplied
 	Return: MAT, product of the two Matrices
 
 X_MVMULT(MAT $A, VEC $B)
 	Available in XPINS Parser: 0.9.0
 	Description: Multiplies a Matrix and a Vector
-	Parameters: The Matrix and Vector to be multiplied
+	Arguments: The Matrix and Vector to be multiplied
 	Return: VEC, product of the Matrix and the Vector
 	
 
@@ -345,18 +352,18 @@ ADVANCED MATRIX OPERATIONS
 X_MDET(MAT $A)
 	Available in XPINS Parser: 0.9.0
 	Description: Finds the determinant of a Matrix
-	Parameters: The Matrix for which the determinant is desired
+	Arguments: The Matrix for which the determinant is desired
 	Return: FLOAT, the Determinant of the Matrix
 	
 X_MINV(MAT $A)
 	Available in XPINS Parser: 0.9.0
 	Description: Finds the inverse of a Matrix
-	Parameters: The Matrix for which the inverse is desired
+	Arguments: The Matrix for which the inverse is desired
 	Return: MAT, the inverse of the Matrix
 	
 X_MTRANS(MAT $A)
 	Description: Finds the transposition of a Matrix
-	Parameters: The Matrix for which the transposition is desired
+	Arguments: The Matrix for which the transposition is desired
 	Return: FLOAT, the transposition of the Matrix
 
 

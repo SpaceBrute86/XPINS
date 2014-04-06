@@ -14,15 +14,15 @@
 using namespace std;
 namespace XPINSCompiler{
 	//Call this to compile an XPINS script
-	bool compileScript(string*);
+	bool compileScript(string&);
 
 	//Compile Steps (you normally don't call these)
-	bool checkVersion(string*);
-	bool removeComments(string*);
-	bool renameFunctions(string*);
-	bool renameVars(string*);
-	bool renameBuiltIns(string*);
-	bool renameVars(string*);
-	bool cleanUp(string*);
+	bool checkVersion(string&);
+	bool removeComments(string&);
+	bool renameFunctions(string&);
+	bool renameVars(string&);
+	bool renameBuiltIns(string&);
+	bool renameVars(string&);
+	bool cleanUp(string&);
 }
 #endif /* defined(__XPINS__XPINSCompiler__) */

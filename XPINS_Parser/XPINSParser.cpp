@@ -2,9 +2,9 @@
 //See the file license.txt for copying permission
 
 
-#include "XPINSParser.h"
-#include "XPINSBindings.h"
+#include "XPINS.h"
 #include <math.h>
+#include <fstream>
 
 
 using namespace std;
@@ -257,8 +257,37 @@ Matrix XPINSParser::ParseMatArg(string scriptText,XPINSVarSpace* scriptVars, XPI
 	while(scriptText[i]!=expectedEnd)++i;
 	return retVal;
 }
-
-void* XPINSParser::ParsePointerArg(string scriptText,XPINSVarSpace* scriptVars,XPINSBindings* localBindings,int& i,char expectedEnd){
+string XPINSParser::ParseStrArg(string scriptText,XPINSVarSpace* scriptVars,XPINSBindings* localBindings,int& i,char expectedEnd)
+{
+	string retVal="";
+	while (scriptText[i]!='$'&&scriptText[i]!='^'&&scriptText[i]!='#') ++i;//Get to Key Character
+	if(scriptText[i]=='$')//variable
+	{
+		i+=2;
+		int index=readInt(scriptText, i, expectedEnd);
+		retVal=scriptVars->sVars[index];
+	}
+	else if(scriptText[i]=='^')//User-defined Function
+	{
+		++i;
+		while (++i<scriptText.length())
+		{
+			if(scriptText[i]=='\\')retVal+=scriptText[++i];
+			else if(scriptText[i]=='\"')break;
+			else retVal+=scriptText[i];
+		}
+	}
+	else if(scriptText[i]=='#'&&scriptText[i+1]=='S'&&scriptText[i+2]=='F')//User-defined Function
+	{
+		i+=3;
+		int fNum=readInt(scriptText, i, '(');
+		localBindings->BindFunction(fNum, scriptText,scriptVars,  i, &retVal);
+	}
+	while(scriptText[i]!=expectedEnd)++i;
+	return retVal;
+}
+void* XPINSParser::ParsePointerArg(string scriptText,XPINSVarSpace* scriptVars,XPINSBindings* localBindings,int& i,char expectedEnd)
+{
 	void* retVal=NULL;
 	while (scriptText[i]!='$'&&scriptText[i]!='#') ++i;//Get to Key Character
 	if(scriptText[i]=='$')//variable
@@ -275,6 +304,26 @@ void* XPINSParser::ParsePointerArg(string scriptText,XPINSVarSpace* scriptVars,X
 	}
 	while(scriptText[i]!=expectedEnd)++i;
 	return retVal;
+}
+
+void XPINSParser::SetNumVar(float val,string scriptText,XPINSVarSpace* scriptVars,int& i,char expectedEnd)
+{
+	i+=2;
+	int index=readInt(scriptText, i, expectedEnd);
+	if(scriptText[i-1]=='F')scriptVars->fVars[index]=val;
+	else scriptVars->iVars[index]=val;
+}
+void XPINSParser::SetVecVar(Vector val,string scriptText,XPINSVarSpace* scriptVars,int& i,char expectedEnd)
+{
+	i+=2;
+	int index=readInt(scriptText, i, expectedEnd);
+	scriptVars->vVars[index]=val;
+}
+void XPINSParser::SetMatVar(Matrix val,string scriptText,XPINSVarSpace* scriptVars,int& i,char expectedEnd)
+{
+	i+=2;
+	int index=readInt(scriptText, i, expectedEnd);
+	scriptVars->mVars[index]=val;
 }
 
 #pragma mark Conditionals and Loops
@@ -338,7 +387,6 @@ void ParseLoop(string scriptText,XPINSVarSpace* scriptVars,XPINSBindings*localBi
 }
 
 #pragma mark Script Execution
-
 //Check to make sure script is compatible
 bool checkVersion(string script)
 {
@@ -376,6 +424,8 @@ XPINSVarSpace* allocVars(string scriptText)
 	space->vVars.resize(readInt(scriptText, i, ' '));
 	while(scriptText[i++]!='M');
 	space->mVars.resize(readInt(scriptText, i, ' '));
+	while(scriptText[i++]!='S');
+	space->sVars.resize(readInt(scriptText, i, ' '));
 	while(scriptText[i++]!='P');
 	space->pVars.resize(readInt(scriptText, i, ' '));
 	return space;
@@ -438,6 +488,11 @@ void ParseCode(string scriptText,XPINSVarSpace* scriptVars,XPINSBindings* localB
 						++i;
 						scriptVars->mVars[index]=ParseMatArg(scriptText, scriptVars,localBindings, i, '\n');
 					}break;
+					case 'S':{//MAT variable
+						int index=readInt(scriptText, i, '=');
+						++i;
+						scriptVars->sVars[index]=ParseStrArg(scriptText, scriptVars,localBindings, i, '\n');
+					}break;
 					case 'P':{//Pointer variable
 						int index=readInt(scriptText, i, '=');
 						++i;
@@ -454,6 +509,9 @@ void ParseCode(string scriptText,XPINSVarSpace* scriptVars,XPINSBindings* localB
 				i+=2;
 				int index=readInt(scriptText, i, '(');
 				XPINSBuiltIn::ParseVoidBIF(index,scriptText, scriptVars,localBindings, i);
+			}break;
+			case '?':{//Expression
+				XPINSBuiltIn::ParseVoidExp(scriptText, scriptVars, localBindings, i);
 			}break;
 			case '@':{
 				++i;

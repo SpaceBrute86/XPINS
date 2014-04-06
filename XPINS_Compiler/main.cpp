@@ -31,7 +31,7 @@ int main(int argc, const char * argv[])
 	}
 	inFile.close();
 	//compile script
-	if(!XPINSCompiler::compileScript(&scriptText)){
+	if(!XPINSCompiler::compileScript(scriptText)){
 		exit(-1);//script could not comiple
 	}
 	

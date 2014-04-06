@@ -10,7 +10,7 @@
 #define __XPINS__XPINSLocalBindings__
 
 #include <iostream>
-#include"XPINSBindings.h"
+#include"XPINS.h"
 
 /*include necessary header files*/
 

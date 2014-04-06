@@ -22,29 +22,29 @@ namespace XPINSCompileUtil {
 }
 
 //Compile Script
-bool XPINSCompiler::compileScript(string* input){
-	string scriptText=*input;
+bool XPINSCompiler::compileScript(string &input){
+	string scriptText=input;
 //	cout<<endl<<"Validating Version..."<<endl;
-	if(!checkVersion(&scriptText))return false;
+	if(!checkVersion(scriptText))return false;
 //	cout<<"Version Compatilbe!";
 //	cout<<endl<<"About To Compile Script:\n"<<scriptText<<endl;
-	if(!removeComments(&scriptText))return false;
+	if(!removeComments(scriptText))return false;
 //	cout<<endl<<"Comments and ';'s Removed:\n"<<scriptText<<endl;
-	if(!renameFunctions(&scriptText))return false;
+	if(!renameFunctions(scriptText))return false;
 //	cout<<endl<<"User Functions Renamed:\n"<<scriptText<<endl;
-	if(!renameVars(&scriptText))return false;
+	if(!renameVars(scriptText))return false;
 //	cout<<endl<<"Variables Renamed:\n"<<scriptText<<endl;
-	if(!renameBuiltIns(&scriptText))return false;
+	if(!renameBuiltIns(scriptText))return false;
 //	cout<<endl<<"Built-in Functions Renamed:\n"<<scriptText<<endl;
-	if(!cleanUp(&scriptText))return false;
+	if(!cleanUp(scriptText))return false;
 //	cout<<endl<<"Cleaned Up:\n"<<scriptText;
-	*input=scriptText;
+	input=scriptText;
 	return true;
 }
 
 //Compiler Steps
-bool XPINSCompiler::checkVersion(string* script){
-	string input=*script;
+bool XPINSCompiler::checkVersion(string &script){
+	string input=script;
 	for(int i=0;i<input.length();i++){
 		if(input[i]=='@'&&input[i+1]=='C'&&input[i+2]=='O'&&input[i+3]=='M'&&input[i+4]=='P'&&input[i+5]=='I'&&input[i+6]=='L'&&input[i+7]=='E'&&input[i+8]=='R'){
 			while(i<input.length()&&input[i]!='[')i++;
@@ -68,15 +68,15 @@ bool XPINSCompiler::checkVersion(string* script){
 			while (i<input.length()) {
 				output+=input[i++];
 			}
-			*script=output;
+			script=output;
 			return true;
 		}
 	}
 	cout<<"SCRIPT MISSING VERSION. EXITING";
 	return false;
 }
-bool XPINSCompiler::removeComments(string* text){
-	string input=*text;
+bool XPINSCompiler::removeComments(string &text){
+	string input=text;
 	string output="";
 	int matcount=0;
 	char ch;
@@ -112,12 +112,12 @@ bool XPINSCompiler::removeComments(string* text){
 		}
 		output+=intermediate1[j];
 	}
-	*text=output;
+	text=output;
 	return true;
 }
 
-bool XPINSCompiler::renameFunctions(string *text){
-	string input=*text;
+bool XPINSCompiler::renameFunctions(string &text){
+	string input=text;
 	string output="";
 	char ch;
 	string intermediate1="";
@@ -168,6 +168,10 @@ bool XPINSCompiler::renameFunctions(string *text){
 			case 'M':
 			case 'm':
 				functionType='M';
+				break;
+			case 'S':
+			case 's':
+				functionType='S';
 				break;
 			case '*':
 				functionType='P';
@@ -243,11 +247,11 @@ bool XPINSCompiler::renameFunctions(string *text){
 		output+=intermediate1[j];
 	}
 	//output=intermediate1;
-	*text=output;
+	text=output;
 	return true;
 }
-bool XPINSCompiler::renameBuiltIns(string *text){
-	string input=*text;
+bool XPINSCompiler::renameBuiltIns(string &text){
+	string input=text;
 	string output="";
 	for(int i=0;i<input.length();++i){
 		output+=input[i];
@@ -269,11 +273,21 @@ bool XPINSCompiler::renameBuiltIns(string *text){
 		}
 		output+=inter[j];
 	}
-	*text=output;
+	text=output;
 	return true;
 }
-bool XPINSCompiler::renameVars(string *text){
-	string input=*text;
+bool XPINSCompiler::renameVars(string &text){
+	string input=text;
+	string intermediate="";
+	//Rename Types
+	for(int i=0;i<input.length();i++){
+		if((input[i]=='B'||input[i]=='I'||input[i]=='F'||input[i]=='V'||input[i]=='M'||input[i]=='S'||input[i]=='*')&&input[i-1]=='\n'){
+			intermediate+=input[i];
+			while (input[++i]!=' ');
+		}
+		intermediate+=input[i];
+	}
+	input=intermediate;
 	string output="";
 	int i=0;
 	//Locate Code block
@@ -290,38 +304,42 @@ bool XPINSCompiler::renameVars(string *text){
 	string intermediate2="";
 	int j=0;
 	//Do the actual work
-	int xb=-1;
-	int xi=-1;
-	int xf=-1;
-	int xv=-1;
-	int xm=-1;
-	int xp=-1;
+	int xb=0;
+	int xi=0;
+	int xf=0;
+	int xv=0;
+	int xm=0;
+	int xs=0;
+	int xp=0;
 	char varType='P';
 	while(i<input.length()&&(input[i]!='@'||input[i+1]!='E')){
 		while (input[i++]!='\n');
-		if(input[i]=='B'||input[i]=='I'||input[i]=='F'||input[i]=='V'||input[i]=='M'||input[i]=='*')
+		if(input[i]=='B'||input[i]=='I'||input[i]=='F'||input[i]=='V'||input[i]=='M'||input[i]=='S'||input[i]=='*')
 		{
 			//determine new variable name
 			varType=input[i]=='*'?'P':input[i];
 			int varNum=0;
 			switch (varType) {
 				case 'B':
-					varNum=++xb;
+					varNum=xb++;
 					break;
 				case 'I':
-					varNum=++xi;
+					varNum=xi++;
 					break;
 				case 'F':
-					varNum=++xf;
+					varNum=xf++;
 					break;
 				case 'V':
-					varNum=++xv;
+					varNum=xv++;
 					break;
 				case 'M':
-					varNum=++xm;
+					varNum=xm++;
+					break;
+				case 'S':
+					varNum=xs++;
 					break;
 				case 'P':
-					varNum=++xp;
+					varNum=xp++;
 					break;
 				default: varType='P';varNum=++xp;
 			}
@@ -334,29 +352,29 @@ bool XPINSCompiler::renameVars(string *text){
 			//Replace Var name
 			intermediate2="";
 			j=0;
-			//while (j<i)
-			//	intermediate2+=intermediate1[++j];
 			while(j<intermediate1.length()){
 				//CHECK FOR @END
 				if(intermediate1[j]=='@'&&intermediate1[j+1]=='E'&&intermediate1[j+2]=='N'&&intermediate1[j+3]=='D'){
 					intermediate2+="@END";
 					break;
 				}
+				if(intermediate1[j-1]=='\n'&&(input[j]=='B'||input[j]=='I'||input[j]=='F'||input[j]=='V'||input[j]=='M'||input[j]=='S'||input[j]=='*')&&XPINSCompileUtil::stringsMatch(j+3, intermediate1, varName))
+					j+=2;
 				//Find start of Var
-				if(intermediate1[j]=='$'){
-					//j+=2;
+				if(intermediate1[j]=='$')
+				{
 					intermediate2+='$';
 					j++;
 					//Check for match
 					if(XPINSCompileUtil::stringsMatch(j, intermediate1, varName)){
 						intermediate2+=varType;
 						intermediate2+=XPINSCompileUtil::strRepresentationOfInt(varNum);
-						while(intermediate1[j]!=')'&&intermediate1[j]!='='&&intermediate1[j]!=','&&intermediate1[j]!='<'&&intermediate1[j]!='>'&&intermediate1[j]!='|'&&intermediate1[j]!='&'&&intermediate1[j]!='!'&&intermediate1[j]!='+'&&intermediate1[j]!='-'&&intermediate1[j]!='*'&&intermediate1[j]!='/'&&intermediate1[j]!='%'&&intermediate1[j]!=']'){//Find '('
-							j++;
-						}
+						//Skip Var Name
+						j+=varName.length();
 					}
 				}
-				else{
+				else
+				{
 					intermediate2+=intermediate1[j];
 					j++;
 				}
@@ -377,6 +395,7 @@ bool XPINSCompiler::renameVars(string *text){
 	varSizes+='F'+XPINSCompileUtil::strRepresentationOfInt(xf)+' ';
 	varSizes+='V'+XPINSCompileUtil::strRepresentationOfInt(xv)+' ';
 	varSizes+='M'+XPINSCompileUtil::strRepresentationOfInt(xm)+' ';
+	varSizes+='S'+XPINSCompileUtil::strRepresentationOfInt(xs)+' ';
 	varSizes+='P'+XPINSCompileUtil::strRepresentationOfInt(xp)+' ';
 	intermediate2+=varSizes+'\n';
 	while (i<intermediate1.length()) intermediate2+=intermediate1[i++];
@@ -384,7 +403,7 @@ bool XPINSCompiler::renameVars(string *text){
 	//Remove Types
 	intermediate2="";
 	for(int i=0;i<intermediate1.length();++i){
-		if((intermediate1[i]=='B'||intermediate1[i]=='I'||intermediate1[i]=='F'||intermediate1[i]=='V'||intermediate1[i]=='M'||intermediate1[i]=='*')&&intermediate1[i-1]=='\n'){
+		if((intermediate1[i]=='B'||intermediate1[i]=='I'||intermediate1[i]=='F'||intermediate1[i]=='V'||intermediate1[i]=='M'||intermediate1[i]=='S'||intermediate1[i]=='*')&&intermediate1[i-1]=='\n'){
 			while (intermediate1[++i]!='$');
 		}
 		intermediate2+=intermediate1[i];
@@ -398,11 +417,11 @@ bool XPINSCompiler::renameVars(string *text){
 		}
 		output+=intermediate1[j];
 	}
-	*text=output;
+	text=output;
 	return true;
 }
-bool XPINSCompiler::cleanUp(string *text){
-	string input=*text;
+bool XPINSCompiler::cleanUp(string &text){
+	string input=text;
 	string output="";
 	string intermediate1="";
 	//Remove excess whitespace
@@ -417,7 +436,7 @@ bool XPINSCompiler::cleanUp(string *text){
 		}
 		output+=intermediate1[i];
 	}
-	*text=output;
+	text=output;
 	return true;
 }
 //UTILTY FUNCTIONS
@@ -472,7 +491,8 @@ string XPINSCompileUtil::nameForBuiltin(string name){
 	if(name.compare("MINV")==0)return "M7";
 	if(name.compare("MTRANS")==0)return "M8";
 	if(name.compare("MVTM")==0)return "M9";
-	if(name.compare("MSET")==0)return "_0";
+	if(name.compare("PRINT")==0)return "_0";
+	if(name.compare("MSET")==0)return "_1";
 	return "_"+name;
 }
 int XPINSCompileUtil::readVarIndex(string scriptText,int *startIndex,char expectedEnd){
