@@ -6,10 +6,10 @@
 #include <math.h>
 #include <fstream>
 
-
 using namespace std;
 using namespace XPINSParser;
 using namespace XPINSScriptableMath;
+
 const int kPMajor=0;
 const int kPMinor=9;
 
@@ -44,41 +44,11 @@ int readInt(string scriptText,int& i,char expectedEnd)
 	return index;
 }
 
-//read a float constant
-float readFloat(string scriptText,int& i,char expectedEnd)
-{
-	int index=0;
-	int fpartDig=0;
-	bool fpart=false;
-	bool isNeg=scriptText[i]=='-';
-	while(i<scriptText.length()&&scriptText[i]!=expectedEnd){
-		if(fpart)fpartDig++;//record decimal place
-		index*=10;
-		if(scriptText[i]=='1')index+=1;
-		else if(scriptText[i]=='2')index+=2;
-		else if(scriptText[i]=='3')index+=3;
-		else if(scriptText[i]=='4')index+=4;
-		else if(scriptText[i]=='5')index+=5;
-		else if(scriptText[i]=='6')index+=6;
-		else if(scriptText[i]=='7')index+=7;
-		else if(scriptText[i]=='8')index+=8;
-		else if(scriptText[i]=='9')index+=9;
-		else if(scriptText[i]=='.')fpart=true;//Start recording decimal places
-		else if(scriptText[i]!='0')index/=10;
-		i++;
-	}
-	while (fpartDig) {//put decimal point in correct place
-		index/=10;
-		fpartDig--;
-	}
-	if(isNeg)index*=-1;
-	return index;
-}
-
 #pragma mark Argument Parsing
 
-bool XPINSParser::ParseBoolArg(string scriptText,XPINSVarSpace* scriptVars,XPINSBindings* localBindings,int& i,char expectedEnd)
+bool XPINSParser::ParseBoolArg(string scriptText,XPINSVarSpace* scriptVars,XPINSBindings* localBindings,int& i,char expectedEnd,int*varIndex)
 {
+	if(!varIndex)varIndex=(int*)malloc(sizeof(int));
 	bool retVal=false;
 	while (i<scriptText.length()&&scriptText[i]!='$'&&scriptText[i]!='^'&&scriptText[i]!='?'&&scriptText[i]!='#'&&scriptText[i]!='X') ++i;//Get to Key Character
 	if (i>=scriptText.length()) return false;
@@ -86,8 +56,8 @@ bool XPINSParser::ParseBoolArg(string scriptText,XPINSVarSpace* scriptVars,XPINS
 	if(scriptText[i]=='$')//Variable
 	{
 		i+=2;
-		int index=readInt(scriptText, i, expectedEnd);
-		retVal=scriptVars->bVars[index];
+		*varIndex=readInt(scriptText, i, expectedEnd);
+		retVal=scriptVars->bVars[*varIndex];
 	}
 	else if(scriptText[i]=='^')//constant
 		retVal=(scriptText[i+1]=='T');
@@ -108,24 +78,46 @@ bool XPINSParser::ParseBoolArg(string scriptText,XPINSVarSpace* scriptVars,XPINS
 	while(scriptText[i]!=expectedEnd)++i;
 	return retVal;
 }
-int XPINSParser::ParseIntArg(string scriptText,XPINSVarSpace* scriptVars, XPINSBindings* localBindings,int& i,char expectedEnd)
+int XPINSParser::ParseIntArg(string scriptText,XPINSVarSpace* scriptVars, XPINSBindings* localBindings,int& i,char expectedEnd,int*varIndex)
 {
-	return ParseFloatArg(scriptText, scriptVars, localBindings, i, expectedEnd);
+	return ParseFloatArg(scriptText, scriptVars, localBindings, i, expectedEnd,varIndex);
 }
-float XPINSParser::ParseFloatArg(string scriptText, XPINSVarSpace* scriptVars, XPINSBindings* localBindings,int& i,char expectedEnd)
+float XPINSParser::ParseFloatArg(string scriptText, XPINSVarSpace* scriptVars, XPINSBindings* localBindings,int& i,char expectedEnd,int*varIndex)
 {
+	if(!varIndex)varIndex=(int*)malloc(sizeof(int));
 	float retVal=0;
 	while (scriptText[i]!='$'&&scriptText[i]!='^'&&scriptText[i]!='?'&&scriptText[i]!='#'&&scriptText[i]!='X') ++i;//Get to Key Character
 	if(scriptText[i]=='$')//Variable
 	{
 		i+=2;
-		int index=readInt(scriptText, i, expectedEnd);
-		retVal=scriptText[i-1]=='F'?scriptVars->fVars[index]:scriptVars->iVars[index];
+		*varIndex=readInt(scriptText, i, expectedEnd);
+		retVal=scriptText[i-1]=='F'?scriptVars->fVars[*varIndex]:scriptVars->iVars[*varIndex];
 	}
 	else if(scriptText[i]=='^')//Constant
 	{
-		++i;
-		retVal=readFloat(scriptText, i, expectedEnd);
+		retVal=0;
+		int fpartDig=0;
+		bool fpart=false;
+		bool isNeg=scriptText[i+1]=='-';
+		while(++i<scriptText.length()&&scriptText[i]!=expectedEnd){
+			if(fpart)fpartDig++;//record decimal place
+			retVal*=10;
+			if(scriptText[i]=='1')retVal+=1;
+			else if(scriptText[i]=='2')retVal+=2;
+			else if(scriptText[i]=='3')retVal+=3;
+			else if(scriptText[i]=='4')retVal+=4;
+			else if(scriptText[i]=='5')retVal+=5;
+			else if(scriptText[i]=='6')retVal+=6;
+			else if(scriptText[i]=='7')retVal+=7;
+			else if(scriptText[i]=='8')retVal+=8;
+			else if(scriptText[i]=='9')retVal+=9;
+			else if(scriptText[i]=='.')fpart=true;//Start recording decimal places
+			else if(scriptText[i]!='0')retVal/=10;
+		}
+		while (fpartDig-->0) {//put decimal point in correct place
+			retVal/=10;
+		}
+		if(isNeg)retVal*=-1;
 	}
 	else if(scriptText[i]=='?')//Expression
 		retVal=scriptText[i+1]=='I'?
@@ -151,15 +143,16 @@ float XPINSParser::ParseFloatArg(string scriptText, XPINSVarSpace* scriptVars, X
 	while(scriptText[i]!=expectedEnd)++i;
 	return retVal;
 }
-Vector XPINSParser::ParseVecArg(string scriptText,XPINSVarSpace* scriptVars,XPINSBindings* localBindings,int& i,char expectedEnd)
+Vector XPINSParser::ParseVecArg(string scriptText,XPINSVarSpace* scriptVars,XPINSBindings* localBindings,int& i,char expectedEnd,int*varIndex)
 {
+	if(!varIndex)varIndex=(int*)malloc(sizeof(int));
 	Vector retVal=Vector();
 	while (scriptText[i]!='$'&&scriptText[i]!='^'&&scriptText[i]!='?'&&scriptText[i]!='#'&&scriptText[i]!='X') ++i;//Get to Key Character
 	if(scriptText[i]=='$')//variable
 	{
 		i+=2;
-		int index=readInt(scriptText, i, expectedEnd);
-		retVal=scriptVars->vVars[index];
+		*varIndex=readInt(scriptText, i, expectedEnd);
+		retVal=scriptVars->vVars[*varIndex];
 	}
 	else if(scriptText[i]=='^')//constant (can contain varialbes, though)
 	{
@@ -167,25 +160,25 @@ Vector XPINSParser::ParseVecArg(string scriptText,XPINSVarSpace* scriptVars,XPIN
 		if(scriptText[i]=='P'&&scriptText[i+1]=='<')//Polar Vector
 		{
 			i+=2;
-			float r=ParseFloatArg(scriptText, scriptVars,localBindings, i, ',');
-			float t=ParseFloatArg(scriptText, scriptVars,localBindings, i, ',');
-			float z=ParseFloatArg(scriptText, scriptVars,localBindings, i, '>');
+			float r=ParseFloatArg(scriptText, scriptVars,localBindings, i, ',',NULL);
+			float t=ParseFloatArg(scriptText, scriptVars,localBindings, i, ',',NULL);
+			float z=ParseFloatArg(scriptText, scriptVars,localBindings, i, '>',NULL);
 			retVal=Vector::PolarVector(r, t, z);
 		}
 		else if(scriptText[i]=='S'&&scriptText[i+1]=='<')//Spherical Vector
 		{
 			i+=2;
-			float r=ParseFloatArg(scriptText, scriptVars,localBindings, i, ',');
-			float t=ParseFloatArg(scriptText, scriptVars,localBindings, i, ',');
-			float p=ParseFloatArg(scriptText, scriptVars,localBindings, i, '>');
+			float r=ParseFloatArg(scriptText, scriptVars,localBindings, i, ',',NULL);
+			float t=ParseFloatArg(scriptText, scriptVars,localBindings, i, ',',NULL);
+			float p=ParseFloatArg(scriptText, scriptVars,localBindings, i, '>',NULL);
 			retVal=Vector::PolarVector(r, t ,p);
 		}
 		else if(scriptText[i]=='<')//rectangular vector
 		{
 			++i;
-			float x=ParseFloatArg(scriptText, scriptVars,localBindings, i, ',');
-			float y=ParseFloatArg(scriptText, scriptVars,localBindings, i, ',');
-			float z=ParseFloatArg(scriptText, scriptVars,localBindings, i, '>');
+			float x=ParseFloatArg(scriptText, scriptVars,localBindings, i, ',',NULL);
+			float y=ParseFloatArg(scriptText, scriptVars,localBindings, i, ',',NULL);
+			float z=ParseFloatArg(scriptText, scriptVars,localBindings, i, '>',NULL);
 			retVal=Vector(x, y,z);
 		}
 	}
@@ -206,15 +199,16 @@ Vector XPINSParser::ParseVecArg(string scriptText,XPINSVarSpace* scriptVars,XPIN
 	return retVal;
 }
 
-Matrix XPINSParser::ParseMatArg(string scriptText,XPINSVarSpace* scriptVars, XPINSBindings* localBindings,int& i,char expectedEnd)
+Matrix XPINSParser::ParseMatArg(string scriptText,XPINSVarSpace* scriptVars, XPINSBindings* localBindings,int& i,char expectedEnd,int*varIndex)
 {
+	if(!varIndex)varIndex=(int*)malloc(sizeof(int));
 	Matrix retVal=Matrix();
 	while (scriptText[i]!='$'&&scriptText[i]!='^'&&scriptText[i]!='?'&&scriptText[i]!='#'&&scriptText[i]!='X') ++i;//Get to Key Character
 	if(scriptText[i]=='$')//variable
 	{
 		i+=2;
-		int index=readInt(scriptText, i, expectedEnd);
-		retVal=scriptVars->mVars[index];
+		*varIndex=readInt(scriptText, i, expectedEnd);
+		retVal=scriptVars->mVars[*varIndex];
 	}
 	else if(scriptText[i]=='^')//constant (can contain varialbes, though)
 	{
@@ -230,12 +224,12 @@ Matrix XPINSParser::ParseMatArg(string scriptText,XPINSVarSpace* scriptVars, XPI
 		{
 			if(c==cols-1)
 			{
-				if(r==rows-1)retVal.SetValueAtPosition(ParseFloatArg(scriptText, scriptVars,localBindings, i, ']'),r,c);
-				else retVal.SetValueAtPosition(ParseFloatArg(scriptText, scriptVars,localBindings, i, ';'),r,c);
+				if(r==rows-1)retVal.SetValueAtPosition(ParseFloatArg(scriptText, scriptVars,localBindings, i, ']',NULL),r,c);
+				else retVal.SetValueAtPosition(ParseFloatArg(scriptText, scriptVars,localBindings, i, ';',NULL),r,c);
 				++r;
 				c=-1;
 			}
-			else retVal.SetValueAtPosition(ParseFloatArg(scriptText, scriptVars,localBindings, i, ','),r,c);
+			else retVal.SetValueAtPosition(ParseFloatArg(scriptText, scriptVars,localBindings, i, ',',NULL),r,c);
 			++c;
 			++i;
 		}
@@ -257,15 +251,16 @@ Matrix XPINSParser::ParseMatArg(string scriptText,XPINSVarSpace* scriptVars, XPI
 	while(scriptText[i]!=expectedEnd)++i;
 	return retVal;
 }
-string XPINSParser::ParseStrArg(string scriptText,XPINSVarSpace* scriptVars,XPINSBindings* localBindings,int& i,char expectedEnd)
+string XPINSParser::ParseStrArg(string scriptText,XPINSVarSpace* scriptVars,XPINSBindings* localBindings,int& i,char expectedEnd,int*varIndex)
 {
+	if(!varIndex)varIndex=(int*)malloc(sizeof(int));
 	string retVal="";
 	while (scriptText[i]!='$'&&scriptText[i]!='^'&&scriptText[i]!='#') ++i;//Get to Key Character
 	if(scriptText[i]=='$')//variable
 	{
 		i+=2;
-		int index=readInt(scriptText, i, expectedEnd);
-		retVal=scriptVars->sVars[index];
+		*varIndex=readInt(scriptText, i, expectedEnd);
+		retVal=scriptVars->sVars[*varIndex];
 	}
 	else if(scriptText[i]=='^')//User-defined Function
 	{
@@ -286,15 +281,15 @@ string XPINSParser::ParseStrArg(string scriptText,XPINSVarSpace* scriptVars,XPIN
 	while(scriptText[i]!=expectedEnd)++i;
 	return retVal;
 }
-void* XPINSParser::ParsePointerArg(string scriptText,XPINSVarSpace* scriptVars,XPINSBindings* localBindings,int& i,char expectedEnd)
+void* XPINSParser::ParsePointerArg(string scriptText,XPINSVarSpace* scriptVars,XPINSBindings* localBindings,int& i,char expectedEnd,int*varIndex)
 {
 	void* retVal=NULL;
 	while (scriptText[i]!='$'&&scriptText[i]!='#') ++i;//Get to Key Character
 	if(scriptText[i]=='$')//variable
 	{
 		i+=2;
-		int index=readInt(scriptText, i, expectedEnd);
-		retVal=scriptVars->pVars[index];
+		*varIndex=readInt(scriptText, i, expectedEnd);
+		retVal=scriptVars->pVars[*varIndex];
 	}
 	else if(scriptText[i]=='#'&&scriptText[i+1]=='P'&&scriptText[i+2]=='F')//User-defined Function
 	{
@@ -304,26 +299,6 @@ void* XPINSParser::ParsePointerArg(string scriptText,XPINSVarSpace* scriptVars,X
 	}
 	while(scriptText[i]!=expectedEnd)++i;
 	return retVal;
-}
-
-void XPINSParser::SetNumVar(float val,string scriptText,XPINSVarSpace* scriptVars,int& i,char expectedEnd)
-{
-	i+=2;
-	int index=readInt(scriptText, i, expectedEnd);
-	if(scriptText[i-1]=='F')scriptVars->fVars[index]=val;
-	else scriptVars->iVars[index]=val;
-}
-void XPINSParser::SetVecVar(Vector val,string scriptText,XPINSVarSpace* scriptVars,int& i,char expectedEnd)
-{
-	i+=2;
-	int index=readInt(scriptText, i, expectedEnd);
-	scriptVars->vVars[index]=val;
-}
-void XPINSParser::SetMatVar(Matrix val,string scriptText,XPINSVarSpace* scriptVars,int& i,char expectedEnd)
-{
-	i+=2;
-	int index=readInt(scriptText, i, expectedEnd);
-	scriptVars->mVars[index]=val;
 }
 
 #pragma mark Conditionals and Loops
@@ -349,7 +324,7 @@ void ParseIf(string scriptText,XPINSVarSpace* scriptVars,XPINSBindings* localBin
 		skipBlock(scriptText, i);
 		while (scriptText[++i]!='\n');
 	}
-	else if(!ParseBoolArg(scriptText,scriptVars,localBindings, i, ']'))//If was false
+	else if(!ParseBoolArg(scriptText,scriptVars,localBindings, i, ']',NULL))//If was false
 	{
 		skipBlock(scriptText, i);
 		while (scriptText[++i]!='\n');
@@ -379,7 +354,7 @@ void ParseLoop(string scriptText,XPINSVarSpace* scriptVars,XPINSBindings*localBi
 		skipBlock(scriptText, i);
 		int loopStop=i;
 		int temp=expressionIndex;
-		while (ParseBoolArg(scriptText, scriptVars,localBindings, expressionIndex, ']')) {
+		while (ParseBoolArg(scriptText, scriptVars,localBindings, expressionIndex, ']',NULL)) {
 			expressionIndex=temp;
 			ParseCode(scriptText, scriptVars,localBindings, loopStart, loopStop);
 		}
@@ -466,37 +441,37 @@ void ParseCode(string scriptText,XPINSVarSpace* scriptVars,XPINSBindings* localB
 					case 'B':{//Bool Variable
 						int index=readInt(scriptText, i, '=');
 						i++;
-						scriptVars->bVars[index]=ParseBoolArg(scriptText, scriptVars,localBindings, i, '\n');
+						scriptVars->bVars[index]=ParseBoolArg(scriptText, scriptVars,localBindings, i, '\n',NULL);
 					}break;
 					case 'I':{//INT variable
 						int index=readInt(scriptText, i, '=');
 						i++;
-						scriptVars->iVars[index]=ParseIntArg(scriptText, scriptVars,localBindings, i, '\n');
+						scriptVars->iVars[index]=ParseIntArg(scriptText, scriptVars,localBindings, i, '\n',NULL);
 					}break;
 					case 'F':{//FLOAT variable
 						int index=readInt(scriptText, i, '=');
 						++i;
-						scriptVars->fVars[index]=ParseFloatArg(scriptText, scriptVars,localBindings, i, '\n');
+						scriptVars->fVars[index]=ParseFloatArg(scriptText, scriptVars,localBindings, i, '\n',NULL);
 					}break;
 					case 'V':{//VEC variable
 						int index=readInt(scriptText, i, '=');
 						++i;
-						scriptVars->vVars[index]=ParseVecArg(scriptText, scriptVars,localBindings, i, '\n');
+						scriptVars->vVars[index]=ParseVecArg(scriptText, scriptVars,localBindings, i, '\n',NULL);
 					}break;
 					case 'M':{//MAT variable
 						int index=readInt(scriptText, i, '=');
 						++i;
-						scriptVars->mVars[index]=ParseMatArg(scriptText, scriptVars,localBindings, i, '\n');
+						scriptVars->mVars[index]=ParseMatArg(scriptText, scriptVars,localBindings, i, '\n',NULL);
 					}break;
 					case 'S':{//MAT variable
 						int index=readInt(scriptText, i, '=');
 						++i;
-						scriptVars->sVars[index]=ParseStrArg(scriptText, scriptVars,localBindings, i, '\n');
+						scriptVars->sVars[index]=ParseStrArg(scriptText, scriptVars,localBindings, i, '\n',NULL);
 					}break;
 					case 'P':{//Pointer variable
 						int index=readInt(scriptText, i, '=');
 						++i;
-						scriptVars->pVars[index]=ParsePointerArg(scriptText, scriptVars,localBindings, i, '\n');
+						scriptVars->pVars[index]=ParsePointerArg(scriptText, scriptVars,localBindings, i, '\n',NULL);
 					}break;
 				}
 			}break;

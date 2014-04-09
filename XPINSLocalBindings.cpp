@@ -24,7 +24,7 @@ using namespace std;
 void XPINSLocalBindings::BindFunction(int fNum,string script,XPINSParser::XPINSVarSpace* data,int& i,void* returnVal){
 	switch (fNum) {
 			/*Bind Your Custom Functions*/
-		case 1: cout<<XPINSParser::ParseIntArg(script, data, this, i, ')')<<"\t";
+		case 1: cout<<XPINSParser::ParseIntArg(script, data, this, i, ')',NULL)<<"\t";
 			break;
 		case 2: cout<<endl;break;
 	}

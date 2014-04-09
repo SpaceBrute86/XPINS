@@ -27,18 +27,13 @@ namespace XPINSParser
 		vector<void*> pVars;//Custom type variables
 	};
 	//Argument PARSING:
-	bool ParseBoolArg(string,XPINSVarSpace*,XPINSBindings*,int&,char);
-	int ParseIntArg(string,XPINSVarSpace*,XPINSBindings*,int&,char);
-	float ParseFloatArg(string,XPINSVarSpace*,XPINSBindings*,int&,char);
-	XPINSScriptableMath::Vector ParseVecArg(string,XPINSVarSpace*,XPINSBindings*,int&,char);
-	XPINSScriptableMath::Matrix ParseMatArg(string,XPINSVarSpace*,XPINSBindings*,int&,char);
-	string ParseStrArg(string,XPINSVarSpace*,XPINSBindings*,int&,char);
-	void* ParsePointerArg( string,XPINSVarSpace*,XPINSBindings*,int&,char);
-	
-	//Get Variables access
-	void SetNumVar(float val, string,XPINSVarSpace*,int&,char);
-	void SetVecVar(XPINSScriptableMath::Vector val, string,XPINSVarSpace*,int&,char);
-	void SetMatVar(XPINSScriptableMath::Matrix val, string,XPINSVarSpace*,int&,char);
+	bool ParseBoolArg(string,XPINSVarSpace*,XPINSBindings*,int&,char,int*index=NULL);
+	int ParseIntArg(string,XPINSVarSpace*,XPINSBindings*,int&,char,int*index=NULL);
+	float ParseFloatArg(string,XPINSVarSpace*,XPINSBindings*,int&,char,int*index=NULL);
+	XPINSScriptableMath::Vector ParseVecArg(string,XPINSVarSpace*,XPINSBindings*,int&,char,int*index=NULL);
+	XPINSScriptableMath::Matrix ParseMatArg(string,XPINSVarSpace*,XPINSBindings*,int&,char,int*index=NULL);
+	string ParseStrArg(string,XPINSVarSpace*,XPINSBindings*,int&,char,int*index=NULL);
+	void* ParsePointerArg( string,XPINSVarSpace*,XPINSBindings*,int&,char,int*index=NULL);
 	
 	//Parsing Scripts
 	void ParseScript(string,XPINSBindings*);

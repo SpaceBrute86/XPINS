@@ -44,6 +44,12 @@ namespace XPINSScriptableMath{
 		void operator*=(const float &f){
 			*this=*this*f;
 		}
+		Vector operator/(const float &f) const {
+			return Scale(*this,1/f);
+		}
+		void operator/=(const float &f){
+			*this=*this/f;
+		}
 		Vector operator-(const Vector &v) const {
 			return Add(*this,v*(-1));
 		}
@@ -100,6 +106,13 @@ namespace XPINSScriptableMath{
 		}
 		void operator*=(const float &f){
 			*this=*this*f;
+		}
+		Matrix operator/(const float &f) const
+		{
+			return Scale(*this,1/f);
+		}
+		void operator/=(const float &f){
+			*this=*this/f;
 		}
 		Matrix operator-(const Matrix &m) const
 		{

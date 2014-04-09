@@ -88,7 +88,7 @@ An expression always starts and ends with a '?'. At the beginning of the express
 	!  : Not (B):(B)
 	|| : Or (B):(B),(B)
 	&& : Or (B):(B),(B)
-	Add a '=' after the +,-,*,/, or % to copy the result into the first variable
+	Add a '=' after the +,-,*,/, or % to copy the result into the first variable, as long as it is of a matching type (e.g. dot product won't work but cross product will). Also, ?V(M*=V)? will store the result in the Vector variable.
 
 
 
@@ -131,15 +131,42 @@ Function 0 is reserved and may be useful in a future version of XPINS.
 You will replace the '...' with the code to find your arguments and call your functions.
 
 Once you have determined which function was called you need to figure out what values were passed to it. Good News: The parser does all of the heavy lifting. Here is what your code looks like:
-___ arg__=parse___Arg(script,data,i,___);
+___ arg__=Parse___Arg(script,data,this,i,___,NULL);
 Only four blanks. The first blank is the type of the argument. This should be one of the following, depending on what your function takes for the argument: bool, int, float, XPINSScriptableMath::Vector, XPINSScriptableMath::Matrix, or void*
 The second blank should be the number of the argument, so the variable is called arg1, arg2, etc. (It is Your choice on whether or not to zero-index, just be consistent. In this documentation I will not be zero-indexing).
 The third blank should match the type: Bool, Int, Float, Vec, Mat, or Pointer.
-The final blank is the expected end character. This is ',' unless it is the final argument for a function, in which case it is ')'.
-So for a VEC argument that is the 2nd but not last argument in a function, the code would look like this:
-XPINSScriptableMath::Vector arg2=parseVecArg(script,parameters,vars,index,',');
+The last blank is the expected end character. This is ',' unless it is the final argument for a function, in which case it is ')'.
+So for a VEC argument that is the 2nd but not last argument in a function and does not need to be modified, the code would look like this:
+XPINSScriptableMath::Vector arg2=parseVecArg(script,parameters,vars,index,',',NULL);
 For functions that don't take arguments, simply use this line of code:
 while(scriptText[++i]!=')');
+
+
+Passing by reference:
+If you want to have a function where the variables are passed by reference, use the following code instead of what is listed above:
+bool floatVar=scriptText[i+1]!='I';//Line 1
+___ arg__=Parse___Arg(scriptText, data, localBindings, i,___,&____);//Line 2
+//call your function
+if(varIndex>-1)
+{
+	if(floatVar)++data->fVars[varIndex];
+	else ++data->iVars[varIndex];
+}
+If the argument is a float or int, put the first line in before you call Parse__Arg. This will determine if an Int variable was passed instead of a float variable.
+The second line should be the same as it would be for passing by value, but NULL is replaced by &___, where ___ is the name of an int variable that we will use later (make sure to use a different variable for each argument, though).
+After you call your function and determine the return value, add the following code to modify the argument
+if(varIndex>-1)
+{
+	data->_Vars[____]=____;
+}
+The first blank is b,i,f,v,m,s,or p depending on the variable type. the second blank is the name of the variable we used earlier, and the last blank is the variable storing the value that we need to assign to the argument variable.
+If your argument is of type float or int, you will need to replace 	
+	data->_Vars[____]=____;
+with
+	if(floatVar)data->fVars[____]=____;
+	else data->iVars[____]=_____;
+
+
 
 Finally, the most important part: calling your functions. This actually is only one line of code (per function), and it goes right after the code for Finding the arguments:
 *returnVal=f__(...);
