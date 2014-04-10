@@ -74,7 +74,6 @@ namespace XPINSScriptableMath{
 		//Accessing Components
 		float ValueAtPosition(size_t,size_t);
 		void SetValueAtPosition(float,size_t,size_t);
-		void Resize(size_t,size_t);
 		//Special Matrices
 		static Matrix IdentityMatrixOfSize(size_t);
 		static Matrix DiagonalMatrixWithValues(std::vector<float>);
@@ -134,7 +133,8 @@ namespace XPINSScriptableMath{
 			return MultiplyMatrixVector(*this,v);
 		}
 	private:
-		std::vector< std::vector<float> > values;
+		std::vector<float> values;
+		size_t rows,cols;
 		static Matrix MinorMatrix(Matrix,size_t,size_t);
 
 	};

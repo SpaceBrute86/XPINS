@@ -186,7 +186,7 @@ int XPINSBuiltIn::ParseIntExp(string scriptText,XPINSVarSpace* data, XPINSBindin
 				else
 				{
 					bool floatVar=scriptText[i+1]!='I';
-					result=ParseIntArg(scriptText, data, localBindings, i,'+',&varIndex);
+					result=ParseIntArg(scriptText, data, localBindings, i,'-',&varIndex);
 					if(varIndex>-1)
 					{
 						if(floatVar)--data->fVars[varIndex];
@@ -198,7 +198,7 @@ int XPINSBuiltIn::ParseIntExp(string scriptText,XPINSVarSpace* data, XPINSBindin
 			else
 			{
 				bool floatVar=scriptText[i+1]!='I';
-				result=ParseIntArg(scriptText, data, localBindings, i,'+',&varIndex);
+				result=ParseIntArg(scriptText, data, localBindings, i,'-',&varIndex);
 				while (scriptText[i]!='$'&&scriptText[i]!='^'&&scriptText[i]!='?'&&scriptText[i]!='#'&&	scriptText[i]!='X') ++i;//Get to Key Character
 				result-=ParseIntArg(scriptText, data, localBindings, i,')',NULL);
 				++i;
@@ -225,7 +225,7 @@ int XPINSBuiltIn::ParseIntExp(string scriptText,XPINSVarSpace* data, XPINSBindin
 		}
 		else if (scriptText[j]=='/') {//division
 			bool floatVar=scriptText[i+1]!='I';
-			result=ParseIntArg(scriptText, data, localBindings, i, '*',&varIndex);
+			result=ParseIntArg(scriptText, data, localBindings, i, '/',&varIndex);
 			while (scriptText[i]!='$'&&scriptText[i]!='^'&&scriptText[i]!='?'&&scriptText[i]!='#'&&scriptText[i]!='X') ++i;//Get to Key Character
 			result/=ParseIntArg(scriptText,data,localBindings, i, ')',NULL);
 			++i;
@@ -238,7 +238,7 @@ int XPINSBuiltIn::ParseIntExp(string scriptText,XPINSVarSpace* data, XPINSBindin
 		}
 		else if (scriptText[j]=='%') {//modulus
 			bool floatVar=scriptText[i+1]!='I';
-			result=ParseIntArg(scriptText, data, localBindings, i, '*',&varIndex);
+			result=ParseIntArg(scriptText, data, localBindings, i, '%',&varIndex);
 			while (scriptText[i]!='$'&&scriptText[i]!='^'&&scriptText[i]!='?'&&scriptText[i]!='#'&&scriptText[i]!='X') ++i;//Get to Key Character
 			result%=ParseIntArg(scriptText,data,localBindings, i, ')',NULL);
 			++i;
@@ -323,7 +323,7 @@ float XPINSBuiltIn::ParseFloatExp(string scriptText,XPINSVarSpace* data, XPINSBi
 				else
 				{
 					bool floatVar=scriptText[i+1]!='I';
-					result=ParseFloatArg(scriptText, data, localBindings, i,'+',&varIndex);
+					result=ParseFloatArg(scriptText, data, localBindings, i,'-',&varIndex);
 					if(varIndex>-1)
 					{
 						if(floatVar)--data->fVars[varIndex];
@@ -336,7 +336,7 @@ float XPINSBuiltIn::ParseFloatExp(string scriptText,XPINSVarSpace* data, XPINSBi
 			else
 			{
 				bool floatVar=scriptText[i+1]!='I';
-				result=ParseIntArg(scriptText, data, localBindings, i,'+',&varIndex);
+				result=ParseIntArg(scriptText, data, localBindings, i,'-',&varIndex);
 				while (scriptText[i]!='$'&&scriptText[i]!='^'&&scriptText[i]!='?'&&scriptText[i]!='#'&&	scriptText[i]!='X') ++i;//Get to Key Character
 				result-=ParseIntArg(scriptText, data, localBindings, i,')',NULL);
 				++i;
@@ -350,7 +350,7 @@ float XPINSBuiltIn::ParseFloatExp(string scriptText,XPINSVarSpace* data, XPINSBi
 		}
 		else if (scriptText[j]=='*') {//multiplication
 			if(scriptText[i+1]=='V'){//Dot Produt
-				Vector v1=ParseVecArg(scriptText, data, localBindings, i,'+',NULL);
+				Vector v1=ParseVecArg(scriptText, data, localBindings, i,'*',NULL);
 				while (scriptText[i]!='$'&&scriptText[i]!='^'&&scriptText[i]!='?'&&scriptText[i]!='#'&&scriptText[i]!='X') ++i;//Get to Key Character
 				Vector v2=ParseVecArg(scriptText, data, localBindings, i,')',NULL);
 				result=Vector::DotProduct(v1, v2);
@@ -359,7 +359,7 @@ float XPINSBuiltIn::ParseFloatExp(string scriptText,XPINSVarSpace* data, XPINSBi
 			}
 			else if(scriptText[j+2]=='F'){
 				bool floatVar=scriptText[i+1]!='I';
-				result=ParseIntArg(scriptText, data, localBindings, i,'+',&varIndex);
+				result=ParseIntArg(scriptText, data, localBindings, i,'*',&varIndex);
 				while (scriptText[i]!='$'&&scriptText[i]!='^'&&scriptText[i]!='?'&&scriptText[i]!='#'&&	scriptText[i]!='X') ++i;//Get to Key Character
 				result-=ParseIntArg(scriptText, data, localBindings, i,')',NULL);
 				++i;
@@ -372,7 +372,7 @@ float XPINSBuiltIn::ParseFloatExp(string scriptText,XPINSVarSpace* data, XPINSBi
 		}
 		else if (scriptText[j]=='/') {//division
 			bool floatVar=scriptText[i+1]!='I';
-			result=ParseIntArg(scriptText, data, localBindings, i,'+',&varIndex);
+			result=ParseIntArg(scriptText, data, localBindings, i,'/',&varIndex);
 			while (scriptText[i]!='$'&&scriptText[i]!='^'&&scriptText[i]!='?'&&scriptText[i]!='#'&&	scriptText[i]!='X') ++i;//Get to Key Character
 			result/=ParseIntArg(scriptText, data, localBindings, i,')',NULL);
 			++i;
@@ -406,7 +406,7 @@ Vector XPINSBuiltIn::ParseVecExp(string scriptText,XPINSVarSpace* data, XPINSBin
 			return result;
 		}
 		else if (scriptText[j]=='-') {//subtraction
-			Vector result=ParseVecArg(scriptText, data, localBindings, i,'+',&varIndex);
+			Vector result=ParseVecArg(scriptText, data, localBindings, i,'-',&varIndex);
 			while (scriptText[i]!='$'&&scriptText[i]!='^'&&scriptText[i]!='?'&&scriptText[i]!='#'&&	scriptText[i]!='X') ++i;//Get to Key Character
 			result+=ParseVecArg(scriptText, data, localBindings, i,')',NULL);
 			++i;
@@ -416,7 +416,7 @@ Vector XPINSBuiltIn::ParseVecExp(string scriptText,XPINSVarSpace* data, XPINSBin
 		}
 		else if (scriptText[j]=='*') {//multiplication
 			if(scriptText[i+1]=='M'||scriptText[i+2]=='['){//Matrix-Vector
-				Matrix m1=ParseMatArg(scriptText, data, localBindings, i,'+',NULL);
+				Matrix m1=ParseMatArg(scriptText, data, localBindings, i,'*',NULL);
 				while (scriptText[i]!='$'&&scriptText[i]!='^'&&scriptText[i]!='?'&&scriptText[i]!='#'&&	scriptText[i]!='X') ++i;//Get to Key Character
 				Vector v2=ParseVecArg(scriptText, data, localBindings, i,')',&varIndex);
 				Vector result=m1*v2;
@@ -426,7 +426,7 @@ Vector XPINSBuiltIn::ParseVecExp(string scriptText,XPINSVarSpace* data, XPINSBin
 				return result;
 			}
 			else if(scriptText[j+2]=='V'||scriptText[j+2]=='<'||scriptText[j+3]=='<'){//Cross Produt
-				Vector v1=ParseVecArg(scriptText, data, localBindings, i,'+',&varIndex);
+				Vector v1=ParseVecArg(scriptText, data, localBindings, i,'*',&varIndex);
 				while (scriptText[i]!='$'&&scriptText[i]!='^'&&scriptText[i]!='?'&&scriptText[i]!='#'&&	scriptText[i]!='X') ++i;//Get to Key Character
 				Vector v2=ParseVecArg(scriptText, data, localBindings, i,')',NULL);
 				Vector result=Vector::CrossProduct(v1, v2);
@@ -436,7 +436,7 @@ Vector XPINSBuiltIn::ParseVecExp(string scriptText,XPINSVarSpace* data, XPINSBin
 				return result;
 			}
 			else{
-				Vector result=ParseVecArg(scriptText, data, localBindings, i,'+',&varIndex);
+				Vector result=ParseVecArg(scriptText, data, localBindings, i,'*',&varIndex);
 				while (scriptText[i]!='$'&&scriptText[i]!='^'&&scriptText[i]!='?'&&scriptText[i]!='#'&&	scriptText[i]!='X') ++i;//Get to Key Character
 				result*=ParseFloatArg(scriptText, data, localBindings, i,')',NULL);
 				++i;
@@ -446,7 +446,7 @@ Vector XPINSBuiltIn::ParseVecExp(string scriptText,XPINSVarSpace* data, XPINSBin
 			}
 		}
 		else if (scriptText[j]=='/') {//division
-			Vector result=ParseVecArg(scriptText, data, localBindings, i,'+',&varIndex);
+			Vector result=ParseVecArg(scriptText, data, localBindings, i,'/',&varIndex);
 			while (scriptText[i]!='$'&&scriptText[i]!='^'&&scriptText[i]!='?'&&scriptText[i]!='#'&&	scriptText[i]!='X') ++i;//Get to Key Character
 			result/=ParseFloatArg(scriptText, data, localBindings, i,')',NULL);
 			++i;
@@ -477,7 +477,7 @@ Matrix XPINSBuiltIn::ParseMatExp(string scriptText,XPINSVarSpace* data, XPINSBin
 			return result;
 		}
 		else if (scriptText[j]=='-') {//subtraction
-			Matrix result=ParseMatArg(scriptText, data, localBindings, i,'+',&varIndex);
+			Matrix result=ParseMatArg(scriptText, data, localBindings, i,'-',&varIndex);
 			while (scriptText[i]!='$'&&scriptText[i]!='^'&&scriptText[i]!='?'&&scriptText[i]!='#'&&	scriptText[i]!='X') ++i;//Get to Key Character
 			result-=ParseMatArg(scriptText, data, localBindings, i,')',NULL);
 			++i;
@@ -487,7 +487,7 @@ Matrix XPINSBuiltIn::ParseMatExp(string scriptText,XPINSVarSpace* data, XPINSBin
 		}
 		else if (scriptText[j]=='*') {//multiplication
 			if(scriptText[j+2]=='M'||scriptText[j+2]=='['){//Matrix-Matrix
-				Matrix result=ParseMatArg(scriptText, data, localBindings, i,'+',&varIndex);
+				Matrix result=ParseMatArg(scriptText, data, localBindings, i,'*',&varIndex);
 				while (scriptText[i]!='$'&&scriptText[i]!='^'&&scriptText[i]!='?'&&scriptText[i]!='#'&&	scriptText[i]!='X') ++i;//Get to Key Character
 				result*=ParseMatArg(scriptText, data, localBindings, i,')',NULL);
 				++i;
@@ -496,7 +496,7 @@ Matrix XPINSBuiltIn::ParseMatExp(string scriptText,XPINSVarSpace* data, XPINSBin
 				return result;
 			}
 			else{
-				Matrix result=ParseMatArg(scriptText, data, localBindings, i,'+',&varIndex);
+				Matrix result=ParseMatArg(scriptText, data, localBindings, i,'*',&varIndex);
 				while (scriptText[i]!='$'&&scriptText[i]!='^'&&scriptText[i]!='?'&&scriptText[i]!='#'&&	scriptText[i]!='X') ++i;//Get to Key Character
 				result*=ParseFloatArg(scriptText, data, localBindings, i,')',NULL);
 				++i;
@@ -506,7 +506,7 @@ Matrix XPINSBuiltIn::ParseMatExp(string scriptText,XPINSVarSpace* data, XPINSBin
 			}
 		}
 		else if (scriptText[j]=='/') {//division
-			Matrix result=ParseMatArg(scriptText, data, localBindings, i,'+',&varIndex);
+			Matrix result=ParseMatArg(scriptText, data, localBindings, i,'*',&varIndex);
 			while (scriptText[i]!='$'&&scriptText[i]!='^'&&scriptText[i]!='?'&&scriptText[i]!='#'&&	scriptText[i]!='X') ++i;//Get to Key Character
 			result/=ParseFloatArg(scriptText, data, localBindings, i,')',NULL);
 			++i;

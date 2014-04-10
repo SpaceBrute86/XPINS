@@ -111,24 +111,27 @@ float XPINSScriptableMath::dist(float x, float y,float z){
 
 //Initializing Matrices and Special Matrices
 Matrix::Matrix (){
-	values=std::vector<std::vector<float>>();
-	this->Resize(1, 1);
+	values=std::vector<float>();
+	rows=0;
+	cols=0;
 }
-Matrix::Matrix (size_t rows, size_t cols){
-	values=std::vector<std::vector<float>>();
-	this->Resize(rows, cols);
+
+Matrix::Matrix (size_t r, size_t c){
+	values=std::vector<float>(r*c);
+	rows=r;
+	cols=c;
 }
 Matrix Matrix::IdentityMatrixOfSize(size_t size){
 	Matrix matrix=Matrix(size,size);
 	for(size_t i=0;i<size;++i){
-		matrix.values[i][i]=1;
+		matrix.values[i*size+i]=1;
 	}
 	return matrix;
 }
 Matrix Matrix::DiagonalMatrixWithValues(std::vector<float> vals){
 	Matrix matrix=Matrix(vals.size(),vals.size());
 	for(size_t i=0;i<vals.size();++i){
-		matrix.values[i][i]=vals[i];
+		matrix.values[i*vals.size()+i]=vals[i];
 	}
 	return matrix;
 }
@@ -140,99 +143,79 @@ Matrix Matrix::RotationMatrixWithAngleAroundVector(Vector vec,float angle){
 	unitVec.RectCoords(&x, &y, &z);
 	//Compute values
 	//Source for Formulas: http://en.wikipedia.org/wiki/Rotation_matrix#Basic_rotations
-	matrix.values[0][0]=cosf(angle)+x*x*(1-cosf(angle));
-	matrix.values[0][1]=z*sinf(angle)+x*y*(1-cosf(angle));
-	matrix.values[0][2]=-y*sinf(angle)+x*z*(1-cosf(angle));
-	matrix.values[1][0]=-z*sinf(angle)+x*y*(1-cosf(angle));
-	matrix.values[1][1]=cosf(angle)+y*y*(1-cosf(angle));
-	matrix.values[1][2]=x*sinf(angle)+z*y*(1-cosf(angle));
-	matrix.values[2][0]=y*sinf(angle)+x*z*(1-cosf(angle));
-	matrix.values[2][1]=-x*sinf(angle)+z*y*(1-cosf(angle));
-	matrix.values[2][2]=cosf(angle)+z*z*(1-cosf(angle));
+	matrix.values[0]=cosf(angle)+x*x*(1-cosf(angle));
+	matrix.values[1]=z*sinf(angle)+x*y*(1-cosf(angle));
+	matrix.values[2]=-y*sinf(angle)+x*z*(1-cosf(angle));
+	matrix.values[3]=-z*sinf(angle)+x*y*(1-cosf(angle));
+	matrix.values[4]=cosf(angle)+y*y*(1-cosf(angle));
+	matrix.values[5]=x*sinf(angle)+z*y*(1-cosf(angle));
+	matrix.values[6]=y*sinf(angle)+x*z*(1-cosf(angle));
+	matrix.values[7]=-x*sinf(angle)+z*y*(1-cosf(angle));
+	matrix.values[8]=cosf(angle)+z*z*(1-cosf(angle));
 	return matrix;
 }
 //Accessing Values
 float Matrix::ValueAtPosition(size_t i,size_t j){
-	return values[i][j];
+	return values[i*cols+j];
 }
 void Matrix::SetValueAtPosition(float val,size_t i,size_t j){
-	values[i][j]=val;
-}
-void Matrix::Resize(size_t rows, size_t cols){
-	//Min Size = 1x1;
-	if(rows==0)rows=1;
-	if(cols==0)cols=1;
-	values.resize(rows);
-	for(size_t i=0;i<cols;++i){
-		values[i].resize(cols);
-	}
+	values[i*cols+j]=val;
 }
 //Converting Matricies to/from Vectors
 Vector Matrix::VectorForMatrix(Matrix m)
 {
-	if(m.values.size()==0)return Vector(0,0,0);
-	if(m.values.size()==1){
-		return Vector(m.values[0][0],m.values[0][1],m.values[0][2]);
-	}
-	else
-	{
-		return Vector(m.values[0][0],m.values[1][0],m.values[2][0]);
-	}
+	if(m.rows==0)return Vector(0,0,0);
+	return Vector(m.values[0],m.rows<1?0:m.values[1],m.rows<2?0:m.values[2]);
 }
 Matrix Matrix::MatrixForVector(Vector v)
 {
 	Matrix m=Matrix(3,1);
-	m.values[0][0]=v.x;
-	m.values[1][0]=v.y;
-	m.values[2][0]=v.z;
+	m.values[0]=v.x;
+	m.values[1]=v.y;
+	m.values[2]=v.z;
 	return m;
 }
 
 //Matrix Operations
 Matrix Matrix::Add(Matrix a,Matrix b)
 {
-	if (a.values.size()!=b.values.size()||a.values[0].size()!=b.values[0].size()) //Sizes don't match
+	if (a.rows!=b.rows||a.cols!=b.cols) //Sizes don't match
 	{
-		size_t rows=a.values.size()<b.values.size()?b.values.size():a.values.size();
-		size_t cols=a.values[0].size()<b.values[0].size()?b.values[0].size():a.values[0].size();
-		a.Resize(rows, cols);
-		b.Resize(rows, cols);
+		return Matrix();
 	}
-	Matrix m=Matrix(a.values.size(),a.values[0].size());
-	for (size_t i=0; i<a.values.size(); ++i)
+	Matrix m=Matrix(a.rows,a.cols);
+	for (size_t i=0; i<a.rows; ++i)
 	{
-		for (size_t j=0; j<a.values[0].size(); ++j)
+		for (size_t j=0; j<a.cols; ++j)
 		{
-			m.values[i][j]=a.values[i][j]+b.values[i][j];
+			m.values[i*a.cols+j]=a.values[i*a.cols+j]+b.values[i*b.cols+j];
 		}
 	}
 	return m;
 }
 Matrix Matrix::Scale(Matrix a,float b)
 {
-	Matrix m=Matrix(a.values.size(),a.values[0].size());
-	for (size_t i=0; i<a.values.size(); ++i)
+	Matrix m=Matrix(a.rows,a.cols);
+	for (size_t i=0; i<a.rows; ++i)
 	{
-		for (size_t j=0; j<a.values[0].size(); ++j)
+		for (size_t j=0; j<a.cols; ++j)
 		{
-			m.values[i][j]=a.values[i][j]*b;
+			m.values[i*a.cols+j]=a.values[i*a.cols+j]*b;
 		}
 	}
 	return m;
 }
 Matrix Matrix::Multiply(Matrix a,Matrix b)
 {
-	if (a.values[0].size()!=b.values.size())//Compensate for size errors
+	if (a.cols!=b.rows)//Can't multiply
 	{
-		size_t p=a.values[0].size()<b.values.size()?a.values[0].size():b.values.size();
-		a.Resize(a.values.size(), p);
-		b.Resize(p, b.values[0].size());
+		return Matrix();
 	}
-	Matrix m=Matrix(a.values.size(),b.values[0].size());
-	for (size_t i=0; i<a.values.size(); ++i) {
-		for (size_t j=0; j<b.values[0].size(); ++j) {
-			for (size_t p=0; p<a.values[0].size(); ++p) {
-				m.values[i][j]+=a.values[i][p]*b.values[p][j];
+	Matrix m=Matrix(a.rows,b.cols);
+	for (size_t i=0; i<a.rows; ++i) {
+		for (size_t j=0; j<b.cols; ++j) {
+			for (size_t p=0; p<a.cols; ++p) {
+				m.values[i*m.cols+j]+=a.values[i*a.cols+p]*b.values[p*b.cols+j];
 			}
 		}
 	}
@@ -247,34 +230,31 @@ Vector Matrix::MultiplyMatrixVector(Matrix m,Vector v)
 }
 Matrix Matrix::Transpose(Matrix in)
 {
-	Matrix out=Matrix(in.values[0].size(),in.values.size());
-	for (size_t i=0; i<in.values.size(); ++i) {
-		for (size_t j=0; j<in.values[0].size(); ++j) {
-			out.values[j][i]=in.values[i][j];
+	Matrix out=Matrix(in.cols,in.rows);
+	for (size_t i=0; i<in.rows; ++i) {
+		for (size_t j=0; j<in.cols; ++j) {
+			out.values[j*out.cols+i]=in.values[i*in.cols+j];
 		}
 	}
-	return Matrix(0,0);
+	return out;
 }
 
 float Matrix::Determinant(Matrix m)
 {
 	//Collapse to square Matrix
-	if (m.values.size()<m.values[0].size()) {
-		m.Resize(m.values.size(), m.values.size());
+	if (m.rows<m.cols||m.rows>m.cols) {
+		return 0;
 	}
-	else if (m.values.size()>m.values[0].size()) {
-		m.Resize(m.values[0].size(), m.values[0].size());
-	}
-	switch (m.values.size()) {
+	switch (m.rows) {
 		case 0:return 0;
 		case 1:
-			return m.values[0][0];//1x1 matrix
+			return m.values[0];//1x1 matrix
 		case 2://2x2 matrix
-			return m.values[0][0]*m.values[1][1]-m.values[0][1]*m.values[1][0];
+			return m.values[0]*m.values[3]-m.values[1]*m.values[2];
 		default://3x3+ matrix
 			float det=0;
-			for (size_t p=0; p<m.values.size(); ++p) {
-				det+=powf(-1, p)*m.values[0][p]*Determinant(MinorMatrix(m, 0, p));
+			for (size_t p=0; p<m.rows; ++p) {
+				det+=powf(-1, p)*m.values[p]*Determinant(MinorMatrix(m, 0, p));
 			}
 			return det;
 	}
@@ -282,10 +262,10 @@ float Matrix::Determinant(Matrix m)
 }
 Matrix Matrix::MinorMatrix(Matrix m, size_t r, size_t c)
 {
-	Matrix minor=Matrix(m.values.size()-1,m.values.size()-1);
-	for (size_t i=0; i<m.values.size()-1; ++i) {
-		for (size_t j=0; j<m.values.size()-1; ++j) {
-			minor.values[i][j]=m.values[i+r<=i?1:0][j+c<=j?1:0];
+	Matrix minor=Matrix(m.rows-1,m.rows-1);
+	for (size_t i=0; i<m.rows-1; ++i) {
+		for (size_t j=0; j<m.rows-1; ++j) {
+			minor.values[i*minor.cols+j]=m.values[(i+r<=i?1:0)*m.cols+j+c<=j?1:0];
 		}
 	}
 	return minor;
@@ -294,21 +274,18 @@ Matrix Matrix::MinorMatrix(Matrix m, size_t r, size_t c)
 Matrix Matrix::Invert(Matrix a)
 {
 	//Collapse to square Matrix
-	if (a.values.size()<a.values[0].size()) {
-		a.Resize(a.values.size(), a.values.size());
-	}
-	else if (a.values.size()>a.values[0].size()) {
-		a.Resize(a.values[0].size(), a.values[0].size());
+	if (a.rows!=a.cols) {
+		return Matrix();
 	}
 	//return Identity Matrix if inverse can't be found
 	if (Determinant(a)==0) {
-		return IdentityMatrixOfSize(a.values.size());
+		return IdentityMatrixOfSize(a.rows);
 	}
 	//Procede with Cramer's rule stuff
-	Matrix b=Matrix(a.values.size(),a.values.size());
-	for (int i=0; i<a.values.size(); ++i) {
-		for (int j=0; j<a.values.size(); ++j) {
-			b.values[i][j]=powf(-1, i+j)*Determinant(MinorMatrix(a, j, i));
+	Matrix b=Matrix(a.rows,a.rows);
+	for (int i=0; i<a.rows; ++i) {
+		for (int j=0; j<a.rows; ++j) {
+			b.values[i*b.cols+j]=powf(-1, i+j)*Determinant(MinorMatrix(a, j, i));
 		}
 	}
 	return b;
