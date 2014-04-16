@@ -439,6 +439,7 @@ void XPINSParser::ParseScript(string script,XPINSBindings* localBindings)
 	//Run Script
 	ParseCode(script, scriptVars, localBindings,0,-1);
 	//Clean up
+	cout<<"\nSCRIPT FINISHED\n";
 	delete scriptVars;
 	while (localBindings->toDelete.size()>0)
 	{

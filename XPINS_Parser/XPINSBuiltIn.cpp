@@ -47,7 +47,7 @@ bool XPINSBuiltIn::ParseBoolExp(string scriptText,XPINSVarSpace* data, XPINSBind
 	}
 	else{
 		i+=2;
-		if (scriptText[i]=='!'&&scriptText[i+1]=='=') {//not
+		if (scriptText[i]=='!') {//not
 			++i;
 			bool arg=ParseBoolArg(scriptText, data, localBindings, i, ')',NULL);
 			++i;
@@ -55,7 +55,16 @@ bool XPINSBuiltIn::ParseBoolExp(string scriptText,XPINSVarSpace* data, XPINSBind
 		}
 		else {//two inputs
 			int j=i;
-			while (scriptText[j]!='|'&&scriptText[j]!='&'&&scriptText[j]!='<'&&scriptText[j]!='='&&scriptText[j]!='>'&&scriptText[j]!='!') ++j;
+			int expCount=0;
+			while ((scriptText[j]!='|'&&scriptText[j]!='&'&&scriptText[j]!='<'&&scriptText[j]!='='&&scriptText[j]!='>'&&scriptText[j]!='!')||expCount!=0)
+			{
+				if(scriptText[j]=='?')
+				{
+					if(scriptText[j+2]=='(')++expCount;
+					else --expCount;
+				}
+				++j;
+			}
 			if(scriptText[j]=='|'&&scriptText[j+1]=='|'){//OR
 				bool arg1=ParseBoolArg(scriptText, data, localBindings, i,'|',NULL);
 				i+=2;
@@ -255,9 +264,9 @@ int XPINSBuiltIn::ParseIntExp(string scriptText,XPINSVarSpace* data, XPINSBindin
 float XPINSBuiltIn::ParseFloatExp(string scriptText,XPINSVarSpace* data, XPINSBindings* localBindings, int& i){
 	float result=0.0;
 	int varIndex=-1;
-	while(scriptText[i++]!='?'){}
+	while(scriptText[i++]!='?');
 	if(scriptText[i]!='F'){
-		cerr<<"Could not parse XPINS expression, returning 0.0\n";
+	//	cerr<<"Could not parse XPINS expression, returning 0.0\n";
 		return ParseIntExp(scriptText, data, localBindings, i);
 	}
 	else{

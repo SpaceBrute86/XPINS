@@ -24,20 +24,21 @@ namespace XPINSCompileUtil {
 //Compile Script
 bool XPINSCompiler::compileScript(string &input){
 	string scriptText=input;
-//	cout<<endl<<"Validating Version..."<<endl;
+	//cout<<endl<<"Validating Version..."<<endl;
 	if(!checkVersion(scriptText))return false;
-//	cout<<"Version Compatilbe!";
-//	cout<<endl<<"About To Compile Script:\n"<<scriptText<<endl;
+	//cout<<"Version Compatilbe!";
+	//cout<<endl<<"About To Compile Script:\n"<<scriptText<<endl;
 	if(!removeComments(scriptText))return false;
-//	cout<<endl<<"Comments and ';'s Removed:\n"<<scriptText<<endl;
+	//cout<<endl<<"Comments and ';'s Removed:\n"<<scriptText<<endl;
 	if(!renameFunctions(scriptText))return false;
-//	cout<<endl<<"User Functions Renamed:\n"<<scriptText<<endl;
+	//cout<<endl<<"User Functions Renamed:\n"<<scriptText<<endl;
 	if(!renameVars(scriptText))return false;
-//	cout<<endl<<"Variables Renamed:\n"<<scriptText<<endl;
+	//cout<<endl<<"Variables Renamed:\n"<<scriptText<<endl;
 	if(!renameBuiltIns(scriptText))return false;
-//	cout<<endl<<"Built-in Functions Renamed:\n"<<scriptText<<endl;
+	if(!checkConstants(scriptText))return false;
+	//cout<<endl<<"Built-in Functions Renamed:\n"<<scriptText<<endl;
 	if(!cleanUp(scriptText))return false;
-//	cout<<endl<<"Cleaned Up:\n"<<scriptText;
+	//cout<<endl<<"Cleaned Up:\n"<<scriptText;
 	input=scriptText;
 	return true;
 }
@@ -290,6 +291,7 @@ bool XPINSCompiler::renameVars(string &text){
 	input=intermediate;
 	string output="";
 	int i=0;
+	cout<<"RETYPED: "<<input;
 	//Locate Code block
 	while(input[i]!='@'||input[i+1]!='C'){
 		i++;
@@ -312,12 +314,12 @@ bool XPINSCompiler::renameVars(string &text){
 	int xs=0;
 	int xp=0;
 	char varType='P';
-	while(i<input.length()&&(input[i]!='@'||input[i+1]!='E')){
-		while (input[i++]!='\n');
-		if(input[i]=='B'||input[i]=='I'||input[i]=='F'||input[i]=='V'||input[i]=='M'||input[i]=='S'||input[i]=='*')
+	while(i<intermediate1.length()&&(intermediate1[i]!='@'||intermediate1[i+1]!='E')){
+		while (i<intermediate1.length()&&intermediate1[i++]!='\n');
+		if(intermediate1[i]=='B'||intermediate1[i]=='I'||intermediate1[i]=='F'||intermediate1[i]=='V'||intermediate1[i]=='M'||intermediate1[i]=='S'||intermediate1[i]=='*')
 		{
 			//determine new variable name
-			varType=input[i]=='*'?'P':input[i];
+			varType=intermediate1[i]=='*'?'P':intermediate1[i];
 			int varNum=0;
 			switch (varType) {
 				case 'B':
@@ -343,11 +345,11 @@ bool XPINSCompiler::renameVars(string &text){
 					break;
 				default: varType='P';varNum=++xp;
 			}
-			while (input[i++]!='$');
+			while (intermediate1[i++]!='$');
 			//read Var name
 			string varName;
-			while(i<input.length()&&input[i]!='='){
-				varName+=input[i++];
+			while(i<intermediate1.length()&&intermediate1[i]!='='&&intermediate1[i]!=' '){
+				varName+=intermediate1[i++];
 			}
 			//Replace Var name
 			intermediate2="";
@@ -358,7 +360,7 @@ bool XPINSCompiler::renameVars(string &text){
 					intermediate2+="@END";
 					break;
 				}
-				if(intermediate1[j-1]=='\n'&&(input[j]=='B'||input[j]=='I'||input[j]=='F'||input[j]=='V'||input[j]=='M'||input[j]=='S'||input[j]=='*')&&XPINSCompileUtil::stringsMatch(j+3, intermediate1, varName))
+				if(intermediate1[j-1]=='\n'&&(intermediate1[j]=='B'||intermediate1[j]=='I'||intermediate1[j]=='F'||intermediate1[j]=='V'||intermediate1[j]=='M'||intermediate1[j]=='S'||intermediate1[j]=='*')&&XPINSCompileUtil::stringsMatch(j+3, intermediate1, varName))
 					j+=2;
 				//Find start of Var
 				if(intermediate1[j]=='$')
@@ -420,6 +422,26 @@ bool XPINSCompiler::renameVars(string &text){
 	text=output;
 	return true;
 }
+bool XPINSCompiler::checkConstants(string& input)
+{
+	string output="";
+	for(int i=0;i<input.length();++i)
+	{
+		output+=input[i];
+		//If it is a character that could be followed by an input
+		if(input[i]=='('||input[i]=='='||input[i]==','||input[i]=='['||input[i]=='<'||//typical operations
+		   input[i]=='|'||input[i]=='&'||input[i]=='>'||input[i]=='!'||input[i]=='+'||input[i]=='-'||input[i]=='*'||input[i]=='/'||input[i]=='%')//Expression Specific
+		   
+		{
+			while (input[i+1]==' ')++i;
+			if(input[i+1]!='$'&&input[i+1]!='#'&&input[i+1]!='?'&&input[i+1]!='X'&&input[i+1]!='^')
+				output+='^';
+		}
+	}
+	input=output;
+	return true;
+}
+
 bool XPINSCompiler::cleanUp(string &text){
 	string input=text;
 	string output="";
