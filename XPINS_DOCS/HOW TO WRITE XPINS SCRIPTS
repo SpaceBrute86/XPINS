@@ -130,7 +130,7 @@ Function 0 is reserved and may be useful in a future version of XPINS.
 You will replace the '...' with the code to find your arguments and call your functions.
 
 Once you have determined which function was called you need to figure out what values were passed to it. Good News: The parser does all of the heavy lifting. Here is what your code looks like:
-___ arg__=Parse___Arg(script,data,this,i,___,NULL);
+___ arg__=Parse___Arg(script,data,this,i,___);
 Only four blanks. The first blank is the type of the argument. This should be one of the following, depending on what your function takes for the argument: bool, int, float, XPINSScriptableMath::Vector, XPINSScriptableMath::Matrix, or void*
 The second blank should be the number of the argument, so the variable is called arg1, arg2, etc. (It is Your choice on whether or not to zero-index, just be consistent. In this documentation I will not be zero-indexing).
 The third blank should match the type: Bool, Int, Float, Vec, Mat, or Pointer.
@@ -148,8 +148,8 @@ ___ arg__=Parse___Arg(scriptText, data, localBindings, i,___,&____);//Line 2
 //call your function
 if(varIndex>-1)
 {
-	if(floatVar)++data->fVars[varIndex];
-	else ++data->iVars[varIndex];
+	if(floatVar)data->fVars[varIndex]=val;
+	else data->iVars[varIndex]=val;
 }
 If the argument is a float or int, put the first line in before you call Parse__Arg. This will determine if an Int variable was passed instead of a float variable.
 The second line should be the same as it would be for passing by value, but NULL is replaced by &___, where ___ is the name of an int variable that we will use later (make sure to use a different variable for each argument, though).
