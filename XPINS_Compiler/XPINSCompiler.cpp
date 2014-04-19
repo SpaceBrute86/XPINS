@@ -291,7 +291,6 @@ bool XPINSCompiler::renameVars(string &text){
 	input=intermediate;
 	string output="";
 	int i=0;
-	cout<<"RETYPED: "<<input;
 	//Locate Code block
 	while(input[i]!='@'||input[i+1]!='C'){
 		i++;
@@ -434,7 +433,8 @@ bool XPINSCompiler::checkConstants(string& input)
 		   
 		{
 			while (input[i+1]==' ')++i;
-			if(input[i+1]!='$'&&input[i+1]!='#'&&input[i+1]!='?'&&input[i+1]!='X'&&input[i+1]!='^')
+			if(input[i+1]!='$'&&input[i+1]!='#'&&input[i+1]!='?'&&input[i+1]!='X'&&input[i+1]!='^'
+			   &&input[i+1]!='='&&input[i+1]!='+'&&input[i+1]!='-'&&input[i+1]!=')')
 				output+='^';
 		}
 	}

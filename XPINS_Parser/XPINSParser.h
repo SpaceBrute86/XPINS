@@ -26,14 +26,26 @@ namespace XPINSParser
 		vector<string> sVars;//Vector Variables
 		vector<void*> pVars;//Custom type variables
 	};
+	class XPINSScriptSpace{
+	public:
+		string instructions;
+		int index;
+		XPINSVarSpace* data;
+		XPINSBindings* bindings;
+		XPINSScriptSpace(string script,XPINSBindings*);
+		char currentChar(){
+			return instructions[index];
+		}
+		bool matchesString(string);
+	};
 	//Argument PARSING:
-	bool ParseBoolArg(string,XPINSVarSpace*,XPINSBindings*,int&,char,int*index=NULL);
-	int ParseIntArg(string,XPINSVarSpace*,XPINSBindings*,int&,char,int*index=NULL);
-	float ParseFloatArg(string,XPINSVarSpace*,XPINSBindings*,int&,char,int*index=NULL);
-	XPINSScriptableMath::Vector ParseVecArg(string,XPINSVarSpace*,XPINSBindings*,int&,char,int*index=NULL);
-	XPINSScriptableMath::Matrix ParseMatArg(string,XPINSVarSpace*,XPINSBindings*,int&,char,int*index=NULL);
-	string ParseStrArg(string,XPINSVarSpace*,XPINSBindings*,int&,char,int*index=NULL);
-	void* ParsePointerArg( string,XPINSVarSpace*,XPINSBindings*,int&,char,int*index=NULL);
+	bool ParseBoolArg(XPINSScriptSpace&,char,int*index=NULL);
+	int ParseIntArg(XPINSScriptSpace&,char,int*index=NULL);
+	float ParseFloatArg(XPINSScriptSpace&,char,int*index=NULL);
+	XPINSScriptableMath::Vector ParseVecArg(XPINSScriptSpace&,char,int*index=NULL);
+	XPINSScriptableMath::Matrix ParseMatArg(XPINSScriptSpace&,char,int*index=NULL);
+	string ParseStrArg(XPINSScriptSpace&,char,int*index=NULL);
+	void* ParsePointerArg(XPINSScriptSpace&,char,int*index=NULL);
 	
 	//Parsing Scripts
 	void ParseScript(string,XPINSBindings*);
@@ -42,20 +54,20 @@ namespace XPINSParser
 //Built In Function/Expression Processing
 namespace XPINSBuiltIn{
 	//Expression PARSING:
-	bool ParseBoolExp(string,XPINSParser::XPINSVarSpace*,XPINSBindings*,int&);
-	int ParseIntExp(string,XPINSParser::XPINSVarSpace*,XPINSBindings*,int&);
-	float ParseFloatExp(string,XPINSParser::XPINSVarSpace*,XPINSBindings*,int&);
-	XPINSScriptableMath::Vector ParseVecExp(string,XPINSParser::XPINSVarSpace*,XPINSBindings*,int&);
-	XPINSScriptableMath::Matrix ParseMatExp(string,XPINSParser::XPINSVarSpace*,XPINSBindings*,int&);
-	void ParseVoidExp(string,XPINSParser::XPINSVarSpace*,XPINSBindings*,int&);
+	bool ParseBoolExp(XPINSParser::XPINSScriptSpace&);
+	int ParseIntExp(XPINSParser::XPINSScriptSpace&);
+	float ParseFloatExp(XPINSParser::XPINSScriptSpace&);
+	XPINSScriptableMath::Vector ParseVecExp(XPINSParser::XPINSScriptSpace&);
+	XPINSScriptableMath::Matrix ParseMatExp(XPINSParser::XPINSScriptSpace&);
+	void ParseVoidExp(XPINSParser::XPINSScriptSpace&);
 
 	//BIF (Built In Function) PARSING:
-	bool ParseBoolBIF(int fNum, string,XPINSParser::XPINSVarSpace*,XPINSBindings*,int&);
-	int ParseIntBIF(int fNum, string,XPINSParser::XPINSVarSpace*,XPINSBindings*,int&);
-	float ParseFloatBIF(int fNum, string,XPINSParser::XPINSVarSpace*,XPINSBindings*,int&);
-	XPINSScriptableMath::Vector ParseVecBIF(int fNum, string,XPINSParser::XPINSVarSpace*,XPINSBindings*,int&);
-	XPINSScriptableMath::Matrix ParseMatBIF(int fNum, string,XPINSParser::XPINSVarSpace*,XPINSBindings*,int&);
-	void ParseVoidBIF(int fNum, string,XPINSParser::XPINSVarSpace*,XPINSBindings*,int&);
+	bool ParseBoolBIF(int fNum,XPINSParser::XPINSScriptSpace&);
+	int ParseIntBIF(int fNum, XPINSParser::XPINSScriptSpace&);
+	float ParseFloatBIF(int fNum, XPINSParser::XPINSScriptSpace&);
+	XPINSScriptableMath::Vector ParseVecBIF(int fNum, XPINSParser::XPINSScriptSpace&);
+	XPINSScriptableMath::Matrix ParseMatBIF(int fNum, XPINSParser::XPINSScriptSpace&);
+	void ParseVoidBIF(int fNum, XPINSParser::XPINSScriptSpace&);
 }
 
 #endif /* defined(__Script__ScriptParser__) */

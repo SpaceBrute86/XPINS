@@ -9,22 +9,22 @@
 	X_PRINT($string);
 	@IF[^F]
 	{
-		#PRINTNUM(^1);
+		#PRINTNUM(1);
 	}
 	@ELIF[^F]
 	{
-		#PRINTNUM(^2);
+		#PRINTNUM(2);
 	}
 	@ELSE
 	{
-		#PRINTNUM(^3);
+		#PRINTNUM(3);
 	}
 	#PRINTLN();
-	INT $X=X_ADD(^1,^0);
-	@WHILE[?B($X<=^10)?]
+	INT $X=X_ADD(1,0);
+	@WHILE[?B($X<=10)?]
 	{
 		INT $Y=^1;
-		@WHILE[?B($Y<=^10)?]
+		@WHILE[?B($Y<=10)?]
 		{
 			#PRINTNUM(?I($X*$Y)?);
 			?I($Y++)?;
@@ -32,11 +32,11 @@
 		?I($X++)?;
 		#PRINTLN();
 	}
-	INT $Z=^0;
-	INT $Y=^0;
+	INT $Z=0;
+	INT $Y=0;
 	X_PRINT(^"\n\n\n");
-	MAT $TRANS=^[^0,^1,^0|^1,^0,^0|^0,^0,^1];
-	VEC $VECTOR=^<^1,^2,^0>;
+	MAT $TRANS=[0,1,0|1,0,0|0,0,1];
+	VEC $VECTOR=<1,2,0>;
 	?V($TRANS*=$VECTOR)?;
 	#PRINTNUM(X_VX($VECTOR));
 	#PRINTLN()

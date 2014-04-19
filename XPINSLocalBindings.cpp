@@ -21,11 +21,15 @@ using namespace std;
 
 //PRIMARY METHOD
 
-void XPINSLocalBindings::BindFunction(int fNum,string script,XPINSParser::XPINSVarSpace* data,int& i,void* returnVal){
+void XPINSLocalBindings::BindFunction(int fNum,XPINSParser::XPINSScriptSpace& script,void* returnVal){
 	switch (fNum) {
 			/*Bind Your Custom Functions*/
-		case 1: cout<<XPINSParser::ParseIntArg(script, data, this, i, ')',NULL)<<"\t";
-			break;
-		case 2: cout<<endl;break;
+		case 1:{
+			int num=XPINSParser::ParseIntArg(script, ')',NULL);
+			cout<<num<<"\t";
+		}break;
+		case 2:{
+			cout<<endl;
+		}break;
 	}
 }
