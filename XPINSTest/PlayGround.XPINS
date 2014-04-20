@@ -1,8 +1,0 @@
-@COMPILER[0.3]
-@PARSER[0.9]
-@FUNC
-@END
-@CODE
-	MAT $matrix= X_MROT(3.1415926535,<0,0,1>);
-	FLOAT $val=X_MGET($matrix,0,0);
-@END
