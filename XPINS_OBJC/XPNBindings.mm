@@ -7,209 +7,135 @@
 //
 
 #import "XPNBindings.h"
+#include <iostream>
 
+using namespace XPINSParser;
 struct objWrapper{
 	NSObject* object;
 };
 
-#pragma mark Primary C++ function
-void XPINSObjCBindings::BindFunction(int fNum,string script,XPINSParser::XPINSVarSpace* data,int& i,void* returnVal){
-	this->scriptText=script;
-	this->data=data;
-	this->index=i;
-	this->retValue=returnVal;
-	[this->bindings bindFunction:fNum];
-	i=this->index;
-}
-
-void XPINSObjCBindings::returnBool(bool val)
-{
-	*((bool*)retValue)=val;
-}
-void XPINSObjCBindings::returnInt(int val)
-{
-	*((int*)retValue)=val;
-}
-void XPINSObjCBindings::returnFloat(float val)
-{
-	*((float*)retValue)=val;
-}
-void XPINSObjCBindings::returnVec(Vector val)
-{
-	*((Vector*)retValue)=val;
-}
-void XPINSObjCBindings::returnMat(Matrix val)
-{
-	*((Matrix*)retValue)=val;
-}
-void XPINSObjCBindings::returnStr(NSString* val)
-{
-	string str=[val cStringUsingEncoding:NSASCIIStringEncoding];
-	*((string*)retValue)=str;
-}
-void XPINSObjCBindings::returnPtr(id val)
-{
-	objWrapper wrapper=objWrapper();
-	wrapper.object=val;
-	*((objWrapper*)retValue)=wrapper;
-}
-
-#pragma mark getting Arguments
-
-bool XPINSObjCBindings::getBoolArg(int &idx,bool last){
-	return ParseBoolArg(scriptText,data,this,index,last?')':',',&idx);
-}
-int XPINSObjCBindings::getIntArg(int &idx,bool last,bool& fl){
-	fl=scriptText[index+1]!='I';
-	return ParseIntArg(scriptText,data,this,index,last?')':',',&idx);
-}
-float XPINSObjCBindings::getFloatArg(int &idx,bool last,bool& fl){
-	fl=scriptText[index+1]!='I';
-	return ParseFloatArg(scriptText,data,this,index,last?')':',',&idx);
-}
-Vector XPINSObjCBindings::getVecArg(int &idx,bool last){
-	return ParseVecArg(scriptText,data,this,index,last?')':',',&idx);
-}
-Matrix XPINSObjCBindings::getMatArg(int &idx,bool last){
-	return ParseMatArg(scriptText,data,this,index,last?')':',',&idx);
-}
-NSString* XPINSObjCBindings::getStrArg(int &idx,bool last){
-	string str= ParseStrArg(scriptText,data,this,index,last?')':',',&idx);
-	return [NSString stringWithCString:str.data() encoding:NSASCIIStringEncoding];
-}
-id XPINSObjCBindings::getPtrArg(int &idx,bool last){
-	objWrapper wrapper=*((objWrapper*)ParsePointerArg(scriptText,data,this,index,last?')':',',&idx));
-	return wrapper.object;
-}
-
-#pragma mark Passing by Reference
-void XPINSObjCBindings::setBoolVar(int index, bool val){
-	if(index>-1)
-	data->bVars[index]=val;
-}
-void XPINSObjCBindings::setIntVar(int index, int val, bool fl){
-	if(index>-1)
-	{
-		if(fl)data->fVars[index]=val;
-		else data->iVars[index]=val;
-	}
-}
-void XPINSObjCBindings::setFloatVar(int index, float val, bool fl){
-	if(index>-1)
-	{
-		if(fl)data->fVars[index]=val;
-		else data->iVars[index]=val;
-	}
-}
-void XPINSObjCBindings::setVecVar(int index, Vector val){
-	if(index>-1)
-	data->vVars[index]=val;
-}
-void XPINSObjCBindings::setMatVar(int index, Matrix val){
-	if(index>-1)
-	data->mVars[index]=val;
-}
-void XPINSObjCBindings::setStrVar(int index, NSString* val){
-	if(index<=-1)return;
-	string str=[val cStringUsingEncoding:NSASCIIStringEncoding];
-	data->sVars[index]=str;
-}
-void XPINSObjCBindings::setPtrVar(int index, id val){
-	if(index<=-1)return;
-	objWrapper wrapper=objWrapper();
-	wrapper.object=val;
-	data->pVars[index]= &wrapper;
+void XPINSObjCBindings::BindFunction(int fNum,XPINSParser::XPINSScriptSpace& script, void* returnVal){
+	[this->bindings bindFunction:fNum forScript:script returnValue:returnVal];
 }
 
 
 @implementation XPNBindings{
 	XPINSObjCBindings cppBindings;
+	XPINSParser::XPINSScriptSpace* script;
+	void* retValue;
 }
 -(id)init{
 	self=[super init];
-	cppBindings=XPINSObjCBindings();
+	cppBindings=*(new XPINSObjCBindings());
 	cppBindings.bindings=self;
 	return self;
 }
--(void)bindFunction:(int)fNum{
-	
+-(void)bindFunction:(int)fNum forScript:(XPINSParser::XPINSScriptSpace&)scriptSpace returnValue:(void*) returnVal
+{
+	script=&scriptSpace;
+	retValue=returnVal;
+	switch (fNum) {
+			/*Bind Your Custom Functions*/
+		case 1:{
+			int num=[self getIntVar:NULL last:YES isFloat:NULL];
+			cout<<num<<"\t";
+		}break;
+		case 2:{
+			cout<<"\n";
+		}break;
+	}
 }
 -(XPINSObjCBindings)bindingsObject{
 	return cppBindings;
 }
 
-
+#pragma mark setting values (pass by reference)
 -(void) setBoolVar:(int) index value:(bool) val{
-	cppBindings.setBoolVar(index, val);
+	script->data->bVars[index]=val;
 }
+
 -(void) setIntVar:(int) index value:(int) val isFloat:(bool)fl{
-	cppBindings.setIntVar(index, val,fl);
+	if(index>-1)
+	{
+		if(fl)script->data->fVars[index]=val;
+		else script->data->iVars[index]=val;
+	}
 }
 -(void) setFloatVar:(int) index value:(float) val isFloat:(bool)fl{
-	cppBindings.setFloatVar(index, val,fl);
+	if(index>-1)
+	{
+		if(fl)script->data->fVars[index]=val;
+		else script->data->iVars[index]=val;
+	}
 }
 -(void) setVecVar:(int) index value:(Vector) val{
-	cppBindings.setVecVar(index, val);
+	if(index>-1) script->data->vVars[index]=val;
 }
 -(void) setMatVar:(int) index value:(Matrix) val{
-	cppBindings.setMatVar(index, val);
+	if(index>-1) script->data->mVars[index]=val;
 }
 -(void) setStrVar:(int) index value:(NSString*) val{
-	cppBindings.setStrVar(index, val);
+	if(index<=-1)return;
+	string str=[val cStringUsingEncoding:NSASCIIStringEncoding];
+	script->data->sVars[index]=str;
 }
 -(void) setPtrVar:(int) index value:(id) val{
-	cppBindings.setPtrVar(index, val);
+	if(index<=-1)return;
+	objWrapper wrapper=objWrapper();
+	wrapper.object=val;
+	script->data->pVars[index]= &wrapper;
 }
 
-
--(bool) getBoolVar:(int) index last:(bool) last{
-	return cppBindings.getBoolArg(index, last);
+#pragma mark getting values
+-(bool) getBoolVar:(int*)idx last:(bool) last{
+	return ParseBoolArg(*script,last?')':',',idx);
 }
--(int) getIntVar:(int) index last:(bool) last isFloat:(bool *)fl{
-	bool flo=*fl;
-	int val=cppBindings.getIntArg(index, last,*fl);
-	*fl=flo;
-	return val;
+-(int) getIntVar:(int*) idx last:(bool) last isFloat:(bool *)fl{
+	if(fl)*fl=script->instructions[script->index+1]!='I';
+	return ParseIntArg(*script,last?')':',',idx);
 }
--(float) getFloatVar:(int) index last:(bool) last isFloat:(bool *)fl{
-	bool flo=*fl;
-	float val=cppBindings.getFloatArg(index, last,*fl);
-	*fl=flo;
-	return val;
+-(float) getFloatVar:(int*) idx last:(bool) last isFloat:(bool *)fl{
+	if(fl)*fl=script->instructions[script->index+1]!='I';
+	return ParseFloatArg(*script,last?')':',',idx);
 }
--(Vector) getVecVar:(int) index last:(bool) last{
-	return cppBindings.getVecArg(index, last);
+-(Vector) getVecVar:(int*) idx last:(bool) last{
+	return ParseVecArg(*script,last?')':',',idx);
 }
--(Matrix) getMatVar:(int) index last:(bool) last{
-	return cppBindings.getMatArg(index, last);
+-(Matrix) getMatVar:(int*) idx last:(bool) last{
+	return ParseMatArg(*script,last?')':',',idx);
 }
--(NSString*) getStrVar:(int) index last:(bool) last{
-	return cppBindings.getStrArg(index, last);
+-(NSString*) getStrVar:(int*) idx last:(bool) last{
+	string str= ParseStrArg(*script,last?')':',',idx);
+	return [NSString stringWithCString:str.data() encoding:NSASCIIStringEncoding];
 }
--(id) getPtrVar:(int) index last:(bool) last{
-	return cppBindings.getPtrArg(index, last);
+-(id) getPtrVar:(int*) idx last:(bool) last{
+	objWrapper wrapper=*((objWrapper*)ParsePointerArg(*script,last?')':',',idx));
+	return wrapper.object;
 }
-
+#pragma mark returning values
 -(void) returnBool:(bool)val{
-	cppBindings.returnBool(val);
+	*((bool*)retValue)=val;
 }
 -(void) returnInt:(int)val{
-	cppBindings.returnInt(val);
+	*((int*)retValue)=val;
 }
 -(void) returnFloat:(float)val{
-	cppBindings.returnFloat(val);
+	*((float*)retValue)=val;
 }
 -(void) returnVec:(Vector)val{
-	cppBindings.returnVec(val);
+	*((Vector*)retValue)=val;
 }
 -(void) returnMat:(Matrix)val{
-	cppBindings.returnMat(val);
+	*((Matrix*)retValue)=val;
 }
 -(void) returnStr:(NSString*)val{
-	cppBindings.returnStr(val);
+	string str=[val cStringUsingEncoding:NSASCIIStringEncoding];
+	*((string*)retValue)=str;
 }
 -(void) returnPtr:(id)val{
-	cppBindings.returnPtr(val);
+	objWrapper wrapper=objWrapper();
+	wrapper.object=val;
+	*((objWrapper*)retValue)=wrapper;
 }
 
 @end

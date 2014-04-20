@@ -10,50 +10,11 @@
 #include "XPINS.h"
 using namespace XPINSScriptableMath;
 
-@class XPNBindings;
-
-class XPINSObjCBindings : public XPINSBindings
-{
-public:
-	virtual void BindFunction(int,string,XPINSParser::XPINSVarSpace* data,int&,void*);
-	XPNBindings* bindings;
-	
-	
-	void setBoolVar(int index, bool val);
-	void setIntVar(int index, int val,bool fl);
-	void setFloatVar(int index, float val,bool fl);
-	void setVecVar(int index, Vector val);
-	void setMatVar(int index, Matrix val);
-	void setStrVar(int index, NSString* val);
-	void setPtrVar(int index, id val);
-	
-	bool getBoolArg(int& index,bool last);
-	int getIntArg(int& ,bool last,bool&);
-	float getFloatArg(int& ,bool last,bool&);
-	Vector getVecArg(int& ,bool last);
-	Matrix getMatArg(int& ,bool last);
-	NSString* getStrArg(int& ,bool last);
-	id getPtrArg(int&,bool last);
-	
-	void returnBool(bool);
-	void returnInt(int);
-	void returnFloat(float);
-	void returnVec(Vector);
-	void returnMat(Matrix);
-	void returnStr(NSString*);
-	void returnPtr(id);
-
-
-private:
-	string scriptText;
-	int index;
-	void* retValue;
-	XPINSParser::XPINSVarSpace* data;
-};
-
-
+class XPINSObjCBindings;
+//Objective C
 @interface XPNBindings : NSObject
--(void)bindFunction:(int)fNum;
+-(void)bindFunction:(int)fNum forScript:(XPINSParser::XPINSScriptSpace&)script returnValue:(void*) returnVal;
+
 -(XPINSObjCBindings)bindingsObject;
 
 -(void) setBoolVar:(int) index value:(bool) val;
@@ -80,3 +41,14 @@ private:
 -(void) returnStr:(NSString*)val;
 -(void) returnPtr:(id)val;
 @end
+
+//C++ Helper
+class XPINSObjCBindings: public XPINSBindings
+{
+private:
+	XPINSParser::XPINSScriptSpace* script;
+	void* retValue;
+public:
+	XPNBindings* bindings;
+	virtual void BindFunction(int,XPINSParser::XPINSScriptSpace&,void*);
+};

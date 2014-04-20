@@ -8,20 +8,29 @@
 
 #import <Foundation/Foundation.h>
 #import "XPNBindings.h"
+#import "XPNCompiler.h"
+#import "XPNParser.h"
 #include <iostream>
 #include <fstream>
 
-const bool playground=true;
+const bool playground=false;
 
 
 int main(int argc, const char * argv[])
 {
 
 	@autoreleasepool {
-		NSURL* scriptURL=[NSURL URLWithString:playground?
+		NSURL* scriptURL=[NSURL fileURLWithPath:playground?
 			@"/Users/robbiemarkwick/Desktop/XPINS/XPINSTest/PlayGround.XPINS":
 			@"/Users/robbiemarkwick/Desktop/XPINS/XPINSTest/TestScript.XPINS"];
-		NSString* script=[NSString stringWithContentsOfURL:scriptURL encoding:NSASCIIStringEncoding error:nil];
+		NSError *err;
+		NSString* script=[NSString stringWithContentsOfURL:scriptURL encoding:NSASCIIStringEncoding error:&err];
+		script=[XPNCompiler compileScript:script];
+		NSLog(@"Script Compiled:");
+		NSLog(script);
+		XPNBindings* bindings=[[XPNBindings alloc] init];
+		[XPNParser runScript:script withBindings:bindings];
+		
 	//	bool result=XPINSCompiler::compileScript(script);
 	//	if (result) {
 	//		cout<<"\n\n\nCompiled Script:\n"<<script<<endl<<endl;

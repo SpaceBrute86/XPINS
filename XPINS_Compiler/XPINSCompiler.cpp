@@ -427,6 +427,17 @@ bool XPINSCompiler::checkConstants(string& input)
 	for(int i=0;i<input.length();++i)
 	{
 		output+=input[i];
+		if(input[i]=='\"')
+		{
+			while (++i<input.length()) {
+				output+=input[i];
+				if(input[i]=='\\'&&(input[i+1]=='\\'||input[i+1]=='\"'))
+				{
+					output+=input[++i];
+				}
+				else if(input[i]=='\"')break;				
+			}
+		}
 		//If it is a character that could be followed by an input
 		if(input[i]=='('||input[i]=='='||input[i]==','||input[i]=='['||input[i]=='<'||//typical operations
 		   input[i]=='|'||input[i]=='&'||input[i]=='>'||input[i]=='!'||input[i]=='+'||input[i]=='-'||input[i]=='*'||input[i]=='/'||input[i]=='%')//Expression Specific
