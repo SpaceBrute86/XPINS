@@ -8,12 +8,18 @@
 
 #import "XPNParser.h"
 #import "XPINS.h"
+#import "XPNBindings.h"
+
 @implementation XPNParser
-+(void)runScript:(NSString*)script withBindings:(XPNBindings*)bindings
++(void)runScript:(NSString*)script withBindings:(NSArray*)bindings
 {
 	string str=[script cStringUsingEncoding:NSASCIIStringEncoding];
-	XPINSObjCBindings bind=[bindings bindingsObject];
-	XPINSParser::ParseScript(str, &bind);
+	vector<XPINSBindings*> bind=vector<XPINSBindings*>(bindings.count);
+	for (NSUInteger i=0; i<bindings.count; ++i) {
+		XPINSObjCBindings objBind=[((XPNBindings*)bindings[i]) bindingsObject];
+		bind[i]=&objBind;
+	}
+	XPINSParser::ParseScript(str, bind);
 }
 
 @end

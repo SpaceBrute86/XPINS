@@ -17,25 +17,22 @@ class XPINSObjCBindings;
 
 -(XPINSObjCBindings)bindingsObject;
 
--(void) setBoolVar:(int) index value:(bool) val;
--(void) setIntVar:(int) index value:(int) val isFloat:(bool)fl;
--(void) setFloatVar:(int) index value:(float) val isFloat:(bool)fl;
--(void) setVecVar:(int) index value:(Vector) val;
--(void) setMatVar:(int) index value:(Matrix) val;
--(void) setStrVar:(int) index value:(NSString*) val;
--(void) setPtrVar:(int) index value:(id) val;
+-(bool) getBoolArg:(NSValue**)ref;
+-(NSNumber*) getNumArg:(NSValue**)ref;
+-(Vector) getVecArg:(NSValue**)ref;
+-(Matrix) getMatArg:(NSValue**)ref;
+-(NSString*) getStrArg:(NSValue**)ref;
+-(id) getPtrArg:(NSValue**)ref;
 
--(bool) getBoolVar:(int) index last:(bool) last;
--(int) getIntVar:(int) index last:(bool) last isFloat:(bool*)fl;
--(float) getFloatVar:(int) index last:(bool) last isFloat:(bool*)fl;
--(Vector) getVecVar:(int) index last:(bool) last;
--(Matrix) getMatVar:(int) index last:(bool) last;
--(NSString*) getStrVar:(int) index last:(bool) last;
--(id) getPtrVar:(int) index last:(bool) last;
+-(void) setBool:(bool)val Arg:(NSValue*)ref;
+-(void) setNum:(NSNumber*)val Arg:(NSValue*)ref;
+-(void) setVec:(Vector)val Arg:(NSValue*)ref;
+-(void) setMat:(Matrix)val Arg:(NSValue*)ref;
+-(void) setStr:(NSString*)val Arg:(NSValue*)ref;
+-(void) setPtr:(id)val Arg:(NSValue*)ref;
 
 -(void) returnBool:(bool)val;
--(void) returnInt:(int)val;
--(void) returnFloat:(float)val;
+-(void) returnNum:(NSNumber*)val;
 -(void) returnVec:(Vector)val;
 -(void) returnMat:(Matrix)val;
 -(void) returnStr:(NSString*)val;
@@ -45,10 +42,7 @@ class XPINSObjCBindings;
 //C++ Helper
 class XPINSObjCBindings: public XPINSBindings
 {
-private:
-	XPINSParser::XPINSScriptSpace* script;
-	void* retValue;
 public:
+	void BindFunction(int,XPINSParser::XPINSScriptSpace&,void*);
 	XPNBindings* bindings;
-	virtual void BindFunction(int,XPINSParser::XPINSScriptSpace&,void*);
 };

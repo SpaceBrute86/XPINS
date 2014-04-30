@@ -13,23 +13,23 @@ namespace XPINSScriptableMath{
 	public:
 		//creating vectors
 		Vector ();//Zero Vector
-		Vector (float, float,float);
-		static Vector PolarVector(float,float,float);
-		static Vector SphericalVector(float,float,float);
+		Vector (double, double,double);
+		static Vector PolarVector(double,double,double);
+		static Vector SphericalVector(double,double,double);
 		//getting coordinate data
-		void RectCoords(float*,float*,float*);//X,Y,Z
-		void PolarCoords(float*,float*,float*);//R,Theta,Z
-		void SphericalCoords(float*,float*,float*);//Rho, Theta, Phi
-		float Magnitude();
-		float Direction();
-		float Altitude();
+		void RectCoords(double*,double*,double*);//X,Y,Z
+		void PolarCoords(double*,double*,double*);//R,Theta,Z
+		void SphericalCoords(double*,double*,double*);//Rho, Theta, Phi
+		double Magnitude();
+		double Direction();
+		double Altitude();
 		//Vector manipulations.
 		static Vector Add(Vector,Vector);
-		static Vector Scale(Vector, float);
-		static float AngleBetweenVectors(Vector,Vector);
-		static float DotProduct(Vector,Vector);
+		static Vector Scale(Vector, double);
+		static double AngleBetweenVectors(Vector,Vector);
+		static double DotProduct(Vector,Vector);
 		static Vector CrossProduct(Vector,Vector);
-		static Vector ProjectionInDirection(Vector,float,float);
+		static Vector ProjectionInDirection(Vector,double,double);
 		
 		//Operator Overloads:
 		Vector operator+(const Vector &v) const {
@@ -38,16 +38,16 @@ namespace XPINSScriptableMath{
 		void operator+=(const Vector &v){
 			*this=*this+v;
 		}
-		Vector operator*(const float &f) const {
+		Vector operator*(const double &f) const {
 			return Scale(*this,f);
 		}
-		void operator*=(const float &f){
+		void operator*=(const double &f){
 			*this=*this*f;
 		}
-		Vector operator/(const float &f) const {
+		Vector operator/(const double &f) const {
 			return Scale(*this,1/f);
 		}
-		void operator/=(const float &f){
+		void operator/=(const double &f){
 			*this=*this/f;
 		}
 		Vector operator-(const Vector &v) const {
@@ -56,13 +56,13 @@ namespace XPINSScriptableMath{
 		void operator-=(const Vector &v){
 			*this=*this-v;
 		}
-		float operator*(const Vector &v) const {
+		double operator*(const Vector &v) const {
 			return DotProduct(*this,v);
 		}
 	private:
-		float x;
-		float y;
-		float z;
+		double x;
+		double y;
+		double z;
 	};
 	class Matrix{
 		friend class Vector;
@@ -71,24 +71,25 @@ namespace XPINSScriptableMath{
 		//creating Matrices
 		Matrix ();
 		Matrix (size_t rows, size_t cols);
+		void clean();
 		//Accessing Components
-		float ValueAtPosition(size_t,size_t);
-		void SetValueAtPosition(float,size_t,size_t);
+		double ValueAtPosition(size_t,size_t);
+		void SetValueAtPosition(double,size_t,size_t);
 		//Special Matrices
 		static Matrix IdentityMatrixOfSize(size_t);
-		static Matrix DiagonalMatrixWithValues(std::vector<float>);
-		static Matrix RotationMatrixWithAngleAroundVector(Vector,float);
+		static Matrix DiagonalMatrixWithValues(std::vector<double>);
+		static Matrix RotationMatrixWithAngleAroundVector(Vector,double);
 		//Converting Matricies to/from Vectors
 		static Vector VectorForMatrix(Matrix);
 		static Matrix MatrixForVector(Vector);
 		//Matrix Operations
 		static Matrix Add(Matrix,Matrix);
-		static Matrix Scale(Matrix,float);
+		static Matrix Scale(Matrix,double);
 		static Matrix Multiply(Matrix,Matrix);
 		static Vector MultiplyMatrixVector(Matrix,Vector);
 		static Matrix Invert(Matrix);
 		static Matrix Transpose(Matrix);
-		static float Determinant(Matrix);
+		static double Determinant(Matrix);
 		
 		//Operator Overloads:
 		Matrix operator+(const Matrix &m) const
@@ -99,18 +100,18 @@ namespace XPINSScriptableMath{
 		{
 			*this=*this+m;
 		}
-		Matrix operator*(const float &f) const
+		Matrix operator*(const double &f) const
 		{
 			return Scale(*this,f);
 		}
-		void operator*=(const float &f){
+		void operator*=(const double &f){
 			*this=*this*f;
 		}
-		Matrix operator/(const float &f) const
+		Matrix operator/(const double &f) const
 		{
 			return Scale(*this,1/f);
 		}
-		void operator/=(const float &f){
+		void operator/=(const double &f){
 			*this=*this/f;
 		}
 		Matrix operator-(const Matrix &m) const
@@ -133,13 +134,13 @@ namespace XPINSScriptableMath{
 			return MultiplyMatrixVector(*this,v);
 		}
 	private:
-		std::vector<float> values;
+		double* values;
 		size_t rows,cols;
 		static Matrix MinorMatrix(Matrix,size_t,size_t);
 
 	};
 
-	float addPolar(float,float);
-	float dist(float,float,float);
+	double addPolar(double,double);
+	double dist(double,double,double);
 }
 #endif

@@ -19,6 +19,7 @@ namespace XPINSCompiler{
 	//Compile Steps (you normally don't call these)
 	bool checkVersion(string&);
 	bool removeComments(string&);
+	bool replaceConstants(string&);
 	bool renameFunctions(string&);
 	bool renameVars(string&);
 	bool renameBuiltIns(string&);

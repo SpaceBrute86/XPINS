@@ -9,12 +9,14 @@ using namespace std;
 const int kMajor=0;
 const int kMinor=1;
 
+
 int main(int argc, const char * argv[])
 {
 	string fileName="";
 	cout<<"Please enter the full path minus extension for the script you would like to compile"<<endl;
 	cout<<"Make sure that the file extension is .XPINS"<<endl;
 	cin>>fileName;
+	
 	fileName="/Users/robbiemarkwick/Desktop/XPINS/XPINSTest/PlayGround";
 	string fileExt=".XPINS";//File extension for uncompiled XPINS: XPINS
 	string outExt=".XPINSX";//File extension for compiled XPINS: XPINSX

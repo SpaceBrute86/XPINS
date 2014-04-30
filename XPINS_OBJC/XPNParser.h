@@ -7,7 +7,6 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "XPNBindings.h"
 @interface XPNParser : NSObject
-+(void)runScript:(NSString*)script withBindings:(XPNBindings*)bindings;
++(void)runScript:(NSString*)script withBindings:(NSArray*)bindings;
 @end

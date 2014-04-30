@@ -12,7 +12,7 @@
 using namespace std;
 
 const int kMajor=0;
-const int kMinor=4;
+const int kMinor=5;
 
 namespace XPINSCompileUtil {
 	string strRepresentationOfInt(int);
@@ -20,25 +20,19 @@ namespace XPINSCompileUtil {
 	int readVarIndex(string,int *,char);
 	string nameForBuiltin(string);
 }
+//#define DEBUGGING
 
 //Compile Script
 bool XPINSCompiler::compileScript(string &input){
 	string scriptText=input;
-	//cout<<endl<<"Validating Version..."<<endl;
 	if(!checkVersion(scriptText))return false;
-	//cout<<"Version Compatilbe!";
-	//cout<<endl<<"About To Compile Script:\n"<<scriptText<<endl;
 	if(!removeComments(scriptText))return false;
-	//cout<<endl<<"Comments and ';'s Removed:\n"<<scriptText<<endl;
-	if(!renameFunctions(scriptText))return false;
-	//cout<<endl<<"User Functions Renamed:\n"<<scriptText<<endl;
-	if(!renameVars(scriptText))return false;
-	//cout<<endl<<"Variables Renamed:\n"<<scriptText<<endl;
-	if(!renameBuiltIns(scriptText))return false;
 	if(!checkConstants(scriptText))return false;
-	//cout<<endl<<"Built-in Functions Renamed:\n"<<scriptText<<endl;
+	if(!replaceConstants(scriptText))return false;
+	if(!renameFunctions(scriptText))return false;
+	if(!renameVars(scriptText))return false;
+	if(!renameBuiltIns(scriptText))return false;
 	if(!cleanUp(scriptText))return false;
-	//cout<<endl<<"Cleaned Up:\n"<<scriptText;
 	input=scriptText;
 	return true;
 }
@@ -99,72 +93,104 @@ bool XPINSCompiler::removeComments(string &text){
 		else if(ch==']')--matcount;
 		if(ch==';'&&matcount==0&&input[i+1]!='\n')output+='\n';
 	}
-	bool hitFirstEND=false;
-	string intermediate1=""+output;
-	output="";
-	//Double Check Ending (strip after 2nd @END)
-	for(int j=0;j<intermediate1.length();j++){
-		if(intermediate1[j]=='@'&&intermediate1[j+1]=='E'&&intermediate1[j+2]=='N'&&intermediate1[j+3]=='D'){
-			if(hitFirstEND){
-				output+="@END\n";
-				break;
-			}
-			else hitFirstEND=true;
-		}
-		output+=intermediate1[j];
-	}
 	text=output;
 	return true;
 }
-
-bool XPINSCompiler::renameFunctions(string &text){
+bool XPINSCompiler::replaceConstants(string &text){
 	string input=text;
-	string output="";
-	char ch;
+	//Initialize first intermediate
 	string intermediate1="";
 	string intermediate2="";
-	//Locate Function block
-	int i=0;
-	while(input[i]!='@'||input[i+1]!='F'){
-		intermediate1+=input[i++];
-	}
-	if(input[i+1]!='F'||input[i+2]!='U'||input[i+3]!='N'||input[i+4]!='C'){
-		cerr<<"Invalid Script: Missing @FUNC.\nEXITING";
-		return false;
-	}
-	i+=5;
-
-	//Initialize first intermediate
 	int j=0;
-	while (input[j]!='@'||input[j+1]!='C') {
-		j++;
-		
+	while (!XPINSCompileUtil::stringsMatch(j, input, "@CONST"))intermediate1+=input[j++];
+	int i=j;
+	while (!XPINSCompileUtil::stringsMatch(++j, input, "@FUNC"));
+	for(;j<input.length();j++)intermediate1+=input[j];
+	
+	while (true) {
+		string constName="~";
+		while (input[i]!='\n'||input[i+1]=='\n')++i;
+		if(XPINSCompileUtil::stringsMatch(i, input, "\n@END"))break;
+		//process constant declaration
+		while (input[++i]!='=')constName+=input[i];
+		string constVal="";
+		while (input[++i]!='\n')
+		{
+			constVal+=input[i];
+			if(input[i]=='\"')
+			{
+				while (++i<input.length()) {
+					constVal+=input[i];
+					if(input[i]=='\\'&&(input[i+1]=='\\'||input[i+1]=='\"'))
+					{
+						constVal+=input[++i];
+					}
+					else if(input[i]=='\"')break;
+				}
+			}
+		}
+		//replace constant in script
+			//Replace Var name
+			intermediate2="";
+			j=0;
+			while (!XPINSCompileUtil::stringsMatch(j, intermediate1, "@CODE"))intermediate2+=intermediate1[j++];
+
+			while(j<intermediate1.length()){
+				//CHECK FOR @END
+				if(intermediate1[j]=='@'&&intermediate1[j+1]=='E'&&intermediate1[j+2]=='N'&&intermediate1[j+3]=='D'){
+					intermediate2+="@END";
+					break;
+				}
+				if(intermediate1[j]=='\"')
+				{
+					intermediate2+='\"';
+					while (++j<intermediate1.length()) {
+						intermediate2+=intermediate1[j];
+						if(intermediate1[j]=='\\'&&(intermediate1[j+1]=='\\'||intermediate1[j+1]=='\"'))
+						{
+							intermediate2+=intermediate1[++j];
+						}
+						else if(intermediate1[j]=='\"')break;
+					}
+				}
+				//Find start of Var
+					//Check for match
+				else if(XPINSCompileUtil::stringsMatch(j, intermediate1, constName)){
+					intermediate2+=constVal;
+					//Skip Var Name
+					j+=constName.length();
+				}
+				else
+				{
+					intermediate2+=intermediate1[j];
+					j++;
+				}
+			}
+			intermediate1=""+intermediate2;
 	}
-	for(;j<input.length();j++){
-		ch=input[j];
-		intermediate1+=ch;
-	}
+	text=intermediate1;
+	return true;
+}
+
+string renameFuncBlock(string input, string intermediate1, int modNum, int blockStart)
+{
+	int i=blockStart;
+	string intermediate2="";
+	int j=0;
 	//Do the actual work
 	int x=1;
-	while(input[i+1]!='@'){
-		if(i==input.length()){
-			cerr<<"Invalid Script: Missing @END.\nEXITING";
-			return false;;
-		}
-		while(input[i++]!='\n'){}
+	while(!XPINSCompileUtil::stringsMatch(i, input, "\n@END")){
+		while(i<input.length()&&input[i++]!='\n');
+		if(XPINSCompileUtil::stringsMatch(i, input, "@END")||i>=input.length())break;
 		char functionType=input[i++];
 		switch (functionType) {
 			case 'B':
 			case 'b':
 				functionType='B';
 				break;
-			case 'I':
-			case 'i':
-				functionType='I';
-				break;
-			case 'F':
-			case 'f':
-				functionType='F';
+			case 'N':
+			case 'n':
+				functionType='N';
 				break;
 			case 'M':
 			case 'm':
@@ -177,6 +203,9 @@ bool XPINSCompiler::renameFunctions(string &text){
 			case '*':
 				functionType='P';
 				break;
+			case 'A':
+				functionType='A';
+				break;
 			case 'V':
 			case 'v':
 				if (input[i]=='E'||input[i]=='e') {
@@ -187,15 +216,13 @@ bool XPINSCompiler::renameFunctions(string &text){
 				functionType=' ';
 				break;
 		}
-		while (input[i]!=' '){
-			i++;
-		}
-		i++;
+		while (i<input.length()&&input[i++]!=' ');
 		//read function name
 		string functionName;
 		for(j=i;j<input.length()&&input[j]!='(';j++){
 			functionName+=input[j];
 		}
+		//if (functionName.length()>0) {
 		//Replace function name
 		intermediate2="";
 		j=0;
@@ -225,8 +252,10 @@ bool XPINSCompiler::renameFunctions(string &text){
 			intermediate2+=intermediate1[j];
 			j++;
 			//Check for match
-			if(XPINSCompileUtil::stringsMatch(j, intermediate1, functionName)){
+			if(XPINSCompileUtil::stringsMatch(j, intermediate1, functionName+'(')){
 				if(functionType!=' ')intermediate2+=functionType;//add function types to user functions.
+				intermediate2+='M';
+				intermediate2+=XPINSCompileUtil::strRepresentationOfInt(modNum);
 				intermediate2+='F';
 				intermediate2+=XPINSCompileUtil::strRepresentationOfInt(x);
 				while(intermediate1[j]!='('){//Find '('
@@ -236,9 +265,41 @@ bool XPINSCompiler::renameFunctions(string &text){
 		}
 		//Get ready for next loop
 		intermediate1=""+intermediate2;
+		//	}
 		++x;
-		while (input[i]!='\n')i++;
+		while (i<input.length()&&input[++i]!='\n');
 	}
+	return intermediate1;
+}
+
+
+bool XPINSCompiler::renameFunctions(string &text){
+	string input=text;
+	string output="";
+	//Initialize first intermediate
+	string intermediate1="";
+	int j=0;
+	while (!XPINSCompileUtil::stringsMatch(j, input, "@FUNC"))intermediate1+=input[j++];
+	while (!XPINSCompileUtil::stringsMatch(++j, input, "@CODE"));
+	for(;j<input.length();j++)intermediate1+=input[j];
+	
+	//Process Local Function block
+	int i=0;
+	while(!XPINSCompileUtil::stringsMatch(++i, input, "@FUNC"));
+	i+=5;
+	intermediate1=renameFuncBlock(input, intermediate1,0, i);
+	while(!XPINSCompileUtil::stringsMatch(++i, input, "@END"));
+	
+	//Process Module blocks
+	for (int modNum=1;;++modNum) {
+		while(!XPINSCompileUtil::stringsMatch(i, input, "@MODULE")&&
+			  !XPINSCompileUtil::stringsMatch(i, input, "@CODE"))++i;
+		if (XPINSCompileUtil::stringsMatch(i, input, "@CODE")) break;
+		i+=7;
+		intermediate1=renameFuncBlock(input, intermediate1,modNum, i);
+		while(!XPINSCompileUtil::stringsMatch(++i, input, "@END"));
+	}
+	
 	//Double Check Ending (strip after @END)
 	for(j=0;j<intermediate1.length();j++){
 		if(intermediate1[j]=='@'&&intermediate1[j+1]=='E'&&intermediate1[j+2]=='N'&&intermediate1[j+3]=='D'){
@@ -282,7 +343,7 @@ bool XPINSCompiler::renameVars(string &text){
 	string intermediate="";
 	//Rename Types
 	for(int i=0;i<input.length();i++){
-		if((input[i]=='B'||input[i]=='I'||input[i]=='F'||input[i]=='V'||input[i]=='M'||input[i]=='S'||input[i]=='*')&&input[i-1]=='\n'){
+		if((input[i]=='B'||input[i]=='N'||input[i]=='V'||input[i]=='M'||input[i]=='S'||input[i]=='*')&&input[i-1]=='\n'){
 			intermediate+=input[i];
 			while (input[++i]!=' ');
 		}
@@ -306,16 +367,16 @@ bool XPINSCompiler::renameVars(string &text){
 	int j=0;
 	//Do the actual work
 	int xb=0;
-	int xi=0;
-	int xf=0;
+	int xn=0;
 	int xv=0;
 	int xm=0;
 	int xs=0;
 	int xp=0;
+	int xa=0;
 	char varType='P';
 	while(i<intermediate1.length()&&(intermediate1[i]!='@'||intermediate1[i+1]!='E')){
 		while (i<intermediate1.length()&&intermediate1[i++]!='\n');
-		if(intermediate1[i]=='B'||intermediate1[i]=='I'||intermediate1[i]=='F'||intermediate1[i]=='V'||intermediate1[i]=='M'||intermediate1[i]=='S'||intermediate1[i]=='*')
+		if(intermediate1[i]=='B'||intermediate1[i]=='N'||intermediate1[i]=='V'||intermediate1[i]=='M'||intermediate1[i]=='S'||intermediate1[i]=='*'||intermediate1[i]=='M')
 		{
 			//determine new variable name
 			varType=intermediate1[i]=='*'?'P':intermediate1[i];
@@ -324,11 +385,8 @@ bool XPINSCompiler::renameVars(string &text){
 				case 'B':
 					varNum=xb++;
 					break;
-				case 'I':
-					varNum=xi++;
-					break;
-				case 'F':
-					varNum=xf++;
+				case 'N':
+					varNum=xn++;
 					break;
 				case 'V':
 					varNum=xv++;
@@ -342,6 +400,9 @@ bool XPINSCompiler::renameVars(string &text){
 				case 'P':
 					varNum=xp++;
 					break;
+				case 'A':
+					varNum=xa++;
+					break;
 				default: varType='P';varNum=++xp;
 			}
 			while (intermediate1[i++]!='$');
@@ -352,22 +413,37 @@ bool XPINSCompiler::renameVars(string &text){
 			}
 			//Replace Var name
 			intermediate2="";
-			j=0;
-			while(j<intermediate1.length()){
+		//	cout<<"\n\n\n\n"<<intermediate1;
+			j=-1;
+			while(true){
 				//CHECK FOR @END
-				if(intermediate1[j]=='@'&&intermediate1[j+1]=='E'&&intermediate1[j+2]=='N'&&intermediate1[j+3]=='D'){
+				if(++j>=intermediate1.length()||(intermediate1[j]=='@'&&intermediate1[j+1]=='E'&&intermediate1[j+2]=='N'&&intermediate1[j+3]=='D'))
+				{
 					intermediate2+="@END";
 					break;
 				}
-				if(intermediate1[j-1]=='\n'&&(intermediate1[j]=='B'||intermediate1[j]=='I'||intermediate1[j]=='F'||intermediate1[j]=='V'||intermediate1[j]=='M'||intermediate1[j]=='S'||intermediate1[j]=='*')&&XPINSCompileUtil::stringsMatch(j+3, intermediate1, varName))
+				if(intermediate1[j-1]=='\n'&&(intermediate1[j]=='B'||intermediate1[j]=='N'||intermediate1[j]=='V'||intermediate1[j]=='M'||intermediate1[j]=='S'||intermediate1[j]=='*'||intermediate1[j]=='A')&&XPINSCompileUtil::stringsMatch(j+3, intermediate1, varName))
+				{
 					j+=2;
+				}
+				if(intermediate1[j-1]=='~'&&intermediate1[j]=='\"')
+				{
+					intermediate2+='\"';
+					while (++j<intermediate1.length()) {
+						intermediate2+=intermediate1[j];
+						if(intermediate1[j]=='\\'&&(intermediate1[j+1]=='\\'||intermediate1[j+1]=='\"'))
+						{
+							intermediate2+=intermediate1[++j];
+						}
+						else if(intermediate1[j]=='\"')break;
+					}
+				}
 				//Find start of Var
-				if(intermediate1[j]=='$')
+				else if(intermediate1[j]=='$')
 				{
 					intermediate2+='$';
-					j++;
 					//Check for match
-					if(XPINSCompileUtil::stringsMatch(j, intermediate1, varName)){
+					if(XPINSCompileUtil::stringsMatch(j+1, intermediate1, varName)){
 						intermediate2+=varType;
 						intermediate2+=XPINSCompileUtil::strRepresentationOfInt(varNum);
 						//Skip Var Name
@@ -377,7 +453,6 @@ bool XPINSCompiler::renameVars(string &text){
 				else
 				{
 					intermediate2+=intermediate1[j];
-					j++;
 				}
 			}
 			intermediate1=""+intermediate2;
@@ -392,19 +467,19 @@ bool XPINSCompiler::renameVars(string &text){
 	while (intermediate1[i]!='@')intermediate2+=intermediate1[i++];
 	string varSizes="@VAR ";
 	varSizes+='B'+XPINSCompileUtil::strRepresentationOfInt(xb)+' ';
-	varSizes+='I'+XPINSCompileUtil::strRepresentationOfInt(xi)+' ';
-	varSizes+='F'+XPINSCompileUtil::strRepresentationOfInt(xf)+' ';
+	varSizes+='N'+XPINSCompileUtil::strRepresentationOfInt(xn)+' ';
 	varSizes+='V'+XPINSCompileUtil::strRepresentationOfInt(xv)+' ';
 	varSizes+='M'+XPINSCompileUtil::strRepresentationOfInt(xm)+' ';
 	varSizes+='S'+XPINSCompileUtil::strRepresentationOfInt(xs)+' ';
 	varSizes+='P'+XPINSCompileUtil::strRepresentationOfInt(xp)+' ';
+	varSizes+='A'+XPINSCompileUtil::strRepresentationOfInt(xa)+' ';
 	intermediate2+=varSizes+'\n';
 	while (i<intermediate1.length()) intermediate2+=intermediate1[i++];
 	intermediate1=intermediate2;
 	//Remove Types
 	intermediate2="";
 	for(int i=0;i<intermediate1.length();++i){
-		if((intermediate1[i]=='B'||intermediate1[i]=='I'||intermediate1[i]=='F'||intermediate1[i]=='V'||intermediate1[i]=='M'||intermediate1[i]=='S'||intermediate1[i]=='*')&&intermediate1[i-1]=='\n'){
+		if((intermediate1[i]=='B'||intermediate1[i]=='N'||intermediate1[i]=='V'||intermediate1[i]=='M'||intermediate1[i]=='S'||intermediate1[i]=='*'||intermediate1[i]=='A')&&intermediate1[i-1]=='\n'){
 			while (intermediate1[++i]!='$');
 		}
 		intermediate2+=intermediate1[i];
@@ -435,18 +510,19 @@ bool XPINSCompiler::checkConstants(string& input)
 				{
 					output+=input[++i];
 				}
-				else if(input[i]=='\"')break;				
+				else if(input[i]=='\"')break;
 			}
 		}
 		//If it is a character that could be followed by an input
-		if(input[i]=='('||input[i]=='='||input[i]==','||input[i]=='['||input[i]=='<'||//typical operations
+		if(input[i]=='('||input[i]=='='||input[i]==','||input[i]=='['||(input[i]=='{'&&input[i-1]=='~')||input[i]=='<'||//typical operations
 		   input[i]=='|'||input[i]=='&'||input[i]=='>'||input[i]=='!'||input[i]=='+'||input[i]=='-'||input[i]=='*'||input[i]=='/'||input[i]=='%')//Expression Specific
-		   
+			
 		{
 			while (input[i+1]==' ')++i;
-			if(input[i+1]!='$'&&input[i+1]!='#'&&input[i+1]!='?'&&input[i+1]!='X'&&input[i+1]!='^'
-			   &&input[i+1]!='='&&input[i+1]!='+'&&input[i+1]!='-'&&input[i+1]!=')')
-				output+='^';
+			if(input[i+1]!='$'&&input[i+1]!='#'&&input[i+1]!='?'&&input[i+1]!='X'&&input[i+1]!='~'
+			   &&input[i+1]!='='&&input[i+1]!='+'&&input[i+1]!='-'&&input[i+1]!=')'
+			   &&(input[i-1]!='R'||input[i]!='[')&&input[i+1]!='\n')
+				output+='~';
 		}
 	}
 	input=output;
@@ -480,30 +556,30 @@ string XPINSCompileUtil::nameForBuiltin(string name){
 	if(name.compare("LESS")==0)return "B3";
 	if(name.compare("MORE")==0)return "B4";
 	if(name.compare("EQUAL")==0)return "B5";
-	if(name.compare("MOD")==0)return "I0";
-	if(name.compare("RAND")==0)return "I1";
-	if(name.compare("ADD")==0)return "F0";
-	if(name.compare("SUB")==0)return "F1";
-	if(name.compare("MULT")==0)return "F2";
-	if(name.compare("DIV")==0)return "F3";
-	if(name.compare("TSIN")==0)return "F4";
-	if(name.compare("TCOS")==0)return "F5";
-	if(name.compare("TTAN")==0)return "F6";
-	if(name.compare("TATAN")==0)return "F7";
-	if(name.compare("POW")==0)return "F8";
-	if(name.compare("VADDPOLAR")==0)return "F9";
-	if(name.compare("VDIST")==0)return "F10";
-	if(name.compare("VX")==0)return "F11";
-	if(name.compare("VY")==0)return "F12";
-	if(name.compare("VZ")==0)return "F13";
-	if(name.compare("VR")==0)return "F14";
-	if(name.compare("VTHETA")==0)return "F15";
-	if(name.compare("VRHO")==0)return "F16";
-	if(name.compare("VPHI")==0)return "F17";
-	if(name.compare("VDOT")==0)return "F18";
-	if(name.compare("VANG")==0)return "F19";
-	if(name.compare("MGET")==0)return "F20";
-	if(name.compare("MDET")==0)return "F21";
+	if(name.compare("ADD")==0)return "N0";
+	if(name.compare("SUB")==0)return "N1";
+	if(name.compare("MULT")==0)return "N2";
+	if(name.compare("DIV")==0)return "N3";
+	if(name.compare("TSIN")==0)return "N4";
+	if(name.compare("TCOS")==0)return "N5";
+	if(name.compare("TTAN")==0)return "N6";
+	if(name.compare("TATAN")==0)return "N7";
+	if(name.compare("POW")==0)return "N8";
+	if(name.compare("VADDPOLAR")==0)return "N9";
+	if(name.compare("VDIST")==0)return "N10";
+	if(name.compare("VX")==0)return "N11";
+	if(name.compare("VY")==0)return "N12";
+	if(name.compare("VZ")==0)return "N13";
+	if(name.compare("VR")==0)return "N14";
+	if(name.compare("VTHETA")==0)return "N15";
+	if(name.compare("VRHO")==0)return "N16";
+	if(name.compare("VPHI")==0)return "N17";
+	if(name.compare("VDOT")==0)return "N18";
+	if(name.compare("VANG")==0)return "N19";
+	if(name.compare("MGET")==0)return "N20";
+	if(name.compare("MDET")==0)return "N21";
+	if(name.compare("MOD")==0)return "N22";
+	if(name.compare("RAND")==0)return "N23";
 	if(name.compare("VREC")==0)return "V0";
 	if(name.compare("VPOL")==0)return "V1";
 	if(name.compare("VSHPERE")==0)return "V2";
@@ -568,9 +644,9 @@ string XPINSCompileUtil::strRepresentationOfInt(int x){
 	return "";
 }
 bool XPINSCompileUtil::stringsMatch(int start,string first, string sec){
-	for(int i=start;i<start+sec.length();i++){
-		if(i==first.length()) return false;
-		if(first[i]!=sec[i-start])return false;
-	}
+	for(int i=0;i<sec.length();++i)
+		if(i+start>=first.length()||
+		   first[start+i]!=sec[i])
+			return false;
 	return true;
 }

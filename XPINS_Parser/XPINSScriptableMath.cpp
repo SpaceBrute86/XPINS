@@ -15,44 +15,44 @@ XPINSScriptableMath::Vector::Vector(){
 	this->y=0;
 	this->z=0;
 }
-XPINSScriptableMath::Vector::Vector(float x,float y,float z){
+XPINSScriptableMath::Vector::Vector(double x,double y,double z){
 	this->x=x;
 	this->y=y;
 	this->z=z;
 }
-Vector Vector::PolarVector(float dist, float dir,float z){
-	float x=dist*cosf(dir);
-	float y=dist*sinf(dir);
+Vector Vector::PolarVector(double dist, double dir,double z){
+	double x=dist*cosf(dir);
+	double y=dist*sinf(dir);
 	return Vector(x,y,z);
 }
-Vector Vector::SphericalVector(float dist, float dir,float alt){
-	float x=dist*cosf(dir)*sinf(alt);
-	float y=dist*sinf(dir)*sinf(alt);
-	float z=dist*cosf(alt);
+Vector Vector::SphericalVector(double dist, double dir,double alt){
+	double x=dist*cosf(dir)*sinf(alt);
+	double y=dist*sinf(dir)*sinf(alt);
+	double z=dist*cosf(alt);
 	return Vector(x,y,z);
 }
 
 //Vector Components
-float Vector::Magnitude(){
+double Vector::Magnitude(){
 	return sqrtf(powf(x, 2)+powf(y, 2)+powf(z,2));
 }
-float Vector::Direction(){
+double Vector::Direction(){
 	return atan2f(y, x);
 }
-float Vector::Altitude(){
+double Vector::Altitude(){
 	return atan2f(sqrtf(x*x+y*y), z);
 }
-void Vector::SphericalCoords(float *dist, float *dir,float *alt){
+void Vector::SphericalCoords(double *dist, double *dir,double *alt){
 	*dist=Magnitude();
 	*dir=Direction();
 	*alt=Altitude();
 }
-void Vector::PolarCoords(float *dist, float *dir,float *z){
+void Vector::PolarCoords(double *dist, double *dir,double *z){
 	*dist=sqrtf(powf(x, 2)+powf(y, 2));
 	*dir=Direction();
 	*z=this->z;
 }
-void Vector::RectCoords(float *x, float *y,float *z){
+void Vector::RectCoords(double *x, double *y,double *z){
 	*x=this->x;
 	*y=this->y;
 	*z=this->z;
@@ -61,49 +61,49 @@ void Vector::RectCoords(float *x, float *y,float *z){
 
 //Vector Arithmetic
 Vector Vector::Add(Vector vec1, Vector vec2){
-	float x=vec1.x+vec2.x;
-	float y=vec1.y+vec2.y;
-	float z=vec1.z+vec2.z;
+	double x=vec1.x+vec2.x;
+	double y=vec1.y+vec2.y;
+	double z=vec1.z+vec2.z;
 	return Vector(x,y,z);
 }
-Vector Vector::Scale(Vector vec, float scale){
+Vector Vector::Scale(Vector vec, double scale){
 	return Vector(vec.x*scale,vec.y*scale,vec.z*scale);
 }
 
-float Vector::DotProduct(Vector a,Vector b){
-	float x=a.x*b.x;
-	float y=a.y*b.y;
-	float z=a.z*b.z;
+double Vector::DotProduct(Vector a,Vector b){
+	double x=a.x*b.x;
+	double y=a.y*b.y;
+	double z=a.z*b.z;
 	return x+y+z;
 }
 Vector Vector::CrossProduct(Vector a,Vector b){
-	float x=(a.y*b.z) - (a.z*b.y);
-	float y=(a.z*b.x) - (a.x*b.z);
-	float z=(a.x*b.y) - (a.y*b.x);
+	double x=(a.y*b.z) - (a.z*b.y);
+	double y=(a.z*b.x) - (a.x*b.z);
+	double z=(a.x*b.y) - (a.y*b.x);
 	return Vector(x,y,z);
 }
 
 //Miscillaneous Vector Functions
-float Vector::AngleBetweenVectors(Vector vec1, Vector vec2){
-	float dot=DotProduct(vec1,vec2);
-	float cos=dot/(vec1.Magnitude()*vec2.Magnitude());
+double Vector::AngleBetweenVectors(Vector vec1, Vector vec2){
+	double dot=DotProduct(vec1,vec2);
+	double cos=dot/(vec1.Magnitude()*vec2.Magnitude());
 	return acosf(cos);
 }
-Vector Vector::ProjectionInDirection(Vector vec,float dir,float alt){
+Vector Vector::ProjectionInDirection(Vector vec,double dir,double alt){
 	Vector unit=Vector::SphericalVector(1, dir,alt);
-	float dot=DotProduct(vec, unit);
+	double dot=DotProduct(vec, unit);
 	Vector result=Scale(unit, dot);
 	return result;
 }
 
 //Related Scalar functions
-float XPINSScriptableMath::addPolar(float x,float y){
-	float res=x+y;
+double XPINSScriptableMath::addPolar(double x,double y){
+	double res=x+y;
 	while (res<0) res+=2*M_PI;
 	while (res>=2*M_PI) res-=2*M_PI;
 	return res;
 }
-float XPINSScriptableMath::dist(float x, float y,float z){
+double XPINSScriptableMath::dist(double x, double y,double z){
 	return sqrtf(x*x+y*y+z*z);
 }
 
@@ -111,15 +111,21 @@ float XPINSScriptableMath::dist(float x, float y,float z){
 
 //Initializing Matrices and Special Matrices
 Matrix::Matrix (){
-	values=std::vector<float>();
-	rows=0;
-	cols=0;
+	values=(double*)malloc(sizeof(double));
+	*values=0.0;
+	rows=1;
+	cols=1;
 }
 
 Matrix::Matrix (size_t r, size_t c){
-	values=std::vector<float>(r*c);
+	values=(double*)malloc(sizeof(double)*r*c);
+	for (int i=0; i<r*c; ++i)values[i]=0.0;
 	rows=r;
 	cols=c;
+}
+void Matrix::clean()
+{
+	delete values;
 }
 Matrix Matrix::IdentityMatrixOfSize(size_t size){
 	Matrix matrix=Matrix(size,size);
@@ -128,18 +134,18 @@ Matrix Matrix::IdentityMatrixOfSize(size_t size){
 	}
 	return matrix;
 }
-Matrix Matrix::DiagonalMatrixWithValues(std::vector<float> vals){
+Matrix Matrix::DiagonalMatrixWithValues(std::vector<double> vals){
 	Matrix matrix=Matrix(vals.size(),vals.size());
 	for(size_t i=0;i<vals.size();++i){
 		matrix.values[i*vals.size()+i]=vals[i];
 	}
 	return matrix;
 }
-Matrix Matrix::RotationMatrixWithAngleAroundVector(Vector vec,float angle){
+Matrix Matrix::RotationMatrixWithAngleAroundVector(Vector vec,double angle){
 	Matrix matrix=Matrix(3,3);
 	//get Unit Vector comonents
 	Vector unitVec=Vector::Scale(vec, 1/vec.Magnitude());
-	float x=0,y=0,z=1;
+	double x=0,y=0,z=1;
 	unitVec.RectCoords(&x, &y, &z);
 	//Compute values
 	//Source for Formulas: http://en.wikipedia.org/wiki/Rotation_matrix#Basic_rotations
@@ -155,10 +161,10 @@ Matrix Matrix::RotationMatrixWithAngleAroundVector(Vector vec,float angle){
 	return matrix;
 }
 //Accessing Values
-float Matrix::ValueAtPosition(size_t i,size_t j){
+double Matrix::ValueAtPosition(size_t i,size_t j){
 	return values[i*cols+j];
 }
-void Matrix::SetValueAtPosition(float val,size_t i,size_t j){
+void Matrix::SetValueAtPosition(double val,size_t i,size_t j){
 	values[i*cols+j]=val;
 }
 //Converting Matricies to/from Vectors
@@ -179,6 +185,7 @@ Matrix Matrix::MatrixForVector(Vector v)
 //Matrix Operations
 Matrix Matrix::Add(Matrix a,Matrix b)
 {
+	if(a.values==NULL||b.values==NULL)return Matrix();
 	if (a.rows!=b.rows||a.cols!=b.cols) //Sizes don't match
 	{
 		return Matrix();
@@ -193,8 +200,10 @@ Matrix Matrix::Add(Matrix a,Matrix b)
 	}
 	return m;
 }
-Matrix Matrix::Scale(Matrix a,float b)
+Matrix Matrix::Scale(Matrix a,double b)
 {
+	if(a.values==NULL)return Matrix();
+
 	Matrix m=Matrix(a.rows,a.cols);
 	for (size_t i=0; i<a.rows; ++i)
 	{
@@ -205,9 +214,10 @@ Matrix Matrix::Scale(Matrix a,float b)
 	}
 	return m;
 }
-Matrix Matrix::Multiply(Matrix a,Matrix b)
+Matrix Matrix::Multiply(Matrix ma,Matrix mb)
 {
-	if (a.cols!=b.rows)//Can't multiply
+	Matrix a=ma,b=mb;
+	if (a.cols!=b.rows||a.values==NULL||b.values==NULL)//Can't multiply
 	{
 		return Matrix();
 	}
@@ -239,7 +249,7 @@ Matrix Matrix::Transpose(Matrix in)
 	return out;
 }
 
-float Matrix::Determinant(Matrix m)
+double Matrix::Determinant(Matrix m)
 {
 	//Collapse to square Matrix
 	if (m.rows<m.cols||m.rows>m.cols) {
@@ -252,7 +262,7 @@ float Matrix::Determinant(Matrix m)
 		case 2://2x2 matrix
 			return m.values[0]*m.values[3]-m.values[1]*m.values[2];
 		default://3x3+ matrix
-			float det=0;
+			double det=0;
 			for (size_t p=0; p<m.rows; ++p) {
 				det+=powf(-1, p)*m.values[p]*Determinant(MinorMatrix(m, 0, p));
 			}

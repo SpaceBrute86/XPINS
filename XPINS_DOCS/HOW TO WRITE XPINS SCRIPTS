@@ -6,7 +6,8 @@ XPINS stands for eXtensible Program Instruction Notation/Script
 
 Each XPINS file has the following components:
 -Version Compatibility Statements
--Function Declaration Block
+-Constant Declaration Block
+-Function Declaration Blocks
 -Code Block
 
 XPINS files can also have comments. XPINS supports both Single and Multiline Comments.
@@ -18,78 +19,94 @@ The first part of every XPINS file are two version compatibility statements. The
 @COMPILER[0.3]
 @PARSER[0.6]
 Only the first two components of the version numbers are used for compatibility statements, even though the version numbers for the compiler and the parser have three components. This is because the third number is used for bug fixes. In order to be compatible with a certain verison of the compiler or parser, the script's Major version number must match that of the software and the Minor version number must be less than or equal to that of the software. For example, a script that states a compiler version number of 1.2 will be compatible with all versions of the compiler from 1.2.0 until 2.0.0.
+CONSTANT BLOCKS:
+	The second part of every XPINS file is a constant block. Just like in many programming languages, XPINS allows you to define constants. For example, if my script is working with circles, I might define PI=3.1415926535; (Note that this constant will probably be predefined at some point in the near future) The syntax for constant declaration looks like this:
+	___=_____; 
+	The first blank is the name of your constant, while the second blank is the value. More on the acceptable constant values later.
+	
 
 FUNCTION BLOCKS:
-The second part of every XPINS file is a function block. XPINS is designed to interact with your code. In order to do this, you must write additional functions in the parser to interact with your code. In order to call these functions within your XPINS scripts, you must declare them so that XPINS can compile your code properly. A simple function block would look like this:
+The third part of every XPINS file is a function block. XPINS is designed to interact with your code. In order to do this, you must write additional functions in the parser to interact with your code. In order to call these functions within your XPINS scripts, you must declare them so that XPINS can compile your code properly. A simple function block would look like this:
 @FUNC
-INT MAGIC_NUMBER(FLOAT,BOOL);
+NUM FOO(NUM,BOOL);
 @END
 A function block starts with @FUNC and ends with @END, each of these getting their own line. Between the two are all of the function declarartions, with one line per function declaration. A function declaration starts with its return type.  Starting with XPINS Parser 0.6, the return type is required, and requires compiler 0.3 or later. The name you write in the function blockis the name you use to call your function in code. If you spell it incorrectly, your script will not execute properly. After the name of your function come the paramaters. Paramaters follow the format of (...). The parameters are currently of no meaning to the compiler, so as long as the parentheses are present you can leave them out. For this reason no two functions can have the same name (no overloading). The function block below is equivalnt to the one above:
 @FUNC
-INT MAGIC_NUMBER()
+NUM FOO()
 @END
-In XPINS, semicolons are optional and removed at compile time. The reason for this is that removing the semicolons does help slightly with both size and performance, but since the parser is written in C++, most developers using XPINS would be comfortable using semicolons.
+Note: In XPINS, semicolons are optional and removed at compile time. The reason for this is that removing the semicolons does help slightly with both size and performance, but since the parser is written in C++, most developers using XPINS will be more comfortable using semicolons.
+In XPINS Compiler 0.5.0 and Parser 0.10.0, Modules were introduced. Modules allow you to define multiple function blocks and pass in different binding objects for each (you're @FUNC block will correspond to you're zeroth binding object). For example, if I am scripting a robot, I might put my functions that turn on motors in one module while putting my functions to do advanced calculations in my @FUNC block.
+After declaring you're function block, you declare a module bolcok like this:
+@MODULE ___
+	____
+@END
+	The first blank is the name of you're module and the other blank is a set of function delcarations, declared exactly the same way they are declared in the @FUNC block.
 
 
 
 CODE BLOCKS:
 The final and most important part of an XPINS file is the code block. This is where you actually tell your code what do. A code block starts with @CODE and ends with @END. Like the function block, each of these gets its own line. Lets look at a sample code block
 @CODE
-INT $MYVAR2=#MAGIC_NUMBER(^0.2,^T);
-BOOL $COND=X_ILESS($MYVAR2,^90);
-@WHILE[$COND]{
-$MYVAR2=X_IADD($MYVAR2,^10);
-$COND=X_ILESS($MYVAR2,^90);
-}
-*MYPLAYER $AIPLAYER=#AI_PLAYER_FUNC();
-#SET_FIRE_ANGLE($AIPLAYER,$MYVAR2);
+	NUM $MYVAR2=#FOO(~0.2,T);
+	@WHILE[?B($MYVAR2<~90)?]{
+		$MYVAR2=X_ADD($MYVAR2,TEN);
+	}
+	*MYPLAYER $AIPLAYER=#AI_PLAYER_FUNC();
+	#SET_FIRE_ANGLE($AIPLAYER,$MYVAR2);
 @END
 The first thing this script does is define a few variables. The format for declaring a variable is: TYPE $NAME=VALUE;
-There are five types in XPINS: BOOL, INT, and FLOAT all correspond directly to their C++ cousins, VEC, which represents a Vector object that allows you to perform vector (3-Dimensional Math/Science vector, not C++ vector) arithmetic without needing to write custom code, MAT, which is a Matrix (allowing you to do Linear Algebra without much code) of any size, STR, which corresponds to strings, and the Generic pointer type, declared as *____. The Generic Pointer Type stores a pointer to any C++ object.
-When you declare a variable, you can assign it one of three things: a constant (BOOL/INT/FLOAT/VEC/MAT/STR only), a copy of another variable, or the return value of a function (more on functions later). Constants are usually preceeded by a '^', but the XPINS compiler will put this in if you forget to. BOOLs can be assigned values of ^T or ^F. INTs and FLOATs can be assigned ^X, where X is any number permitted by that type (i.e. ^1.2 could not be assigned to an INT variable) VEC constants take the form ^<X,Y,Z>, ^P<R,THETA,Z>, or ^S<RHO,THETA<PHI>. MAT constants take the form ^[a,b,c|d,e,f|g,h,i], where columns are comma separated and rows are vetical-line separated. STR constants take the form ^"..." where ... is your ASCII string. Assigning a new value to a variable works the same way as declaring the variable, except that you don't specify the variable type (i.e. $NAME=VALUE;)
+There are five types in XPINS: BOOL corresponds directly to its C++ cousin, NUM corresponds to a C++ double, VEC, which represents a Vector object that allows you to perform vector (3-Dimensional Math/Science vector, not C++ vector) arithmetic without needing to write custom code, MAT, which is a Matrix (allowing you to do Linear Algebra without much code) of any size, STR, which corresponds to strings,  the Generic pointer type, declared as *____, which stores a pointer to any C++ object, and ARR, which stores an array of Generic Pointers, although BOOLs, NUMs, VECs, MATs, and STRs will be automatically copied and converted. However, to embed arrays in arrays, you must use the following code when passing the subarray as one of the values:
+____[:]
+	where the blank is the array (variable or function return).
+When you declare a variable, you can assign it one of three things: a constant (BOOL/NUM/VEC/MAT/STR only), a copy of another variable, or the return value of a function (more on functions later). Constants are usually preceeded by a '~', but the XPINS compiler will put this in if you forget to. BOOLs can be assigned values of ~T or ~F. INTs and FLOATs can be assigned ~X, where X is any number permitted by that type (e.g. ~1.2 would be truncated to ~1) VEC constants take the form ~<X,Y,Z>, ~P<R,THETA,Z>, or ~S<RHO,THETA<PHI>. MAT constants take the form ~[a,b,c|d,e,f|g,h,i], where columns are comma separated and rows are vetical-line separated. STR constants take the form ~"..." where ... is your ASCII string. Assigning a new value to a variable works the same way as declaring the variable, except that you don't specify the variable type (i.e. $NAME=VALUE;)
 In XPINS, the scope of any variable is its script (i.e. one script cannot access another script's variables), but an error is not generated if you declare a variale twice. However, you will allocate unused memory when you execute the script.
-In the sample script, once we assign two constants to variables, we create a third variable, and assign to it the return value of the MAGIC_NUMBER function shown in the function block. Calling a user defined function looks like this: #FUNCTION_NAME($Var1,$Var2,...);. You as the developer get to decide how many parameters need to be passed to the function. To pass a constant as a parameter, just pass ^0.4 instead of $Var. You can also pass expression and function results as parameters. Calling any user function is indicated by a '#'. Functions do not need to have a return type. a common example is near the end of your script when you set some custom value on some object.
+In the sample script, once we assign two constants to variables, we create a third variable, and assign to it the return value of the MAGIC_NUMBER function shown in the function block. Calling a user defined function looks like this: #FUNCTION_NAME($Var1,$Var2,...);. You as the developer get to decide how many parameters need to be passed to the function. To pass a constant as a parameter, just pass ~___ instead of $Var. You can also pass expression and function results as parameters. Calling any user function is indicated by a '#'. Functions do not need to have a return type. a common example is near the end of your script when you set some custom value on some object.
 After Declaring a few more constants, we declare a BOOL that is assigned the return value of a built in function. Instead of being preceeded by a '#', Built in functions follow the format X_NAME(...). There are a variet of built in functions, ranging from boolean logic and Number comparison to trigonometry and Vector arithmetic. There is a list of built in functions in another document.
 The BOOL we just declared is used as the condition for a while loop. while loops take the format @WHILE[$CONDITION]{...} The condition is a BOOL variable usually set just before and at the end of each iteration of a loop. If the condition is false, the loop will be skipped, and the condition is checked again once you reach the end of the loop. It will keep running until the condition evaluates to false.
 While not present in this example, you can also use an If statement. If statements take the form of @IF[$CONDITION]{...}@ELIF{...}...@ELSE{...} (@ELSE{...} and any number of @ELIF{...}'s are optional). If the condition is true, it the code inside the IF block is executed. If not the ELIF conditions are evaluated until one is true or they are all false, in which case the corresponding ELIF block (if an ELIF condition is true) or the ELSE block (if present and no ELIF condition is true) is executed.
 After the while loop, we declare a genaric pointer variable. In this case, it most likely points to a struct of type MYPlAYER. We assign it to the return value of the AI_PLAYER_FUNC function (Lets assume that we declared this in our function block). We then pass this as the first argument to an object that sets the fire angle of this AI Player. We finish the script with an @END statement.
-Using XPINS, you can script almost anything you can do in C/C++.
+While not shown in this example, you can access array elements for both reading and writing:
+____[____]
+	where the first blank is the array variable or a function returning an array and the second blank is an NUM holding the index (it can be a variable, constant, function, or expression). This can be used for both reading and writing, though writing must be done using an array variable (writing to an array not stored anywhere won't do anything, thus the parser won't allow it).
+	If you want to access an element of an array stored in an array, just use the following code
+___[___][___]
 
 
 EXPRESSIONS:
-In C++, there are expressions and operators that make it very easy to perform calculations. In XPINS, there are functions for addition, subtraction, etc, but those take a lot of time to write (and also use more memory). XPINS has expressions that allow mathematical calculations to performded easier. Here is a sample expression:
+In C++, there are expressions and operators that make it very easy to perform calculations. In XPINS, there are functions for addition, subtraction, etc, but those are harder to use (and take up more space). XPINS has expressions that allow mathematical calculations to performded easier. Here is a sample expression:
 ?B($Var1<$Var2)?
-An expression always starts and ends with a '?'. At the beginning of the expression is the return type: B, I,  F, V, or M (there is no support for String or Pointer expressions at this time). After the type is a pair of parentheses containing the input and operator. The inputs can be constants, variables, or even other expressions. The operator goes before the last input. Valid operators at this point in time are listed below. The format for this list is: <op> : <Use> (<Return types>):(<1st Input types>),(<2nd Input types>),...
-	+  : Addition (I,F):(I,F),(I,F)
-	++ : increment (I,F):(I,F)  (before returns result, after returns input and increments after)
-	+  :Vector Addition (V):(V),(V)
-	+  :Matrix Addition (M):(M),(M)
-	-  :Subtraction (I,F):(I,F),(I,F)
-	-- : decrement (I,F):(I,F)  (before returns result, after returns input and increments after)
-	-  :Vector Subtraction (V):(V),(V)
-	-  :Matrix Subtraction (M):(M),(M)
-	*  : Multiplication (I,F):(I,F),(I,F)
-	*  : Vector-Scalar Multiplication (V):(V),(I,F)
+An expression always starts and ends with a '?'. At the beginning of the expression is the return type: B, I,  F, V, or M (there is no support for String or Pointer expressions at this time). After the type is a pair of parentheses containing the input and operator. The inputs can be constants, variables, or even other expressions. The operator goes before the last input. Valid operators at this point in time are listed below. The format for this list is: <op> : <Use> (<Return types>):(<1st Input type>),(<2nd Input type>),...
+	+  : Addition (N):(N),(N)
+	++ : increment (N):(N)  (before returns result, after returns input and increments after)
+	+  : Vector Addition (V):(V),(V)
+	+  : Matrix Addition (M):(M),(M)
+	-  : Subtraction (N):(N),(N)
+	-- : decrement (N):(N)  (before returns result, after returns input and increments after)
+	-  : Vector Subtraction (V):(V),(V)
+	-  : Matrix Subtraction (M):(M),(M)
+	*  : Multiplication (N):(N),(N)
+	*  : Vector-Scalar Multiplication (V):(V),(N)
 	*  : Vector Dot Product (F):(V),(V)
 	*  : Vector Cross Product (V):(V),(V)
-	*  : Matrix-Scalar Multiplication (M):(M),(I,F)
+	*  : Matrix-Scalar Multiplication (M):(M),(N)
 	*  : Matrix-Vector Multiplication (V):(M),(V)
 	*  : Matrix-Matrix Multiplication (M):(M),(M)
-	/  : Division (I,F):(I,F),(I,F)
-	/  :Vector-Scalar Division (V):(V),(V),(I,F)
-	/  : Matrix-Matrix Division (M):(M),(I,F)
+	/  : Division (N):(N),(N)
+	/  : Vector-Scalar Division (V):(V),(V),(N)
+	/  : Matrix-Matrix Division (M):(M),(N)
 	%  : Modulus (I):(I),(I)
-	<  : Less than (B):(I,F),(I,F)
-	<= : less than or equal (B):(I,F),(I,F)
-	>  : Greater than (B):(I,F),(I,F)
-	>= : Greater than or equal (B):(I,F),(I,F)
-	== : Equal (B):(I,F),(I,F)
-	!= : Not Equal (B):(I,F),(I,F)
+	^  : Power (N):(N):(N)
+	<  : Less than (B):(N),(N)
+	<= : less than or equal (B):(N),(N)
+	>  : Greater than (B):(N),(N)
+	>= : Greater than or equal (B):(N),(N)
+	== : Equal (B):(N),(N)
+	!= : Not Equal (B):(N),(N)
 	!  : Not (B):(B)
 	|| : Or (B):(B),(B)
 	&& : Or (B):(B),(B)
-	Add a '=' after the +,-,*,/, or % to copy the result into the first (with the exception of ?V($M*=$V)? which will store the result in the Vector variable) variable, as long as it is of a matching type (e.g. dot product won't work but cross product will). Also,
-	Order matters scalar-Vector,
+	Add a '=' after +,-,*,/,^, or % to copy the result into the first (with the exception of ?V($M*=$V)? which will store the result in the Vector variable) variable, as long as it is of a matching type (e.g. dot product won't work but cross product will). Also, Order matters for expressions with differnet types, or expresons where the underlying mathematics is not commutative.
+	Most expressions have an equivalent built in function. The only exceptions expressions that modify one of the inputs (e.g. ++$var). However, not all built in functions have an equivalent expression (e.g. X_MINV, which inverts a matrix).
 
 
 BINDING FUNCTIONS:
@@ -99,12 +116,12 @@ In order to make XPINS useful, you must implement the Function Binding code:
 -Implement Custom Functions
 -Write the actual Binding Code
 
-In order to interact with your code, you must subclass XPINSBindings. For your convenience XPINSLocalBindings is provided, but if you plan to run different scripts in the same program it is reccommended that each script have its own binding class. When you implement XPINSLocalBindings be sure to include any header files necessary, whether it is for parameter passing or for function implementation. Make sure that XPINSBindings.h is included in the header file for your subclass.
+In order to interact with your code, you must subclass XPINSBindings. Further, Each module must have its own subclass For your convenience XPINSLocalBindings is provided as a template, but if you plan to run different scripts in the same program it is reccommended that each script have its own binding class. When you implement you're bindings object be sure to include any header files necessary, whether it is for parameter passing or for function implementation. Make sure that XPINSBindings.h is included in the header file for your subclass.
 
-Through your subclass of XPINSBindings you can pass values to your script. For example, if you are using XPINS to script your game AI, you might have a reference to a particular character as one of the members of your subclass.
+Through your subclass of XPINSBindings you can also pass values to your script. For example, if you are using XPINS to script your game AI, you might have a pointer to a particular character as one of the members of your subclass.
 When you are ready to execute a script, remember to give these references to your Bindings object. In order to access these values, you will need to use your bindings functions.
 
-Once you have declared the data members for your bindings object, you must declare the scriptable functions. It is up to you as to what you should name them, but it is reccomended that you give them the same name you gave them when they were declared your @FUNC block. It is also reccomended that these functions are private functions.
+Once you have declared the data members for your bindings object, you must declare the scriptable functions. It is up to you as to what you should name them, but it is reccomended that you give them the same name you gave them when they were declared your @FUNC or @MODULE block. It is also reccomended that these functions are private functions.
 
 If you want to write a function that takes a VEC or MAT variable as a parameter, it will be passed as an object of type XPINSScriptableMath::Vector or XPINSScriptableMath::Matrix, respectively. BOOL, INT, and FLOAT will be passed as their C/C++ cousins. For *___ (generic pointer type), you must write the function to receive a void* pointer. You can then extract the desired value:
 MyType *var=(MyType*)arg1;
@@ -120,8 +137,8 @@ void XPINSLocalBindings::BindFunction(int fNum,XPINSScriptSpace& script,void* re
 }
 Notic the switch statement.  For each function you declare, you need a case statement. It should look like this:
 case __:{...}break;
-the __ should be the assigned number for your function. To determine this number, look in your @FUNC block for your script, and count the number of function you declared before it and add one. If your block looks like this:
-@FUNC
+the __ should be the assigned number for your function. To determine this number, look in the @FUNC or @MODULE block for your script, and count the number of functions you declared before it and add one. If your block looks like this:
+@MODULE ModuleName
 	VOID myVoidFunc();
 	INT myIntFunc();
 	MAT myMatrixFunc();
@@ -131,50 +148,39 @@ Function 0 is reserved and may be useful in a future version of XPINS.
 You will replace the '...' with the code to find your arguments and call your functions.
 
 Once you have determined which function was called you need to figure out what values were passed to it. Good News: The parser does all of the heavy lifting. Here is what your code looks like:
-___ arg__=Parse___Arg(script,___);
-Only four blanks. The first blank is the type of the argument. This should be one of the following, depending on what your function takes for the argument: bool, int, float, XPINSScriptableMath::Vector, XPINSScriptableMath::Matrix, or void*
+___ arg__=*Parse___Arg(script,',');
+Only four blanks. The first blank is the type of the argument. This should be one of the following, depending on what your function takes for the argument: bool, double, XPINSScriptableMath::Vector, XPINSScriptableMath::Matrix, or void*, or vector<void*> (avoid using functions that involve arrays when possible, and when doing so look over the source code for the Parser to see how XPINS Arrays work under the hood).
 The second blank should be the number of the argument, so the variable is called arg1, arg2, etc. (It is Your choice on whether or not to zero-index, just be consistent. In this documentation I will not be zero-indexing).
-The third blank should match the type: Bool, Int, Float, Vec, Mat, or Pointer.
-The last blank is the expected end character. This is ',' unless it is the final argument for a function, in which case it is ')'.
+The third blank should match the type: Bool, Num, Vec, Mat, Pointer, or Arr.
 So for a VEC argument that is the 2nd but not last argument in a function and does not need to be modified, the code would look like this:
-XPINSScriptableMath::Vector arg2=parseVecArg(script,',',NULL);
+XPINSScriptableMath::Vector arg2=*ParseVecArg(script,',');
 For functions that don't take arguments, simply use this line of code:
 while(script.currencChar()!=')')++script.index;
 
 
 Passing by reference:
-If you want to have a function where the variables are passed by reference, use the following code instead of what is listed above:
-bool floatVar=script.instructions[script.index+1]!='I';//Line 1
-___ arg__=Parse___Arg(script,___,&____);//Line 2
-//call your function
-if(varIndex>-1)
-{
-	script.data->_Vars[____]=____;
-}
-If the argument is a float or int, put the first line in before you call Parse__Arg. This will determine if an Int variable was passed instead of a float variable.
-The second line should be the same as it would be for passing by value, but NULL is replaced by &___, where ___ is the name of an int variable that we will use later (make sure to use a different variable for each argument, though).
-After you call your function and determine the return value, add the following code to modify the argument
-if(varIndex>-1)
-{
-	script.data->_Vars[____]=____;
-}
-The first blank is b,i,f,v,m,s,or p depending on the variable type. the second blank is the name of the variable we used earlier, and the last blank is the variable storing the value that we need to assign to the argument variable.
-If your argument is of type float or int, you will need to replace 	
-	script.data->_Vars[____]=____;
-with
-	if(floatVar)script.data->fVars[____]=____;
-	else script.data->iVars[____]=_____;
+If you want to have a function where the variables are passed by reference, use one of the following code snippets instead of what is listed above:
+//SNIPPET 1:(use if you're function uses a pointer)
+___* arg__=Parse___Arg(script,',');
+//call your function with the pointer variable
 
+//SNIPPET 2: (use if you're function uses a pass by reference)
+___* argP__=Parse___Arg(script,',');
+___ arg__=*argP__;
+//call your function with the non-pointer variable
+*argP__=arg__
 
 
 Finally, the most important part: calling your functions. This actually is only one line of code (per function), and it goes right after the code for Finding the arguments:
-*returnVal=f__(...);
--the first blank is the number for the function (e.g. if it is the first function declared, then f1)
+___ val=f__(...);
+*returnVal=(void**)&val;
+-the first blank is the type that you're function returns
+-the second blank is the number for the function (e.g. if it is the first function declared, then f1)
 -the "..." is the arguments for the functions (the arg_ variables you created earlier):
 So if I have function F11 that takes two arguments and returns a bool:
 *returnVal=f11(arg1,arg2);
 
-NOTE: For help with Function Binding, look at the Built In Function implementaitons in XPINSBuiltIn.cpp. Built in Functions are processed almost the same way that your functions are bridged (however many of those function calls are replaced with operators).
+NOTE: For help with Function Binding, look at the Built In Function implementaitons in XPINSBuiltIn.cpp. Built in Functions are processed almost the same way that your functions are (however many of those function calls are replaced with operators).
 
 
 COMPILING SCRIPTS
@@ -183,15 +189,18 @@ The first thing you need to do to run a script is compile the Script so that the
 The following Script:
 @COMPILER[0.4]
 @PARSER[0.9]
+@CONST
+	TEN=10;
+@END
 @FUNC
-	INT MAGIC_NUMBER(FLOAT,BOOL);
+	NUM FOO(NUM,BOOL);
 	*MYPLAYER AI_PLAYER_FUNC();
 @END
 @CODE
-	INT $MYVAR2=#MAGIC_NUMBER(^0.2,^T);
-	@WHILE[X_LESS($MYVAR2,^90)]
+	NUM $MYVAR2=#FOO(~0.2,T);
+	@WHILE[?B($MYVAR2<~90)?]
 	{
-		$MYVAR2=X_ADD($MYVAR2,^10);
+		$MYVAR2=X_ADD($MYVAR2,TEN);
 	}
 	*MYPLAYER $AIPLAYER=#AI_PLAYER_FUNC();
 	#SET_FIRE_ANGLE($AIPLAYER,$MYVAR2);
@@ -199,22 +208,23 @@ The following Script:
 
 Would look like this once compiled:
 @PARSER[0.9]
-@VAR B0 I1 F0 V0 M0 S0 P1
+@VAR B0 N1 V0 M0 S0 P1 A0
 @CODE
-$I0=#IF1(^0.2,^T);
-@WHILE[XB3($I0,^90)]
+$N0=#NF1(~0.2,~T);
+@WHILE[?B($N0<~90)?]
 {
-$I0=XF0($I0,^10);
+$N0=XF0($N0,~10);
 }
 $P0=#PF2();
-#F3($P0,$I0);
+#F3($P0,$N0);
 @END
 
 There are two options for compiling:
 	-Build and Run the compiler on one of your machines. You will need to distribute the compiled script (usually with your program, sometimes via your server).
 	-Distribute your uncompiled script and compile it at runtime.
-The first option is usually a better option if your program is running on a system with constrained resources (e.g. smartphones). It will also reduce your program size as (A) you do not have do include the code for the compiler and (B) compiled scripts tend to be smaller than uncompiled scripts. 
-However, the second option has a few important use cases. First, if you want to make the scripts user-modifiable, you need to compile them at runtime. Editing compiled scripts by hand is strongly discouraged and could cause your program to crash. Second, if your program is open source, you should consider distributing the script in its uncompiled from.
+The first option is usually a better option, especially if your program is running on a system with constrained resources (e.g. smartphones).
+However, the second option has a few important use cases. For example, if you want to make the scripts user-modifiable, you need to compile them at runtime. Editing compiled scripts by hand is strongly discouraged and could cause your program to crash.
+Also, if your program is open source, please consider distributing the script in its uncompiled from.
 
 
 To compile on your machine: Compile the compiler and run it on your machine. Making sure that the script file has the extension .XPINS, enter in the full path for your script. The compiler will write the compiled script to a file with the extension .XPINSX. If it doesn't write a file but displays a compiled script, copy that into a .XPINSX file. Ship the .XPINSX file with your program, and load it into a string object at runtime.
@@ -226,9 +236,14 @@ To compile at runtime: Include XPINSCompiler.h in whatever file you wish to use 
 
 RUNNING SCRIPTS
 To run the script, inlcude XPINSParser.h and the header file for your bindings subclass, and add the following code:
-string myScript="...";//Make sure you have your script loaded into memory
-XPINSLocalBindings *myBindings=new XPINSLocalBindings();//replace with your subclass
+string myScript="...";//Make sure you have your compiled script loaded into memory
 //Set up bindings object
-XPINSParser::ParseScript(myScript, myBindings);
+vector<XPINSBindings*> bindings=vector<XPINSBindings*>();
+		bindings.resize(1);//size of bindings vector= 1+Number Of Modules
+		bindings[0]=new XPINSLocalBindings();//Replace with class for @FUNC bindings object
+		bindings[1]=new XPINSLocalBindings();//Replace with class for 1st @MODULE bindings object
+		bindings[2]=new XPINSLocalBindings();//Replace with class for 2nd @MODULE bindings object
+		//repeat for remaining modules
+XPINSParser::ParseScript(myScript, bindings);
 
 Have Fun with XPINS!
