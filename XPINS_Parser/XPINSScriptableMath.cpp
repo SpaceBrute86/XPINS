@@ -7,6 +7,51 @@
 using namespace XPINSScriptableMath;
 
 
+#pragma mark Probability Library
+double XPINSScriptableMath::Probability::NormalRV(double mu, double sigma){
+	double CDF=((double)arc4random())/0x10000;//Random between 0 and 1
+	double devs=sqrt(2*log(0.25/(CDF-pow(CDF, 2))));
+	devs*=CDF<0.5?-1:1;
+	return mu+sigma*devs;
+}
+
+bool XPINSScriptableMath::Probability::BernoulliRV(double p){
+	double CDF=((double)arc4random())/0x10000;//Random between 0 and 1
+	return CDF<p;
+}
+double XPINSScriptableMath::Probability::UniformRV(double low,double length){
+	double P=((double)arc4random())/0x10000;//Random between 0 and 1
+	return P*length+low;
+}
+
+double XPINSScriptableMath::Probability::ExponentialRV(double lambda){
+	double CDF=((double)arc4random())/0x10000;//Random between 0 and 1
+	double t=log(1/(1-CDF));
+	return t/lambda;
+}
+int XPINSScriptableMath::Probability::PoissonRV(double lambda){
+	int k=0;
+	for (double time=0; time<1; ++k){
+		time+=ExponentialRV(lambda);
+	}
+	return k;
+}
+
+int XPINSScriptableMath::Probability::CoinFlip(double p,int n){
+	int sum=0;
+	for (int i=0; i<n; ++i) {
+		if (BernoulliRV(p))++sum;
+	}
+	return sum;
+}
+int  XPINSScriptableMath::Probability::FairDiceRoll(int sides,int n){
+	int sum=0;
+	for (int i=0; i<n; ++i) {
+		sum+=UniformRV(1, sides);
+	}
+	return sum;
+}
+
 #pragma mark Vector Library
 
 //Initializing Vectors

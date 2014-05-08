@@ -21,7 +21,7 @@ using namespace std;
 
 //PRIMARY METHOD
 
-void XPINSLocalBindings::BindFunction(int fNum,XPINSParser::XPINSScriptSpace& script,void** returnVal){
+void* XPINSLocalBindings::BindFunction(int fNum,XPINSParser::XPINSScriptSpace& script){
 	switch (fNum) {
 			/*Bind Your Custom Functions*/
 		case 1:{
@@ -32,4 +32,5 @@ void XPINSLocalBindings::BindFunction(int fNum,XPINSParser::XPINSScriptSpace& sc
 			cout<<endl;
 		}break;
 	}
+	return NULL;
 }

@@ -10,14 +10,14 @@
 #import "XPINS.h"
 #import "XPNBindings.h"
 
+
 @implementation XPNParser
 +(void)runScript:(NSString*)script withBindings:(NSArray*)bindings
 {
 	string str=[script cStringUsingEncoding:NSASCIIStringEncoding];
 	vector<XPINSBindings*> bind=vector<XPINSBindings*>(bindings.count);
 	for (NSUInteger i=0; i<bindings.count; ++i) {
-		XPINSObjCBindings objBind=[((XPNBindings*)bindings[i]) bindingsObject];
-		bind[i]=&objBind;
+		bind[i]=new XPINSObjCBindings((XPNBindings*)bindings[i]);
 	}
 	XPINSParser::ParseScript(str, bind);
 }

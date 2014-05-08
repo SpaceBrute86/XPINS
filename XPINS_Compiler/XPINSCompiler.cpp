@@ -556,6 +556,7 @@ string XPINSCompileUtil::nameForBuiltin(string name){
 	if(name.compare("LESS")==0)return "B3";
 	if(name.compare("MORE")==0)return "B4";
 	if(name.compare("EQUAL")==0)return "B5";
+	
 	if(name.compare("ADD")==0)return "N0";
 	if(name.compare("SUB")==0)return "N1";
 	if(name.compare("MULT")==0)return "N2";
@@ -579,7 +580,16 @@ string XPINSCompileUtil::nameForBuiltin(string name){
 	if(name.compare("MGET")==0)return "N20";
 	if(name.compare("MDET")==0)return "N21";
 	if(name.compare("MOD")==0)return "N22";
-	if(name.compare("RAND")==0)return "N23";
+	if(name.compare("LN")==0)return "N23";
+	if(name.compare("LOG")==0)return "N24";
+	if(name.compare("ABS")==0)return "N25";
+	if(name.compare("FLOOR")==0)return "N26";
+	if(name.compare("PRAND")==0)return "N27";
+	if(name.compare("PBERN")==0)return "N28";
+	if(name.compare("PNORMAL")==0)return "N29";
+	if(name.compare("PEXP")==0)return "N30";
+	if(name.compare("PPOISSON")==0)return "N31";
+
 	if(name.compare("VREC")==0)return "V0";
 	if(name.compare("VPOL")==0)return "V1";
 	if(name.compare("VSHPERE")==0)return "V2";
@@ -590,6 +600,7 @@ string XPINSCompileUtil::nameForBuiltin(string name){
 	if(name.compare("VCROSS")==0)return "V7";
 	if(name.compare("MMTV")==0)return "V8";
 	if(name.compare("MVMULT")==0)return "V9";
+	
 	if(name.compare("MMAKE")==0)return "M0";
 	if(name.compare("MID")==0)return "M1";
 	if(name.compare("MROT")==0)return "M2";
@@ -600,8 +611,10 @@ string XPINSCompileUtil::nameForBuiltin(string name){
 	if(name.compare("MINV")==0)return "M7";
 	if(name.compare("MTRANS")==0)return "M8";
 	if(name.compare("MVTM")==0)return "M9";
+	
 	if(name.compare("PRINT")==0)return "_0";
 	if(name.compare("MSET")==0)return "_1";
+	
 	return "_"+name;
 }
 int XPINSCompileUtil::readVarIndex(string scriptText,int *startIndex,char expectedEnd){

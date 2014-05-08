@@ -8,6 +8,21 @@
 
 
 namespace XPINSScriptableMath{
+	
+//Probability simulation
+	namespace Probability{
+		//Random Variables
+		double NormalRV(double mu, double sigma);
+		double ExponentialRV(double lambda);
+		int PoissonRV(double lambda);
+		bool BernoulliRV(double p);
+		double UniformRV(double low,double length);
+		//Experiments
+		int CoinFlip(double p,int n);
+		int FairDiceRoll(int sides,int n);
+	}
+	
+//Vector Calculations
 	class Vector{
 	friend class Matrix;
 	public:
@@ -64,6 +79,8 @@ namespace XPINSScriptableMath{
 		double y;
 		double z;
 	};
+	
+//Matrix Calculations
 	class Matrix{
 		friend class Vector;
 
@@ -139,7 +156,7 @@ namespace XPINSScriptableMath{
 		static Matrix MinorMatrix(Matrix,size_t,size_t);
 
 	};
-
+//Miscillaneous Functions
 	double addPolar(double,double);
 	double dist(double,double,double);
 }

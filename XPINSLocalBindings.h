@@ -17,7 +17,7 @@
 class XPINSLocalBindings : public XPINSBindings
 {
 public:
-	void BindFunction(int,XPINSParser::XPINSScriptSpace&,void**);
+	void* BindFunction(int,XPINSParser::XPINSScriptSpace&);
 	/*Define your custom parameters here*/
 	
 private:

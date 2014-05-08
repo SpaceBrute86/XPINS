@@ -171,12 +171,14 @@ ___ arg__=*argP__;
 *argP__=arg__
 
 
-Finally, the most important part: calling your functions. This actually is only one line of code (per function), and it goes right after the code for Finding the arguments:
+Finally, the most important part: calling your functions. This actually is only two lines of code (per function), and it goes right after the code for Finding the arguments:
 ___ val=f__(...);
-*returnVal=(void**)&val;
+//Reassign any Pass-By-Reference arguments
+return &retVal;
 -the first blank is the type that you're function returns
 -the second blank is the number for the function (e.g. if it is the first function declared, then f1)
 -the "..." is the arguments for the functions (the arg_ variables you created earlier):
+the & should be left in even if your function returns a pointer.
 So if I have function F11 that takes two arguments and returns a bool:
 *returnVal=f11(arg1,arg2);
 

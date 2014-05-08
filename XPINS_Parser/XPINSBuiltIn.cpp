@@ -600,15 +600,53 @@ double XPINSBuiltIn::ParseNumBIF(int fNum, XPINSScriptSpace& script)
 			int arg2=*ParseNumArg(script, ')');
 			return arg1%arg2;
 		}
-		case 23://X_RAND
+		case 23://X_LN
+		{
+			double arg1=*ParseNumArg(script, ',');
+			return log(arg1);
+		}
+		case 24://X_LOG
+		{
+			double arg1=*ParseNumArg(script, ',');
+			double arg2=*ParseNumArg(script, ',');
+			return log(arg1)/log(arg2);
+		}
+		case 25://X_ABS
+		{
+			double arg1=*ParseNumArg(script, ',');
+			return fabs(arg1);
+		}
+		case 26://X_FLOOR
+		{
+			double arg1=*ParseNumArg(script, ',');
+			return floor(arg1);
+		}
+		case 27://X_PRAND
 		{
 			double arg1=*ParseNumArg(script, ',');
 			double arg2=*ParseNumArg(script, ')');
-			int a1=arg1*0x100;
-			int a2=arg2*0x100;
-			double res= (arc4random()*0x100)%(a2-a1)+a1;
-			res/=0x100;
-			return res;
+			return Probability::UniformRV(arg1, arg2-arg1);
+		}
+		case 28://X_PBERN
+		{
+			double arg1=*ParseNumArg(script, ',');
+			return Probability::BernoulliRV(arg1);
+		}
+		case 29://X_PNormal
+		{
+			double arg1=*ParseNumArg(script, ',');
+			double arg2=*ParseNumArg(script, ')');
+			return Probability::UniformRV(arg1, arg2);
+		}
+		case 30://X_PEXP
+		{
+			double arg1=*ParseNumArg(script, ',');
+			return Probability::ExponentialRV(arg1);
+		}
+		case 31://X_PPOISSON
+		{
+			double arg1=*ParseNumArg(script, ',');
+			return Probability::PoissonRV(arg1);
 		}
 			
 	}

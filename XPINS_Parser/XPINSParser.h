@@ -16,6 +16,10 @@ class XPINSBindings;
 
 namespace XPINSParser
 {
+	struct XPINSArray{
+		vector<void*> values;
+		string types;
+	};
 	//Variable space
 	struct XPINSVarSpace{
 		bool* bVars;//bool variables
@@ -24,7 +28,7 @@ namespace XPINSParser
 		XPINSScriptableMath::Matrix* mVars;//Matrix Variables
 		string* sVars;//String Variables
 		void** pVars;//Custom type variables
-		vector<void*>* aVars;//Array variables
+		XPINSArray* aVars;//Array variables
 		~XPINSVarSpace(){
 			free(bVars);
 			free(nVars);
@@ -53,8 +57,8 @@ namespace XPINSParser
 	XPINSScriptableMath::Vector* ParseVecArg(XPINSScriptSpace&,char);
 	XPINSScriptableMath::Matrix* ParseMatArg(XPINSScriptSpace&,char);
 	string* ParseStrArg(XPINSScriptSpace&,char);
-	void** ParsePointerArg(XPINSScriptSpace&,char);
-	vector<void*>* ParseArrayArg(XPINSScriptSpace&,char);
+	void** ParsePointerArg(XPINSScriptSpace&,char, char* type=NULL);
+	XPINSArray* ParseArrayArg(XPINSScriptSpace&,char);
 
 	
 	//Parsing Scripts
