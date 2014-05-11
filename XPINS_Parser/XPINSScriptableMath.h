@@ -62,7 +62,7 @@ namespace XPINSScriptableMath{
 		Matrix ();										//Empty
 		Matrix (size_t rows, size_t cols);				//Zero Matrix
 		Matrix (size_t rows, size_t cols, double val);	//Constant Value matrix
-		Matrix copy();									//Copy Matrix
+		Matrix Copy();									//Copy Matrix
 		~Matrix();										//Delete values
 	// Creating Special Matrices
 		static Matrix IdentityMatrixOfSize(size_t size);							//Identity Matrix
@@ -115,7 +115,7 @@ namespace XPINSScriptableMath{
 		bool BernoulliRV(double p);					//Weighted Random Bool
 		double UniformRV(double low,double length);	//Uniform Random Number
 	// Experiments
-		int CoinFlip(double p,int n);		//Flip n coins of bias p
+		int CoinFlip(double p,int n);	//Flip n coins of bias p
 		int FairDiceRoll(int s,int n);	//Roll n Fair s-sided die
 	// Markov Chains
 		double SimulateMarkovChain(Matrix chain, int n, int start);				//Simulate n stages

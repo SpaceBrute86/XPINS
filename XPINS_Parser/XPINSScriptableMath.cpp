@@ -1,5 +1,5 @@
 //Copyright (c) 2013 Robert Markwick
-//See the file license.txt for copying permission
+//See the file license.txt for Copying permission
 
 
 #include "XPINSScriptableMath.h"
@@ -64,7 +64,7 @@ int  XPINSScriptableMath::Probability::FairDiceRoll(int sides,int n)
 }
 double XPINSScriptableMath::Probability::SimulateMarkovChain(Matrix chain, int steps, int start)
 {
-	Matrix markov=chain.copy();
+	Matrix markov=chain.Copy();
 	int state=start;
 	for (int i=0; i<steps; ++i)
 	{
@@ -83,7 +83,7 @@ double XPINSScriptableMath::Probability::SimulateMarkovChain(Matrix chain, int s
 }
 double XPINSScriptableMath::Probability::TransitionProbability(Matrix chain, int steps, int start, int stop)
 {
-	Matrix markov=chain.copy();
+	Matrix markov=chain.Copy();
 	Matrix prob=Matrix::IdentityMatrixOfSize(markov.GetRows());
 	for (int i=0; i<steps; ++i)
 	{
@@ -93,7 +93,7 @@ double XPINSScriptableMath::Probability::TransitionProbability(Matrix chain, int
 }
 double XPINSScriptableMath::Probability::SteadyStateProbability(Matrix chain, int state)
 {
-	Matrix markov=chain.copy();
+	Matrix markov=chain.Copy();
 	Matrix constants=Matrix(markov.GetRows(), 1);
 	Matrix system=Matrix::Append(Matrix::IdentityMatrixOfSize(markov.GetRows())-markov, constants);
 	for (int i=0; i<system.GetCols(); ++i)
@@ -137,7 +137,7 @@ int XPINSScriptableMath::Probability::SimulateAbosorbtionTime(Matrix chain, int 
 }
 bool XPINSScriptableMath::Probability::Reachable(Matrix chain, int start, int stop)
 {
-	Matrix markov=chain.copy();
+	Matrix markov=chain.Copy();
 	if(markov.ValueAtPosition(start, stop)!=0)  return true;
 	Matrix prob=markov;
 	for (int i=1; i<markov.GetCols(); ++i)
@@ -149,8 +149,8 @@ bool XPINSScriptableMath::Probability::Reachable(Matrix chain, int start, int st
 }
 Matrix XPINSScriptableMath::Probability::Subchain(Matrix chain,int& state,int& start,bool mustReach)
 {
-	Matrix markov=chain.copy();
-	Matrix tempMarkov=markov.copy();
+	Matrix markov=chain.Copy();
+	Matrix tempMarkov=markov.Copy();
 	int pathPoints=0;
 	for (int i=0; i<markov.GetRows(); ++i) {
 		if(!Reachable(markov, start, i)||(mustReach&&!Reachable(markov, i, state)))
@@ -365,7 +365,7 @@ Matrix::~Matrix()
 {
 //	delete values;
 }
-Matrix Matrix::copy()
+Matrix Matrix::Copy()
 {
 	Matrix *m=new Matrix(rows,cols);
 	for (int i=0; i<rows; ++i)
@@ -439,7 +439,7 @@ Matrix Matrix::MatrixForVector(Vector v)
 //Matrix Operations
 Matrix Matrix::Append(Matrix ma,Matrix mb)
 {
-	Matrix a=ma.copy(),b=mb.copy();
+	Matrix a=ma.Copy(),b=mb.Copy();
 	if (a.rows!=b.rows) return Matrix(a.rows,a.cols+b.cols); //Error workaround
 	//Calculation
 	Matrix m=Matrix(a.rows,a.cols+b.cols);
@@ -450,12 +450,12 @@ Matrix Matrix::Append(Matrix ma,Matrix mb)
 			m.values[i*m.cols+j]=j<a.cols?a.values[i*a.cols+j]:b.values[i*b.cols+j-a.cols];
 		}
 	}
-	return m.copy();
+	return m.Copy();
 }
 
 Matrix Matrix::Add(Matrix ma,Matrix mb)
 {
-	Matrix a=ma.copy(),b=mb.copy();
+	Matrix a=ma.Copy(),b=mb.Copy();
 	if (a.rows!=b.rows||a.cols!=b.cols)  return Matrix(a.rows,a.cols); //Error workaround
 	//Calculation
 	for (size_t i=0; i<a.rows*a.cols; ++i)
@@ -467,7 +467,7 @@ Matrix Matrix::Add(Matrix ma,Matrix mb)
 
 Matrix Matrix::Scale(Matrix ma,double b)
 {
-	Matrix a=ma.copy();
+	Matrix a=ma.Copy();
 	for (size_t i=0; i<a.rows*a.cols; ++i)
 	{
 		a.values[i]*=b;
@@ -499,7 +499,7 @@ Vector Matrix::MVMultiply(Matrix m,Vector v)
 }
 Matrix Matrix::Transpose(Matrix i)
 {
-	Matrix in=i.copy();
+	Matrix in=i.Copy();
 	Matrix out=Matrix(in.cols,in.rows);
 	for (size_t i=0; i<in.rows; ++i)
 	{
@@ -512,7 +512,7 @@ Matrix Matrix::Transpose(Matrix i)
 }
 double Matrix::Determinant(Matrix a)
 {
-	Matrix ma=a.copy();
+	Matrix ma=a.Copy();
 	double det=1;
 	for (int i=0; i<ma.rows; ++i)
 	{
@@ -553,7 +553,7 @@ double Matrix::Determinant(Matrix a)
 }
 Matrix Matrix::Invert(Matrix a)
 {
-	Matrix ma=a.copy();
+	Matrix ma=a.Copy();
 	if (ma.rows!=ma.cols) return Matrix(a.cols,a.rows);
 	Matrix* mb=new Matrix(a.rows,a.cols);
 	*mb=IdentityMatrixOfSize(a.cols);
@@ -612,7 +612,7 @@ Matrix Matrix::Invert(Matrix a)
 }
 Matrix Matrix::RowEchelon(Matrix a)
 {
-	Matrix ma=a.copy();
+	Matrix ma=a.Copy();
 	for (int i=0; i<ma.rows; ++i)
 	{
 		if(ma.values[i*ma.cols+i]==0)//Row Swapping
@@ -646,7 +646,7 @@ Matrix Matrix::RowEchelon(Matrix a)
 }
 Matrix Matrix::ReducedRowEchelon(Matrix a)
 {
-	Matrix ma=a.copy();
+	Matrix ma=a.Copy();
 	for (int i=0; i<ma.rows; ++i)
 	{
 		if(ma.values[i*ma.cols+i]==0)//Row Swapping
@@ -688,7 +688,7 @@ Matrix Matrix::ReducedRowEchelon(Matrix a)
 
 #pragma mark Polynomial Library
 
-//Polynomial creation and copying
+//Polynomial creation and Copying
 Polynomial::Polynomial ()
 {
 	values=*new vector<Monomial>(1);

@@ -24,12 +24,10 @@ void* XPINSObjCBindings::BindFunction(int fNum,XPINSParser::XPINSScriptSpace& sc
 	if([obj isKindOfClass:[NSNumber class]]){//BOOL or NUM
 		while (sc[ind]!='#') --ind;
 		if(sc[ind+1]=='B'){
-			bool b=[((NSNumber*)obj) boolValue];
-			return &b;
+			return new bool([((NSNumber*)obj) boolValue]);
 		}
 		else{
-			double d=[((NSNumber*)obj) doubleValue];
-			return &d;
+			return new double([((NSNumber*)obj) doubleValue]);
 		}
 	}
 	else if([obj isKindOfClass:[XPNVector class]]){//Vector
@@ -38,12 +36,14 @@ void* XPINSObjCBindings::BindFunction(int fNum,XPINSParser::XPINSScriptSpace& sc
 	else if([obj isKindOfClass:[XPNMatrix class]]){//Vector
 		return &((XPNMatrix*)obj)->matrix;
 	}
+	else if([obj isKindOfClass:[XPNPolynomial class]]){//Vector
+		return &((XPNPolynomial*)obj)->polynomial;
+	}
 	else if([obj isKindOfClass:[NSString class]]){
-		string str=[((NSString*)obj) cStringUsingEncoding:NSASCIIStringEncoding];
-		return &str;
+		new string([((NSString*)obj) cStringUsingEncoding:NSASCIIStringEncoding]);
 	}
 	else if([obj isKindOfClass:[NSArray class]]){
-		return NStoXPINSArray(obj);
+		return NStoXPINSArray((NSArray*)obj);
 	}
 	else{
 		return new objWrapper(obj);
@@ -54,27 +54,30 @@ NSArray*  XPINSObjCBindings::XPINStoNSArray(XPINSArray* arr){
 	NSMutableArray*val=[@[] mutableCopy];
 	for(int i=0;i<arr->values.size();++i){
 		switch (arr->types[i]) {
-			case 'B':{
+			case 'B':
 				[val addObject:@(*(bool*)arr->values[i])];
-			}break;
-			case 'N':{
+				break;
+			case 'N':
 				[val addObject:@(*(double*)arr->values[i])];
-			}break;
-			case 'V':{
+				break;
+			case 'V':
 				[val addObject:[XPNVector vectorWithVector:*(Vector*)arr->values[i]]];
-			}break;
-			case 'M':{
+				break;
+			case 'M':
 				[val addObject:[XPNMatrix matrixWithMatrix:*(Matrix*)arr->values[i]]];
-			}break;
-			case 'S':{
+				break;
+			case 'P':
+				[val addObject:[XPNPolynomial polynomialWithPolynomial:*(Polynomial*)arr->values[i]]];
+				break;
+			case 'S':
 				[val addObject:[NSString stringWithCString:((string*)arr->values[i])->data() encoding:NSASCIIStringEncoding]];
-			}break;
-			case 'P':{
+				break;
+			case 'O':
 				[val addObject:((objWrapper*)arr->values[i])->object];
-			}break;
-			case 'A':{
+				break;
+			case 'A':
 				[val addObject:XPINStoNSArray((XPINSArray*)arr->values[i])];
-			}	break;
+				break;
 			default:
 				break;
 		}
@@ -98,18 +101,22 @@ XPINSArray*  XPINSObjCBindings::NStoXPINSArray(NSArray* arr){
 			val->values[i]= &((XPNMatrix*)obj)->matrix;
 			val->types[i]='M';
 		}
+		else if([obj isKindOfClass:[XPNPolynomial class]]){//Matrix
+			val->values[i]= &((XPNPolynomial*)obj)->polynomial;
+			val->types[i]='P';
+		}
 		else if([obj isKindOfClass:[NSString class]]){
 			string str=[((NSString*)obj) cStringUsingEncoding:NSASCIIStringEncoding];
 			val->values[i]=&str;
 			val->types[i]='S';
 		}
 		else if([obj isKindOfClass:[NSArray class]]){
-			val->values[i]=NStoXPINSArray(obj);
+			val->values[i]=NStoXPINSArray((NSArray*)obj);
 			val->types[i]='A';
 		}
 		else{
 			val->values[i]=new objWrapper(obj);
-			val->types[i]='P';
+			val->types[i]='O';
 		}
 	}
 	return val;
@@ -160,6 +167,11 @@ XPINSArray*  XPINSObjCBindings::NStoXPINSArray(NSArray* arr){
 	if(ref)*ref=[NSValue valueWithPointer:val];
 	return [XPNMatrix matrixWithMatrix:*val];
 }
+-(XPNPolynomial*) getPolyArg:(NSValue**)ref{
+	Polynomial* val= ParsePolyArg(*script,',');
+	if(ref)*ref=[NSValue valueWithPointer:val];
+	return [XPNPolynomial polynomialWithPolynomial:*val];
+}
 -(NSString*) getStrArg:(NSValue**)ref{
 	string* val= ParseStrArg(*script,',');
 	if(ref)*ref=[NSValue valueWithPointer:val];
@@ -191,6 +203,10 @@ XPINSArray*  XPINSObjCBindings::NStoXPINSArray(NSArray* arr){
 -(void) setMat:(XPNMatrix*)val Arg:(NSValue*)ref{
 	Matrix* addr=(Matrix*)[ref pointerValue];
 	*addr=val->matrix;
+}
+-(void) setPoly:(XPNPolynomial*)val Arg:(NSValue*)ref{
+	Polynomial* addr=(Polynomial*)[ref pointerValue];
+	*addr=val->polynomial;
 }
 -(void) setStr:(NSString*)val Arg:(NSValue*)ref{
 	string* addr=(string*)[ref pointerValue];

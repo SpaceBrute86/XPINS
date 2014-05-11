@@ -96,7 +96,7 @@ int readInt(XPINSScriptSpace& script,char expectedEnd)//Read an Integer from the
 
 bool* XPINSParser::ParseBoolArg(XPINSScriptSpace& script,char expectedEnd)
 {
-	bool* retVal;
+	bool* retVal=NULL;
 	while (script.index<script.instructions.length()&&script.currentChar()!='$'&&script.currentChar()!='~'&&script.currentChar()!='?'&&script.currentChar()!='#'&&script.currentChar()!='X') ++script.index;//Get to Key Character
 	if (script.index>=script.instructions.length()) return NULL;
 	if(script.matchesString("$B"))//Variable

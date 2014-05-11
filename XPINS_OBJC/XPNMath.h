@@ -35,30 +35,11 @@
 -(XPNVector*)crossProductWithVector:(XPNVector*)vector;
 -(XPNVector*)multiplyWithMatrix:(XPNMatrix*)matrix;
 -(XPNVector*)projectionInDirectionOfVector:(XPNVector*)vector;
+-(double)angleFromVector:(XPNVector*)vector;
 
 @end
 
-/*
- //Accessing Components
- double ValueAtPosition(size_t,size_t);
- void SetValueAtPosition(double,size_t,size_t);
- //Special Matrices
- static Matrix IdentityMatrixOfSize(size_t);
- static Matrix DiagonalMatrixWithValues(std::vector<double>);
- static Matrix RotationMatrixWithAngleAroundVector(Vector,double);
- //Converting Matricies to/from Vectors
- static Vector VectorForMatrix(Matrix);
- static Matrix MatrixForVector(Vector);
- //Matrix Operations
- static Matrix Add(Matrix,Matrix);
- static Matrix Scale(Matrix,double);
- static Matrix Multiply(Matrix,Matrix);
- static Vector MultiplyMatrixVector(Matrix,Vector);
- static Matrix Invert(Matrix);
- static Matrix Transpose(Matrix);
- static double Determinant(Matrix);
- */
-@interface XPNMatrix : NSObject{
+@interface XPNMatrix : NSObject <NSCopying>{
 @public
 	XPINSScriptableMath::Matrix matrix;
 }
@@ -72,10 +53,36 @@
 -(void)setValue:(double)val forRow:(int)row Column:(int)col;
 -(double)getValueForRow:(int)row Column:(int)col;
 //Matrix operations
+-(void)appendMatrix:(XPNMatrix*)mat;
 -(XPNMatrix*)sumWithMatrix:(XPNMatrix*)mat;
 -(XPNMatrix*)scale:(double)scale;
 -(XPNMatrix*)multiplyWithMatrix:(XPNMatrix*)mat;
 -(XPNMatrix*)invert;
 -(double)determinant;
 -(XPNMatrix*)transpose;
+-(XPNMatrix*)rowEchelon;
+-(XPNMatrix*)reducedRowEchelon;
 @end
+
+@interface XPNPolynomial : NSObject <NSCopying>{
+@public
+	XPINSScriptableMath::Polynomial polynomial;
+}
+//Creation
++(XPNPolynomial*) polynomialWithPolynomial:(XPINSScriptableMath::Polynomial)poly;
++(XPNPolynomial*) monomialWithCoefficient:(double)coeff xPower:(int)x yPower:(int)y zPower:(int)z tPower:(int)t;
+//Arithmetic
+-(XPNPolynomial*)sumWithPolynomial:(XPNPolynomial*)poly;
+-(XPNPolynomial*)scale:(double)scale;
+-(XPNPolynomial*)multiplyByPolynomial:(XPNPolynomial*)poly;
+-(XPNPolynomial*)raiseToPower:(int)power;
+-(XPNPolynomial*)compositionWithPolynomial:(XPNPolynomial*)poly forVar:(int) var;
+//Evaluation
+-(double)evaluationWithX:(double)x Y:(double)y Z:(double)z T:(double)t;
+-(XPNPolynomial*)partialEvaluationWithValue:(double)val forVar:(int) var;
+//Calculus
+-(XPNPolynomial*)derivativeForVar:(int)var;
+-(XPNPolynomial*)integralForVar:(int)var;
+
+@end
+
