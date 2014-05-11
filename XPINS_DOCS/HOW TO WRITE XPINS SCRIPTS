@@ -95,7 +95,11 @@ An expression always starts and ends with a '?'. At the beginning of the express
 	/  : Vector-Scalar Division (V):(V),(V),(N)
 	/  : Matrix-Matrix Division (M):(M),(N)
 	%  : Modulus (I):(I),(I)
-	^  : Power (N):(N):(N)
+	^  : Power (N):(N),(N)
+	^  : Polynomial Power (P):(P),(N)
+	&  : Polynomial Composition (P):(P),(P)
+	&  : Polynomial Single Variable Evaluation (P):(P),(N),(N) //Variable value, Variable index
+	&  : Polynomial All Variable Evaluation (P):(P),(N),...
 	<  : Less than (B):(N),(N)
 	<= : less than or equal (B):(N),(N)
 	>  : Greater than (B):(N),(N)
@@ -126,7 +130,7 @@ Once you have declared the data members for your bindings object, you must decla
 If you want to write a function that takes a VEC or MAT variable as a parameter, it will be passed as an object of type XPINSScriptableMath::Vector or XPINSScriptableMath::Matrix, respectively. BOOL, INT, and FLOAT will be passed as their C/C++ cousins. For *___ (generic pointer type), you must write the function to receive a void* pointer. You can then extract the desired value:
 MyType *var=(MyType*)arg1;
 If your function returns a custom type, it must be returned as a void* pointer. By default XPINS will not memory manage this for you and you must free the object later to avoid a leak. If you want XPINS to memory manage this for you (i.e. delete it when the script is done executing), add the following line of code (My var is the pointer to the object):
-this->toDelete.push_back(myVar);
+script.toDelete.push_back(myVar);
 
 
 In order know when to call your scripted functions, you must override BindFunction. In XPINSLocalBindings it looks like this:
@@ -172,15 +176,16 @@ ___ arg__=*argP__;
 
 
 Finally, the most important part: calling your functions. This actually is only two lines of code (per function), and it goes right after the code for Finding the arguments:
-___ val=f__(...);
+___ val=;
 //Reassign any Pass-By-Reference arguments
-return &retVal;
+return new ___(val);
 -the first blank is the type that you're function returns
 -the second blank is the number for the function (e.g. if it is the first function declared, then f1)
 -the "..." is the arguments for the functions (the arg_ variables you created earlier):
-the & should be left in even if your function returns a pointer.
+-the final blank should be the same as the first blank
 So if I have function F11 that takes two arguments and returns a bool:
-*returnVal=f11(arg1,arg2);
+bool val=f11(arg1,arg2);
+return new bool(val);
 
 NOTE: For help with Function Binding, look at the Built In Function implementaitons in XPINSBuiltIn.cpp. Built in Functions are processed almost the same way that your functions are (however many of those function calls are replaced with operators).
 

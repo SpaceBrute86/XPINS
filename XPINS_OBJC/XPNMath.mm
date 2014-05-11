@@ -29,34 +29,37 @@
 }
 //Coordinates
 -(double)getX{
-	double x,y,z;
-	self->vector.RectCoords(&x, &y, &z);
+	double x;
+	self->vector.RectCoords(&x, NULL, NULL);
 	return x;
 }
 -(double)getY{
-	double x,y,z;
-	self->vector.RectCoords(&x, &y, &z);
+	double y;
+	self->vector.RectCoords(NULL, &y, NULL);
 	return y;
 }
 -(double)getZ{
-	double x,y,z;
-	self->vector.RectCoords(&x, &y, &z);
+	double z;
+	self->vector.RectCoords( NULL,  NULL, &z);
 	return z;
 }
 -(double)getR{
-	double r,t,z;
-	self->vector.PolarCoords(&r, &t, &z);
+	double r;
+	self->vector.PolarCoords(&r,  NULL,  NULL);
 	return r;
 }
 -(double)getMagnitude{
 	return self->vector.Magnitude();
 }
 -(double)getTheta{
-	return self->vector.Direction();
+	double t;
+	self->vector.SphericalCoords(NULL, &t, NULL);
+	return t;
 }
 -(double)getPHI{
-	return self->vector.Altitude();
-
+	double p;
+	self->vector.SphericalCoords(NULL, NULL, &p);
+	return p;
 }
 //Manipulations
 -(XPNVector*)sumWithVector:(XPNVector*)vec{
@@ -72,7 +75,9 @@
 	return [XPNVector vectorWithVector:(XPINSScriptableMath::Vector::CrossProduct(self->vector, vec->vector))];
 }
 -(XPNVector*)projectionInDirectionOfVector:(XPNVector*)vec{
-	return [XPNVector vectorWithVector:(XPINSScriptableMath::Vector::ProjectionInDirection(self->vector, vec->vector.Direction(),vec->vector.Altitude()))];
+	double a,b;
+	vec->vector.SphericalCoords(NULL, &a, &b);
+	return [XPNVector vectorWithVector:(XPINSScriptableMath::Vector::ProjectionInDirection(self->vector, a,b))];
 }
 
 @end

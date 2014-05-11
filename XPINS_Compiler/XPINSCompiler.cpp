@@ -196,12 +196,16 @@ string renameFuncBlock(string input, string intermediate1, int modNum, int block
 			case 'm':
 				functionType='M';
 				break;
+			case 'P':
+			case 'p':
+				functionType='P';
+				break;
 			case 'S':
 			case 's':
 				functionType='S';
 				break;
 			case '*':
-				functionType='P';
+				functionType='O';
 				break;
 			case 'A':
 				functionType='A';
@@ -373,13 +377,15 @@ bool XPINSCompiler::renameVars(string &text){
 	int xs=0;
 	int xp=0;
 	int xa=0;
-	char varType='P';
+	int xo=0;
+
+	char varType='O';
 	while(i<intermediate1.length()&&(intermediate1[i]!='@'||intermediate1[i+1]!='E')){
 		while (i<intermediate1.length()&&intermediate1[i++]!='\n');
-		if(intermediate1[i]=='B'||intermediate1[i]=='N'||intermediate1[i]=='V'||intermediate1[i]=='M'||intermediate1[i]=='S'||intermediate1[i]=='*'||intermediate1[i]=='M')
+		if(intermediate1[i]=='B'||intermediate1[i]=='N'||intermediate1[i]=='V'||intermediate1[i]=='M'||intermediate1[i]=='S'||intermediate1[i]=='P'||intermediate1[i]=='*'||intermediate1[i]=='A')
 		{
 			//determine new variable name
-			varType=intermediate1[i]=='*'?'P':intermediate1[i];
+			varType=intermediate1[i]=='*'?'O':intermediate1[i];
 			int varNum=0;
 			switch (varType) {
 				case 'B':
@@ -399,6 +405,9 @@ bool XPINSCompiler::renameVars(string &text){
 					break;
 				case 'P':
 					varNum=xp++;
+					break;
+				case 'O':
+					varNum=xo++;
 					break;
 				case 'A':
 					varNum=xa++;
@@ -470,8 +479,9 @@ bool XPINSCompiler::renameVars(string &text){
 	varSizes+='N'+XPINSCompileUtil::strRepresentationOfInt(xn)+' ';
 	varSizes+='V'+XPINSCompileUtil::strRepresentationOfInt(xv)+' ';
 	varSizes+='M'+XPINSCompileUtil::strRepresentationOfInt(xm)+' ';
-	varSizes+='S'+XPINSCompileUtil::strRepresentationOfInt(xs)+' ';
 	varSizes+='P'+XPINSCompileUtil::strRepresentationOfInt(xp)+' ';
+	varSizes+='S'+XPINSCompileUtil::strRepresentationOfInt(xs)+' ';
+	varSizes+='O'+XPINSCompileUtil::strRepresentationOfInt(xo)+' ';
 	varSizes+='A'+XPINSCompileUtil::strRepresentationOfInt(xa)+' ';
 	intermediate2+=varSizes+'\n';
 	while (i<intermediate1.length()) intermediate2+=intermediate1[i++];
@@ -515,14 +525,21 @@ bool XPINSCompiler::checkConstants(string& input)
 		}
 		//If it is a character that could be followed by an input
 		if(input[i]=='('||input[i]=='='||input[i]==','||input[i]=='['||(input[i]=='{'&&input[i-1]=='~')||input[i]=='<'||//typical operations
-		   input[i]=='|'||input[i]=='&'||input[i]=='>'||input[i]=='!'||input[i]=='+'||input[i]=='-'||input[i]=='*'||input[i]=='/'||input[i]=='%')//Expression Specific
+		   input[i]=='|'||input[i]=='&'||input[i]=='>'||input[i]=='!'||input[i]=='+'||input[i]=='-'||input[i]=='*'||input[i]=='/'||input[i]=='^'||input[i]==':'||input[i]=='%')//Expression Specific
 			
 		{
 			while (input[i+1]==' ')++i;
-			if(input[i+1]!='$'&&input[i+1]!='#'&&input[i+1]!='?'&&input[i+1]!='X'&&input[i+1]!='~'
-			   &&input[i+1]!='='&&input[i+1]!='+'&&input[i+1]!='-'&&input[i+1]!=')'
-			   &&(input[i-1]!='R'||input[i]!='[')&&input[i+1]!='\n')
+			if(input[i+1]!='$'&&input[i+1]!='#'&&input[i+1]!='?'&&input[i+1]!='X'&&input[i+1]!='~'&&
+			   input[i+1]!='='&&input[i+1]!='+'&&(input[i+1]!='-'||input[i]!='-')&&input[i+1]!=')'
+			   &&(input[i-1]!='R'||input[i]!='[')&&input[i+1]!='\n'
+			   &&(output[output.length()-2]!='~'||output[output.length()-1]=='('||output[output.length()-1]=='{'||output[output.length()-1]=='['||output[output.length()-1]=='<')){
 				output+='~';
+				/*if(input[i]=='-'){
+					output+='-';
+					output+=input[++i];
+					i+=2;
+				}*/
+			}
 		}
 	}
 	input=output;
@@ -550,70 +567,55 @@ bool XPINSCompiler::cleanUp(string &text){
 }
 //UTILTY FUNCTIONS
 string XPINSCompileUtil::nameForBuiltin(string name){
-	if(name.compare("AND")==0)return "B0";
-	if(name.compare("OR")==0)return "B1";
-	if(name.compare("NOT")==0)return "B2";
-	if(name.compare("LESS")==0)return "B3";
-	if(name.compare("MORE")==0)return "B4";
-	if(name.compare("EQUAL")==0)return "B5";
-	
-	if(name.compare("ADD")==0)return "N0";
-	if(name.compare("SUB")==0)return "N1";
-	if(name.compare("MULT")==0)return "N2";
-	if(name.compare("DIV")==0)return "N3";
-	if(name.compare("TSIN")==0)return "N4";
-	if(name.compare("TCOS")==0)return "N5";
-	if(name.compare("TTAN")==0)return "N6";
-	if(name.compare("TATAN")==0)return "N7";
-	if(name.compare("POW")==0)return "N8";
-	if(name.compare("VADDPOLAR")==0)return "N9";
-	if(name.compare("VDIST")==0)return "N10";
-	if(name.compare("VX")==0)return "N11";
-	if(name.compare("VY")==0)return "N12";
-	if(name.compare("VZ")==0)return "N13";
-	if(name.compare("VR")==0)return "N14";
-	if(name.compare("VTHETA")==0)return "N15";
-	if(name.compare("VRHO")==0)return "N16";
-	if(name.compare("VPHI")==0)return "N17";
-	if(name.compare("VDOT")==0)return "N18";
-	if(name.compare("VANG")==0)return "N19";
-	if(name.compare("MGET")==0)return "N20";
-	if(name.compare("MDET")==0)return "N21";
-	if(name.compare("MOD")==0)return "N22";
-	if(name.compare("LN")==0)return "N23";
-	if(name.compare("LOG")==0)return "N24";
-	if(name.compare("ABS")==0)return "N25";
-	if(name.compare("FLOOR")==0)return "N26";
-	if(name.compare("PRAND")==0)return "N27";
-	if(name.compare("PBERN")==0)return "N28";
-	if(name.compare("PNORMAL")==0)return "N29";
-	if(name.compare("PEXP")==0)return "N30";
-	if(name.compare("PPOISSON")==0)return "N31";
+	if(name.compare("TSIN")==0)return "N1";
+	if(name.compare("TCOS")==0)return "N2";
+	if(name.compare("TTAN")==0)return "N3";
+	if(name.compare("TASIN")==0)return "N4";
+	if(name.compare("TACOS")==0)return "N5";
+	if(name.compare("TATAN")==0)return "N6";
+	if(name.compare("SQRT")==0)return "N7";
+	if(name.compare("LN")==0)return "N8";
+	if(name.compare("LOG")==0)return "N9";
+	if(name.compare("ABS")==0)return "N10";
+	if(name.compare("FLOOR")==0)return "N11";
+	if(name.compare("VADDPOLAR")==0)return "N12";
+	if(name.compare("VDIST")==0)return "N13";
+	if(name.compare("VX")==0)return "N14";
+	if(name.compare("VY")==0)return "N15";
+	if(name.compare("VZ")==0)return "N16";
+	if(name.compare("VR")==0)return "N17";
+	if(name.compare("VTHETA")==0)return "N18";
+	if(name.compare("VRHO")==0)return "N19";
+	if(name.compare("VPHI")==0)return "N20";
+	if(name.compare("VANG")==0)return "N21";
+	if(name.compare("MGET")==0)return "N22";
+	if(name.compare("MDET")==0)return "N23";
+		if(name.compare("PRAND")==0)return "N24";
+	if(name.compare("PBERN")==0)return "N25";
+	if(name.compare("PNORMAL")==0)return "N26";
+	if(name.compare("PEXP")==0)return "N27";
+	if(name.compare("PPOISSON")==0)return "N28";
+	if(name.compare("PCOIN")==0)return "N29";
+	if(name.compare("PDICE")==0)return "N30";
 
-	if(name.compare("VREC")==0)return "V0";
-	if(name.compare("VPOL")==0)return "V1";
-	if(name.compare("VSHPERE")==0)return "V2";
-	if(name.compare("VADD")==0)return "V3";
-	if(name.compare("VSUB")==0)return "V4";
-	if(name.compare("VSCALE")==0)return "V5";
-	if(name.compare("VPROJ")==0)return "V6";
-	if(name.compare("VCROSS")==0)return "V7";
-	if(name.compare("MMTV")==0)return "V8";
-	if(name.compare("MVMULT")==0)return "V9";
+	if(name.compare("VREC")==0)return "V1";
+	if(name.compare("VPOL")==0)return "V2";
+	if(name.compare("VSHPERE")==0)return "V3";
+	if(name.compare("VPROJ")==0)return "V4";
+	if(name.compare("MMTV")==0)return "V5";
 	
-	if(name.compare("MMAKE")==0)return "M0";
-	if(name.compare("MID")==0)return "M1";
-	if(name.compare("MROT")==0)return "M2";
-	if(name.compare("MADD")==0)return "M3";
-	if(name.compare("MSUB")==0)return "M4";
-	if(name.compare("MSCALE")==0)return "M5";
-	if(name.compare("MMULT")==0)return "M6";
-	if(name.compare("MINV")==0)return "M7";
-	if(name.compare("MTRANS")==0)return "M8";
-	if(name.compare("MVTM")==0)return "M9";
+	if(name.compare("MMAKE")==0)return "M1";
+	if(name.compare("MID")==0)return "M2";
+	if(name.compare("MROT")==0)return "M3";
+	if(name.compare("MINV")==0)return "M4";
+	if(name.compare("MTRANS")==0)return "M5";
+	if(name.compare("MVTM")==0)return "M6";
 	
-	if(name.compare("PRINT")==0)return "_0";
-	if(name.compare("MSET")==0)return "_1";
+	if(name.compare("ADERIVE")==0)return "P1";
+	if(name.compare("AINTEGRATE")==0)return "P2";
+
+	if(name.compare("PRINT")==0)return "_1";
+	if(name.compare("MSET")==0)return "_2";
 	
 	return "_"+name;
 }

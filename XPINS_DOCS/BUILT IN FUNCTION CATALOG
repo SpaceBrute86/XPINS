@@ -10,87 +10,6 @@ X_PRINT(STR $A)
 	Arguments: the string you want to display
 	Return: NONE
 
-BOOLEAN LOGIC
-
-X_AND(BOOL $A,BOOL $B)
-	Available in XPINS Parser: 0.2.0
-	Description: Evaultes the statement A AND B
-	Arguments: The booleans to be tested for AND
-	Return: BOOL, returns true if and only if both A and B are true.
-
-X_OR(BOOL $A,BOOL $B)
-	Available in XPINS Parser: 0.2.0
-	Description: Evaultes the statement A OR B
-	Arguments: The booleans to be tested for OR
-	Return: BOOL, returns true if either A or B is true.
-
-X_NOT(BOOL $A)
-	Available in XPINS Parser: 0.2.0
-	Description: Evaultes the statement NOT A
-	Arguments: The booleans to be inverted
-	Return: BOOL, returns true if and only if A is false
-					
-
-
-
-NUMBER COMPARISON
-
-X_LESS(NUM $A,NUM $B)
-	Available in XPINS Parser: 0.2.0
-	Description: Evaultes the expression A<B
-	Arguments: The NUMs to be compared
-	Return: BOOL, returns true if A is less than B
-	
-X_MORE(NUM $A,NUM $B)
-	Available in XPINS Parser: 0.2.0
-	Description: Evaultes the expression A>B
-	Arguments: The NUMs to be compared
-	Return: BOOL, returns true if A is greater than B
-
-	
-X_EQUAL(NUM $A,NUM $B)
-	Available in XPINS Parser: 0.2.0
-	Description: Evaultes the expression A==B
-	Arguments: The NUMs to be compared
-	Return: BOOL, returns true if A is equal to B
-						
-
-
-
-ARITHMETIC
-
-X_ADD(NUM $A, NUM $B)
-	Available in XPINS Parser: 0.2.0
-	Description: Evaultes the expression A+B
-	Arguments: The NUMs to be added
-	Return: NUM, returns the sum of A and B
-	
-X_SUB(NUM $A, NUM $B)
-	Available in XPINS Parser: 0.2.0
-	Description: Evaultes the expression A-B
-	Arguments: The NUMs to be subtracted
-	Return: NUM, returns the difference of A and B
-
-X_MULT(NUM $A, NUM $B)
-	Available in XPINS Parser: 0.2.0
-	Description: Evaultes the expression A*B
-	Arguments: The NUMs to be multiplied
-	Return: NUM, returns the product of A and B
-
-X_DIV(NUM $A, NUM $B)
-	Available in XPINS Parser: 0.2.0
-	Description: Evaultes the expression A/B
-	Arguments: The NUMs to be divided
-	Return: NUM, returns the quotient of A and B
-					
-X_MOD(NUM $A, NUM $B)
-	Available in XPINS Parser: 0.4.0
-	Description: Evaultes the expression A%B
-	Arguments: The NUMs to be modulated
-	Return: NUM, returns the modulus of A and B
-
-
-
 TRIGONOMETRY
 
 X_TSIN(NUM $A)
@@ -124,21 +43,25 @@ X_VADDPOLAR(NUM $A, NUM $B)
 	Return: NUM, returns the modified sum of A and B
 					
 
+MISCILLANEOUS SCALAR MATH OPERATIONS
 
+X_SQRT(NUM $A)
+	Available in XPINS Parser: 0.10.0
+	Description: Finds Square Root of A
+	Arguments: The NUM to take the square root of.
+	Return: NUM, returns the square root value of A.
 
-OTHER SCALAR MATH OPERATIONS
-
-X_POW(NUM $A, NUM $B)
-	Available in XPINS Parser: 0.2.0
-	Description: Evaluates A^B
-	Arguments: NUMs representing the base and exponent, respectively
-	Return: NUM, returns the result of the power exrpession
-	
 X_ABS(NUM $A)
 	Available in XPINS Parser: 0.10.0
-	Description: Finds Absolute A
+	Description: Finds Absolute value of A
 	Arguments: The NUM to take the absolute of.
 	Return: NUM, returns the absolute value of A.
+
+X_FLOOR(NUM $A)
+	Available in XPINS Parser: 0.10.0
+	Description: Floors a number to make it an integer
+	Arguments: A is the number you would like to floor
+	Return: NUM, returns the result of the floorign
 
 X_LN(NUM $A)
 	Available in XPINS Parser: 0.10.0
@@ -151,12 +74,6 @@ X_LOG(NUM $A, NUM $B)
 	Description: Evaluates log base B of A
 	Arguments: A is the value and B is the Base.
 	Return: NUM, returns the result of the logarithm
-	
-X_FLOOR(NUM $A)
-	Available in XPINS Parser: 0.10.0
-	Description: Floors a number to make it an integer
-	Arguments: A is the number you would like to floor
-	Return: NUM, returns the result of the floorign
 
 X_VDIST(NUM $A, NUM $B, NUM $C)
 	Available in XPINS Parser: 0.2.0
@@ -187,7 +104,7 @@ X_VSPHERE(NUM $A, NUM $B, NUM $C)
 	Return: VEC, returns a new vector with the given components
 
 
-READING VECTORS
+READING VECTOR COMPONENTS
 
 X_VX(VEC $A)
 	Available in XPINS Parser: 0.2.0
@@ -235,48 +152,17 @@ X_VPHI(VEC $A)
 
 VECTOR OPERATIONS
 
+X_VPROJ(VEC $A, NUM $B)
+	Available in XPINS Parser: 0.3.0
+	Description: Finds the projection of a vector onto a generic vector in a given direction
+	Arguments: The vector from whihc the projection is to be taken, and the direction of the result.
+	Return: VEC, returns the projection of A onto a vector in direction.	Return: VEC, returns a vector in the same direction as A with the magnitude multiplied by B
 
 X_VANG(VEC $A, VEC$B)
 	Available in XPINS Parser: 0.2.0
 	Description: Finds the angle between two vectors
 	Arguments: The vectors for which you want to find the angle between
 	Return: NUM, returns the Angle between the Vectors
-
-X_VADD(VEC $A, VEC $B)
-	Available in XPINS Parser: 0.2.0
-	Description: Adds two vectors
-	Arguments: The vectors to be added
-	Return: VEC, returns the sum of the two vectors
-	
-X_VSUB(VEC $A, VEC $B)
-	Available in XPINS Parser: 0.2.0
-	Description: Subtracts two vectors
-	Arguments: The vectors to be subtracted
-	Return: VEC, returns the difference of the two vectors
-	
-X_VSCALE(VEC $A, NUM $B)
-	Available in XPINS Parser: 0.2.0
-	Description: Scales a vector
-	Arguments: The vector to be scaled, and the NUM by which to scale it
-	
-X_VDOT(VEC $A, VEC $B)
-	Available in XPINS Parser: 0.3.0
-	Description: Finds the dot product of two vectors
-	Arguments: The vectors for which the dot product will be found
-	Return: NUM, returns A dot B.
-
-X_VCROSS(VEC $A, VEC $B)
-	Available in XPINS Parser: 0.8.0
-	Description: Finds the cross product of two vectors
-	Arguments: The vectors for which the cross product will be found
-	Return: VEC, returns A cross B.
-
-X_VPROJ(VEC $A, NUM $B)
-	Available in XPINS Parser: 0.3.0
-	Description: Finds the projection of a vector onto a generic vector in a given direction
-	Arguments: The vector from whihc the projection is to be taken, and the direction of the result.
-	Return: VEC, returns the projection of A onto a vector in direction.	Return: VEC, returns a vector in the same direction as A with the magnitude multiplied by B
-	
 	
 MATRIX CREATION
 
@@ -329,41 +215,8 @@ X_MVTM(VEC $A)
 	Arguments: The Vector to be converted
 	Return: MAT, Matrix from Vector A
 	
-	
-MATRIX ARITHMETIC
-
-X_MADD(MAT $A, MAT $B)
-	Available in XPINS Parser: 0.9.0
-	Description: Adds two Matrices
-	Arguments: The Matrices to be added
-	Return: MAT, Sum of the two Matrices
-	
-X_MSUB(MAT $A, MAT $B)
-	Available in XPINS Parser: 0.9.0
-	Description: Subtracts two Matrices
-	Arguments: The Matrices to be subtracted
-	Return: MAT, Difference of the two Matrices
-	
-X_MSCALE(MAT $A, NUM $B)
-	Available in XPINS Parser: 0.9.0
-	Description: Multiplies a Matrix by a scalar
-	Arguments: The Matrix and the Scalar
-	Return: MAT, Product of a Scalar and  a Matrix
-
-X_MMULT(MAT $A, MAT $B)
-	Available in XPINS Parser: 0.9.0
-	Description: Multiplies two Matrices
-	Arguments: The Matrices to be multiplied
-	Return: MAT, product of the two Matrices
-
-X_MVMULT(MAT $A, VEC $B)
-	Available in XPINS Parser: 0.9.0
-	Description: Multiplies a Matrix and a Vector
-	Arguments: The Matrix and Vector to be multiplied
-	Return: VEC, product of the Matrix and the Vector
-	
-
-ADVANCED MATRIX OPERATIONS
+	 
+MATRIX OPERATIONS
 
 X_MDET(MAT $A)
 	Available in XPINS Parser: 0.9.0
@@ -416,15 +269,4 @@ X_PPOISSON(NUM $A)
 	Description: Generates a random number from an Poisson Random Variable
 	Arguments: A is the Parameter
 	Return: NUM, the Random Number
-	
-
-	
-	
-	
-	
-	
-	
-	
-	
-
 	
