@@ -82,28 +82,6 @@ X_VDIST(NUM $A, NUM $B, NUM $C)
 	Return: NUM, returns sqrt(x^2+y^2+z^2);
 
 
-
-VECTOR CREATION
-
-X_VREC(NUM $A, NUM $B, NUM $C)
-	Available in XPINS Parser: 0.2.0
-	Description: Creates a vector using rectangular components
-	Arguments: NUMs representing the X, Y, and Z components, respectively
-	Return: VEC, returns a new vector with the given components
-	
-X_VPOL(NUM $A, NUM $B, NUM $C)
-	Available in XPINS Parser: 0.2.0
-	Description: Creates a vector using polar components
-	Arguments: NUMs representing the R, THETA, and Z components, respectively
-	Return: VEC, returns a new vector with the given components
-	
-X_VSPHERE(NUM $A, NUM $B, NUM $C)
-	Available in XPINS Parser: 0.2.0
-	Description: Creates a vector using polar components
-	Arguments: NUMs representing the RHO, THETA, and PHI components, respectively
-	Return: VEC, returns a new vector with the given components
-
-
 READING VECTOR COMPONENTS
 
 X_VX(VEC $A)
@@ -157,6 +135,13 @@ X_VPROJ(VEC $A, NUM $B)
 	Description: Finds the projection of a vector onto a generic vector in a given direction
 	Arguments: The vector from whihc the projection is to be taken, and the direction of the result.
 	Return: VEC, returns the projection of A onto a vector in direction.	Return: VEC, returns a vector in the same direction as A with the magnitude multiplied by B
+	
+X_VUNIT(VEC $A)
+	Available in XPINS Parser: 0.11.0
+	Description: Finds the unit vector for a given vector
+	Arguments: The vector from whihc the projection is to be taken, and the direction of the result.
+	Return: VEC, returns the projection of A onto a vector in direction.	Return: VEC, returns a vector in the same direction as A with the magnitude multiplied by B
+
 
 X_VANG(VEC $A, VEC$B)
 	Available in XPINS Parser: 0.2.0
@@ -270,3 +255,77 @@ X_PPOISSON(NUM $A)
 	Arguments: A is the Parameter
 	Return: NUM, the Random Number
 	
+
+PROBABILITY: EXPERIMENTS:
+
+X_PCOIN(NUM $A, NUM $B)
+	Available in XPINS Parser: 0.11.0
+	Description: Simulates flipping B coins of bias A
+	Arguments: A is the probability of heads for a given flip. B is the number of flips.
+	Return: NUM, total number of heads
+
+X_PDICE(NUM $A, NUM $B)
+	Available in XPINS Parser: 0.11.0
+	Description: Rolls B A-sided fair dice
+	Arguments: A is the number of sides, B is the number of rolls.
+	Return: NUM, returns a random number between A and B
+
+
+PROBABILITY: MARKOV CHAINS:
+
+X_PMSIM(MAT $A, NUM $B, NUM $C)
+	Available in XPINS Parser: 0.11.0
+	Description: Simulates Markov Chain A for B steps starting in state C
+	Arguments: A is the transition probability Matrix (column in row out), B is the number of steps, C is the starting state
+	Return: NUM, a random stage weighted on probability of being in that state after B steps
+
+X_PMPROB(MAT $A, NUM $B, NUM $C, NUM $D)
+	Available in XPINS Parser: 0.11.0
+	Description: Calculates B-Step transition Probability
+	Arguments: A is the transition probability Matrix, B is the number of steps, C is the starting state, D is the end State
+	Return: NUM, probability fo being in state D after B steps.
+	
+X_PMSTEADYSTATE(MAT $A, NUM $B)
+	Available in XPINS Parser: 0.11.0
+	Description: Calculates Steady-State Probability
+	Arguments: A is the transition probability Matrix, B is the state
+	Return: NUM, probability fo being in state B after a long time.
+
+X_PMREACHABLE(MAT $A, NUM $B, NUM $C)
+	Available in XPINS Parser: 0.11.0
+	Description: Can state B be reached from state C
+	Arguments: A is the transition probability Matrix, B is the final state, C is the initial stae
+	Return: BOOL, TRUE if and only if state B can be arrived at given initial state C
+
+X_PMABSORBPROB(MAT $A, NUM $B, NUM $C)
+	Available in XPINS Parser: 0.11.0
+	Description: Calculates Steady-State Probability given initial state C
+	Arguments: A is the transition probability Matrix, B is the absorbing state, C is the initial stae
+	Return: NUM, probability fo being in state B after a long time.
+
+X_PMABSORBTIME(MAT $A, NUM $B, NUM $C)
+	Available in XPINS Parser: 0.11.0
+	Description: Calculates Expected Absorbtion time for State B
+	Arguments: A is the transition probability Matrix, B is the absorbing state, C is the initial stae
+	Return: NUM, Expected time to reach state B from state C.
+	
+X_PMABSORBSIM(MAT $A, NUM $B, NUM $C)
+	Available in XPINS Parser: 0.11.0
+	Description: Simulates Absorbtion time for State B
+	Arguments: A is the transition probability Matrix, B is the absorbing state, C is the initial stae
+	Return: NUM, A possible time to reach state B from state C.
+
+
+POLYNOMIALS: CALCULUS
+
+X_ADERIVE(POLY $A,NUM $B)
+	Available in XPINS Parser: 0.11.0
+	Description: Takes the derivative of A with respect to the variable at index B;
+	Arguments: A is the Polynomial, B is the index of the Variable
+	Return: POLY, the Derivative
+	
+X_AINTEGRATE(POLY $A)
+	Available in XPINS Parser: 0.11.0
+	Description: Finds the Integral of A with respect to the variable at index B;
+	Arguments: A is the Polynomial, B is the index of the Variable
+	Return: POLY, the Indefinite Integaral

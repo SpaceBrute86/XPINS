@@ -103,12 +103,12 @@ double XPINSScriptableMath::Probability::SteadyStateProbability(Matrix chain, in
 	Matrix solution=Matrix::ReducedRowEchelon(system);
 	return solution.ValueAtPosition(state, solution.GetCols()-1);
 }
-double XPINSScriptableMath::Probability::AbosorbtionProbability(Matrix chain, int state,int start)
+double XPINSScriptableMath::Probability::AbsorbtionProbability(Matrix chain, int state,int start)
 {
 	Matrix markov=Subchain(chain, state, start,false);
 	return SteadyStateProbability(markov, state);
 }
-double XPINSScriptableMath::Probability::AbosorbtionTime(Matrix chain, int state,int start)
+double XPINSScriptableMath::Probability::AbsorbtionTime(Matrix chain, int state,int start)
 {
 	Matrix markov=Subchain(chain, state, start,true);
 	Matrix constants=Matrix(markov.GetRows(), 1,1.0);
@@ -116,7 +116,7 @@ double XPINSScriptableMath::Probability::AbosorbtionTime(Matrix chain, int state
 	Matrix solution=Matrix::ReducedRowEchelon(system);
 	return solution.ValueAtPosition(state, solution.GetCols()-1);
 }
-int XPINSScriptableMath::Probability::SimulateAbosorbtionTime(Matrix chain, int state,int start)
+int XPINSScriptableMath::Probability::SimulateAbsorbtionTime(Matrix chain, int state,int start)
 {
 	Matrix markov=Subchain(chain, state, start,true);
 	int time=0;
@@ -578,6 +578,7 @@ Matrix Matrix::Invert(Matrix a)
 					mb->values[swapRow*mb->cols+j]=temp;
 				}
 			}
+			else return Matrix(ma.rows,ma.cols);
 		}
 		if(ma.values[i*ma.cols+i]!=0)
 		{

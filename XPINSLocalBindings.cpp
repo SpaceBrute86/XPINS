@@ -31,6 +31,15 @@ void* XPINSLocalBindings::BindFunction(int fNum,XPINSParser::XPINSScriptSpace& s
 		case 2:{
 			cout<<endl;
 		}break;
+		case 3:{
+			XPINSScriptableMath::Matrix m=*XPINSParser::ParseMatArg(script, ',');
+			for (int i=0; i<m.GetRows(); ++i) {
+				for (int j=0; j<m.GetCols(); ++j) {
+					cout<<m.ValueAtPosition(i, j)<<"\t\t";
+				}
+				cout<<'\n';
+			}
+		}break;
 	}
 	return NULL;
 }

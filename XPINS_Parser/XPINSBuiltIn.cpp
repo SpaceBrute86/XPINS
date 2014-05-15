@@ -29,7 +29,7 @@ enum resType{
 opCode FindOp(XPINSScriptSpace sc, bool* assign,resType type)
 {
 	XPINSScriptSpace script=sc;
-	for (; true; ++script.index) {
+	for (; script.index<script.instructions.length(); ++script.index) {
 		if(script.currentChar()=='(')
 		{
 			for (int i=1; i>0;) {
@@ -41,7 +41,8 @@ opCode FindOp(XPINSScriptSpace sc, bool* assign,resType type)
 			}
 			++script.index;
 		}
-		switch (script.currentChar()) {
+		char ch=script.currentChar();
+		switch (ch) {
 				case '|':
 					if(type==BOOL)return OR;
 					break;
@@ -220,7 +221,8 @@ double XPINSBuiltIn::ParseNumExp(XPINSScriptSpace& script){
 			{
 				double* var=ParseNumArg(script,'*');
 				double result=*var;
-				result*=*ParseNumArg(script,')');
+				double a=*ParseNumArg(script,')');
+				result*=a;
 				if(assign) *var=result;
 				return result;
 			}
@@ -360,11 +362,15 @@ Matrix XPINSBuiltIn::ParseMatExp(XPINSScriptSpace& script){
 		{
 			Matrix* var=ParseMatArg(script,'*');
 			Matrix result=*var;
-			if(script.instructions[script.index+2]=='M'||script.instructions[script.index+2]=='[')//Cross Product
+			if(script.instructions[script.index+2]=='M'||script.instructions[script.index+2]=='[')//Matrix-Matrix
 			{
-				result=result* *ParseMatArg(script, ')');
+				result=result * *ParseMatArg(script, ')');
 			}
-			else result*=*ParseNumArg(script,')');
+			else
+			{
+				double a=*ParseNumArg(script,')');
+				result*=a;
+			}
 			if(assign) *var=result;
 			return result;
 			
@@ -454,6 +460,13 @@ Polynomial XPINSBuiltIn::ParsePolyExp(XPINSScriptSpace& script){
 bool XPINSBuiltIn::ParseBoolBIF(int fNum, XPINSScriptSpace& script)
 {
 	switch (fNum) {
+		case 1://X_PMREACHABLE
+		{
+			Matrix arg1=*ParseMatArg(script, ',');
+			double arg2=*ParseNumArg(script, ',');
+			double arg3=*ParseNumArg(script, ',');
+			return Probability::Reachable(arg1, arg2, arg3);
+		}
 		default: return false;
 	}
 }
@@ -638,16 +651,50 @@ double XPINSBuiltIn::ParseNumBIF(int fNum, XPINSScriptSpace& script)
 			double arg2=*ParseNumArg(script, ')');
 			return Probability::FairDiceRoll(arg1, arg2);
 		}
-		case 34://X_AEVAL
+		case 31://X_PMSIM
 		{
-			Polynomial poly=*ParsePolyArg(script, ',');
-			vector<double>args=vector<double>();
-			for (int i=0;script.currentChar()==','; ++i) {
-				args.resize(i+1);
-				double arg=*ParseNumArg(script, ',');
-				args[i]=arg;
-			}
-			return poly.Evaluate(args);
+			Matrix arg1=*ParseMatArg(script, ',');
+			double arg2=*ParseNumArg(script, ',');
+			double arg3=*ParseNumArg(script, ',');
+			return Probability::SimulateMarkovChain(arg1, arg2, arg3);
+		}
+		case 32://X_PMPROB
+		{
+			Matrix arg1=*ParseMatArg(script, ',');
+			double arg2=*ParseNumArg(script, ',');
+			double arg3=*ParseNumArg(script, ',');
+			double arg4=*ParseNumArg(script, ',');
+			return Probability::TransitionProbability(arg1, arg2, arg3, arg4);
+		}
+		case 33://X_PMSTEADYSTATE
+		{
+			Matrix arg1=*ParseMatArg(script, ',');
+			double arg2=*ParseNumArg(script, ',');
+			double arg3=*ParseNumArg(script, ',');
+			return Probability::SteadyStateProbability(arg1, arg2);
+
+		}
+		case 34://X_PMABSORBPROB
+		{
+			Matrix arg1=*ParseMatArg(script, ',');
+			double arg2=*ParseNumArg(script, ',');
+			double arg3=*ParseNumArg(script, ',');
+			return Probability::AbsorbtionProbability(arg1, arg2, arg3);
+
+		}
+		case 35://X_PMABSORBTIME
+		{
+			Matrix arg1=*ParseMatArg(script, ',');
+			double arg2=*ParseNumArg(script, ',');
+			double arg3=*ParseNumArg(script, ',');
+			return Probability::AbsorbtionTime(arg1, arg2, arg3);
+		}
+		case 36://X_PMABSORBSIM
+		{
+			Matrix arg1=*ParseMatArg(script, ',');
+			double arg2=*ParseNumArg(script, ',');
+			double arg3=*ParseNumArg(script, ',');
+			return Probability::SimulateAbsorbtionTime(arg1, arg2, arg3);
 		}
 	}
 	return 0;
@@ -656,35 +703,19 @@ XPINSScriptableMath::Vector XPINSBuiltIn::ParseVecBIF(int fNum, XPINSScriptSpace
 {
 	
 	switch (fNum) {
-		case 1://X_VREC
-		{
-			double arg1=*ParseNumArg(script, ',');
-			double arg2=*ParseNumArg(script, ',');
-			double arg3=*ParseNumArg(script, ')');
-			return Vector(arg1,arg2,arg3);
-		}
-		case 2://X_VPOL
-		{
-			double arg1=*ParseNumArg(script, ',');
-			double arg2=*ParseNumArg(script, ',');
-			double arg3=*ParseNumArg(script, ')');
-			return Vector::PolarVector(arg1,arg2,arg3);
-		}
-		case 3://X_VSHPERE
-		{
-			double arg1=*ParseNumArg(script, ',');
-			double arg2=*ParseNumArg(script, ',');
-			double arg3=*ParseNumArg(script, ')');
-			return Vector::SphericalVector(arg1,arg2,arg3);
-		}
-		case 4://X_VPROJ
+		case 1://X_VPROJ
 		{
 			Vector arg1=*ParseVecArg(script, ',');
 			double arg2=*ParseNumArg(script, ',');
 			double arg3=*ParseNumArg(script, ')');
 			return Vector::ProjectionInDirection(arg1,arg2,arg3);
 		}
-		case 5://X_MMTV
+		case 2://X_VUNIT
+		{
+			Vector arg1=*ParseVecArg(script, ',');
+			return Vector::UnitVectorFromVector(arg1);
+		}
+		case 3://X_MMTV
 		{
 			Matrix arg1=*ParseMatArg(script, ')');
 			return Matrix::VectorForMatrix(arg1);

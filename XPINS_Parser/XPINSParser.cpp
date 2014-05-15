@@ -11,7 +11,7 @@ using namespace XPINSParser;
 using namespace XPINSScriptableMath;
 
 const int kPMajor=0;
-const int kPMinor=10;
+const int kPMinor=11;
 
 void ParseCode(XPINSScriptSpace& script, int, int);
 
@@ -35,7 +35,7 @@ XPINSScriptSpace::XPINSScriptSpace(string script,vector<XPINSBindings*> bind)
 }
 char XPINSScriptSpace::currentChar()
 {
-	return instructions[index];
+	return index<instructions.length()?instructions[index]:' ';
 }
 bool XPINSScriptSpace::matchesString(string testString)
 {
@@ -120,6 +120,8 @@ bool* XPINSParser::ParseBoolArg(XPINSScriptSpace& script,char expectedEnd)
 		int mNum=readInt(script,'F');
 		int fNum=readInt(script,'(');
 		retVal=(bool*)script.bindings[mNum]->BindFunction(fNum, script);
+		while(script.currentChar()!=')')++script.index;
+		++script.index;
 	}
 	else if(script.matchesString("#A")||script.matchesString("$A"))//Array Value
 	{
@@ -133,6 +135,8 @@ bool* XPINSParser::ParseBoolArg(XPINSScriptSpace& script,char expectedEnd)
 		script.index+=2;
 		int index=readInt(script, '(');
 		retVal=new bool(XPINSBuiltIn::ParseBoolBIF(index,script));
+		while(script.currentChar()!=')')++script.index;
+		++script.index;
 	}
 	while(script.currentChar()!=expectedEnd&&(script.currentChar()!=')'))++script.index;
 	if(script.instructions[script.index+1]=='?')script.index+=2;
@@ -194,6 +198,7 @@ double* XPINSParser::ParseNumArg(XPINSScriptSpace& script,char expectedEnd)
 	else if(script.matchesString("?N"))//Expression
 	{
 		retVal=new double(XPINSBuiltIn::ParseNumExp(script));
+		while(script.instructions[script.index]!='?')++script.index;
 	}
 	else if(script.matchesString("#NM"))//User-defined Function
 	{
@@ -201,6 +206,8 @@ double* XPINSParser::ParseNumArg(XPINSScriptSpace& script,char expectedEnd)
 		int mNum=readInt(script,'F');
 		int fNum=readInt(script,'(');
 		retVal=(double*)script.bindings[mNum]->BindFunction(fNum, script);
+		while(script.currentChar()!=')')++script.index;
+		++script.index;
 	}
 	else if(script.matchesString("#A")||script.matchesString("$A"))//Array Value
 	{
@@ -214,9 +221,10 @@ double* XPINSParser::ParseNumArg(XPINSScriptSpace& script,char expectedEnd)
 		script.index+=2;
 		int index=readInt(script, '(');
 		retVal=new double(XPINSBuiltIn::ParseNumBIF(index,script));
+		while(script.currentChar()!=')')++script.index;
+		++script.index;
 	}
 	while(script.currentChar()!=expectedEnd&&script.currentChar()!=')')++script.index;
-	if(script.instructions[script.index+1]=='?')script.index+=2;
 	return retVal;
 }
 Vector* XPINSParser::ParseVecArg(XPINSScriptSpace& script,char expectedEnd)
@@ -267,6 +275,8 @@ Vector* XPINSParser::ParseVecArg(XPINSScriptSpace& script,char expectedEnd)
 		int mNum=readInt(script,'F');
 		int fNum=readInt(script,'(');
 		retVal=(Vector*)script.bindings[mNum]->BindFunction(fNum, script);
+		while(script.currentChar()!=')')++script.index;
+		++script.index;
 	}
 	else if(script.matchesString("#A")||script.matchesString("$A"))//Array Value
 	{
@@ -280,6 +290,8 @@ Vector* XPINSParser::ParseVecArg(XPINSScriptSpace& script,char expectedEnd)
 		script.index+=2;
 		int index=readInt(script, '(');
 		retVal=new Vector(XPINSBuiltIn::ParseVecBIF(index,script));
+		while(script.currentChar()!=')')++script.index;
+		++script.index;
 	}
 	while(script.currentChar()!=expectedEnd&&script.currentChar()!=')'&&script.currentChar()!='\n')++script.index;
 	if(script.instructions[script.index+1]=='?'&&script.currentChar()!='\n')script.index+=2;
@@ -351,12 +363,16 @@ Matrix *XPINSParser::ParseMatArg(XPINSScriptSpace& script,char expectedEnd)
 		int mNum=readInt(script,'F');
 		int fNum=readInt(script,'(');
 		mat=(Matrix*)script.bindings[mNum]->BindFunction(fNum, script);
+		while(script.currentChar()!=')')++script.index;
+		++script.index;
 	}
 	else if(script.matchesString("XM"))//Built-in Function
 	{
 		script.index+=2;
 		int index=readInt(script, '(');
 		mat=new Matrix(XPINSBuiltIn::ParseMatBIF(index,script));
+		while(script.currentChar()!=')')++script.index;
+		++script.index;
 	}
 	else if(script.matchesString("#A")||script.matchesString("$A"))//Array
 	{
@@ -445,12 +461,16 @@ Polynomial* XPINSParser::ParsePolyArg(XPINSScriptSpace& script, char expectedEnd
 		int mNum=readInt(script,'F');
 		int fNum=readInt(script,'(');
 		poly=(Polynomial*)script.bindings[mNum]->BindFunction(fNum, script);
+		while(script.currentChar()!=')')++script.index;
+		++script.index;
 	}
-	else if(script.matchesString("XP"))//Built-in Function NO POLY BIFs YET
+	else if(script.matchesString("XP"))//Built-in Function
 	{
 		script.index+=2;
 		int index=readInt(script, '(');
 		poly=new Polynomial(XPINSBuiltIn::ParsePolyBIF(index,script));
+		while(script.currentChar()!=')')++script.index;
+		++script.index;
 	}
 	else if(script.matchesString("#A")||script.matchesString("$A"))//User-defined Function
 	{
@@ -519,6 +539,8 @@ string *XPINSParser::ParseStrArg(XPINSScriptSpace& script,char expectedEnd)
 		int mNum=readInt(script,'F');
 		int fNum=readInt(script,'(');
 		retVal=(string*)script.bindings[mNum]->BindFunction(fNum, script);
+		while(script.currentChar()!=')')++script.index;
+		++script.index;
 	}
 	else if(script.matchesString("#A")||script.matchesString("$A"))//User-defined Function
 	{
@@ -553,6 +575,8 @@ void** XPINSParser::ParsePointerArg(XPINSScriptSpace& script,char expectedEnd, c
 				int fNum=readInt(script,'(');
 				retVal=(void**)script.bindings[mNum]->BindFunction(fNum, script);
 				*type='O';
+				while(script.currentChar()!=')')++script.index;
+				++script.index;
 			}
 			else if(script.matchesString("#A")||script.matchesString("$A"))//User-defined Function
 			{
@@ -655,6 +679,8 @@ XPINSArray* XPINSParser::ParseArrayArg(XPINSScriptSpace& script,char expectedEnd
 			else retVal=(XPINSArray*)(arr->values[arrIndex]);
 		}
 		else retVal=arr;
+		while(script.currentChar()!=')')++script.index;
+		++script.index;
 	}
 	while(script.currentChar()!=expectedEnd&&script.currentChar()!=')')++script.index;
 	if(script.instructions[script.index+1]=='?')script.index+=2;

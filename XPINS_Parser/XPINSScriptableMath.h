@@ -121,9 +121,9 @@ namespace XPINSScriptableMath{
 		double SimulateMarkovChain(Matrix chain, int n, int start);				//Simulate n stages
 		double TransitionProbability(Matrix chain, int n, int start, int stop);	//Transition Probability
 		double SteadyStateProbability(Matrix chain, int state);					//Steady-state Probability
-		double AbosorbtionProbability(Matrix chain, int state,int start);		//Constrained Steady-State
-		double AbosorbtionTime(Matrix chain, int state,int start);				//Expected Absorbtion Time
-		int SimulateAbosorbtionTime(Matrix chain, int state,int start);			//Simulate Absorbtion Time
+		double AbsorbtionProbability(Matrix chain, int state,int start);		//Constrained Steady-State
+		double AbsorbtionTime(Matrix chain, int state,int start);				//Expected Absorbtion Time
+		int SimulateAbsorbtionTime(Matrix chain, int state,int start);			//Simulate Absorbtion Time
 		bool Reachable(Matrix chain, int b, int a);								//Is b reachable form a
 		Matrix Subchain(Matrix,int&,int&,bool);
 	}
