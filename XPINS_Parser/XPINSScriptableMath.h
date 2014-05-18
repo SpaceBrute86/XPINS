@@ -141,6 +141,7 @@ namespace XPINSScriptableMath{
 		Polynomial ();					//Empty Polynomial
 		Polynomial (vector<Monomial>);	//Polynomial with monomials
 		Polynomial Copy();				//Copy of Polynomial
+		size_t Size();
 	// Polynomial Arithmetic
 		static Polynomial Add(Polynomial a,Polynomial b);				//Polynomial Addition
 		static Polynomial Scale(Polynomial,double);						//Polynomial-Scalar Multiplication

@@ -33,6 +33,11 @@ namespace XPINSParser
 		string* sVars;							//String Variables
 		void** oVars;							//Custom type variables
 		XPINSArray* aVars;						//Array variables
+	//Other
+		list<void*>Garbage;
+		size_t GarbageCost;
+		list<void*>Trash;
+
 	// Deconstructor
 		~XPINSVarSpace();	//Clears All Variables
 	};
@@ -42,14 +47,23 @@ namespace XPINSParser
 	// Data
 		string instructions;				//Script Text
 		int index;							//Current Index in Script Text
+		string clusterURL;					//URL of script Cluster URL
 		XPINSVarSpace* data;				//Script Variables
 		vector<XPINSBindings*> bindings;	//Bindings objects
 		list<void*>toDelete;				//Objects to delte at end of Script
+		XPINSArray* scriptParams;			//Parameters to be passed from script to script
+		void* returnVal;					//Return Value from script
 	// Functions
-		XPINSScriptSpace(string script,vector<XPINSBindings*> bindings);	//Create Script Space
-		char currentChar();													//Character at script indx
-		bool matchesString(string testSTring);								//Check String against script
+		XPINSScriptSpace(string script,vector<XPINSBindings*> bindings);		//Create Script Space
+		XPINSScriptSpace(string cluster,string name,vector<XPINSBindings*> bindings);
+		char currentChar();														//Character at script index
+		bool matchesString(string testSTring);									//Check String against script
 	};
+//Miscllaneous Functions
+	int readInt(XPINSScriptSpace& script,char expectedEnd);	//Read an Integer from the script
+	void EmptyGarbage(XPINSVarSpace& vars);					//Delete unused values to avoid leaks
+	void EmptyAllGarbage();									//Deal withMemory Pressure
+
 
 // Argument Parsing
 	bool* ParseBoolArg(XPINSScriptSpace& script,char expectedEnd);								//Boolean
@@ -63,11 +77,22 @@ namespace XPINSParser
 	
 // Parsing Scripts
 	void ParseScript(string,vector<XPINSBindings*>);
+	void ParseScriptCluster(string,vector<XPINSBindings*>);
 	
 }
-// Built In Function and Expression Processing
+// Constant, Built In Function, and Expression Processing
 namespace XPINSBuiltIn{
-// Expression PARSING:
+	
+// Constant Parsing
+	bool ParseBoolConst(XPINSParser::XPINSScriptSpace& script);								//BOOL constant
+	double ParseNumConst(XPINSParser::XPINSScriptSpace& script,char stop);					//NUM constant
+	XPINSScriptableMath::Vector ParseVecConst(XPINSParser::XPINSScriptSpace& script);		//VEC constant
+	XPINSScriptableMath::Matrix ParseMatConst(XPINSParser::XPINSScriptSpace& script);		//MAT constant
+	XPINSScriptableMath::Polynomial ParsePolyConst(XPINSParser::XPINSScriptSpace& script);	//POLY constant
+	string ParseStrConst(XPINSParser::XPINSScriptSpace& script);							//STR constant
+	XPINSParser::XPINSArray ParseArrConst(XPINSParser::XPINSScriptSpace& script);			//ARR constant
+	
+// Expression Parsing:
 	bool ParseBoolExp(XPINSParser::XPINSScriptSpace&);								//Boolean Expression
 	double ParseNumExp(XPINSParser::XPINSScriptSpace&);								//Numerical Expression
 	XPINSScriptableMath::Vector ParseVecExp(XPINSParser::XPINSScriptSpace&);		//Vector Expression
@@ -75,13 +100,14 @@ namespace XPINSBuiltIn{
 	XPINSScriptableMath::Polynomial ParsePolyExp(XPINSParser::XPINSScriptSpace&);	//Polynomial Expression
 	void ParseVoidExp(XPINSParser::XPINSScriptSpace&);								//Void Expression
 
-// BIF (Built In Function) PARSING:
+// BIF (Built In Function) Parsing:
 	bool ParseBoolBIF(int fNum,XPINSParser::XPINSScriptSpace&);								//Boolean BIF
 	double ParseNumBIF(int fNum, XPINSParser::XPINSScriptSpace&);							//Number BIF
 	XPINSScriptableMath::Vector ParseVecBIF(int fNum, XPINSParser::XPINSScriptSpace&);		//Vector BIF
 	XPINSScriptableMath::Matrix ParseMatBIF(int fNum, XPINSParser::XPINSScriptSpace&);		//Matrix BIF
 	XPINSScriptableMath::Polynomial ParsePolyBIF(int fNum, XPINSParser::XPINSScriptSpace&);	//Polynomial BIF
 	void ParseVoidBIF(int fNum, XPINSParser::XPINSScriptSpace&);							//Void BIF
+	
 }
 
 #endif /* defined(__Script__ScriptParser__) */

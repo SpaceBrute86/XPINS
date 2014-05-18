@@ -9,4 +9,5 @@
 #import <Foundation/Foundation.h>
 @interface XPNParser : NSObject
 +(void)runScript:(NSString*)script withBindings:(NSArray*)bindings;
++(void)emptyTrash;
 @end

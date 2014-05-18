@@ -11,9 +11,11 @@
 #include <vector>
 
 using namespace XPINSParser;
-struct objWrapper{
+struct objWrapper
+{
 	NSObject* object;
-	objWrapper(NSObject*obj){
+	objWrapper(NSObject*obj)
+	{
 		object=obj;
 	}
 };
@@ -50,6 +52,7 @@ void* XPINSObjCBindings::BindFunction(int fNum,XPINSParser::XPINSScriptSpace& sc
 	}
 	return NULL;
 }
+
 NSArray*  XPINSObjCBindings::XPINStoNSArray(XPINSArray* arr){
 	NSMutableArray*val=[@[] mutableCopy];
 	for(int i=0;i<arr->values.size();++i){
@@ -123,7 +126,6 @@ XPINSArray*  XPINSObjCBindings::NStoXPINSArray(NSArray* arr){
 }
 
 @implementation XPNBindings{
-	//XPINSObjCBindings cppBindings;
 	XPINSParser::XPINSScriptSpace* script;
 	void* retValue;
 }

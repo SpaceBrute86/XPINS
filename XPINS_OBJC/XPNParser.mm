@@ -10,16 +10,32 @@
 #import "XPINS.h"
 #import "XPNBindings.h"
 
-
+NSOperationQueue *XPINSQueue;
 @implementation XPNParser
 +(void)runScript:(NSString*)script withBindings:(NSArray*)bindings
 {
+	//Set up C++ script string
 	string str=[script cStringUsingEncoding:NSASCIIStringEncoding];
+	//Set up Bindings
 	vector<XPINSBindings*> bind=vector<XPINSBindings*>(bindings.count);
 	for (NSUInteger i=0; i<bindings.count; ++i) {
 		bind[i]=new XPINSObjCBindings((XPNBindings*)bindings[i]);
 	}
-	XPINSParser::ParseScript(str, bind);
+	//Set up Operation Queue
+	if(!XPINSQueue)
+	{
+		XPINSQueue=[[NSOperationQueue alloc] init];
+		XPINSQueue.maxConcurrentOperationCount=NSOperationQueueDefaultMaxConcurrentOperationCount;
+	}
+	//Run script
+	[queue addOperationWithBlock:^{
+		XPINSParser::ParseScript(str, bind);
+	}];
 }
-
++(void)emptyTrash
+{
+	[XPINSQueue setSuspended:YES];
+	XPINSParser::EmptyAllGarbage();
+	[XPINSQueue setSuspended:NO];
+}
 @end

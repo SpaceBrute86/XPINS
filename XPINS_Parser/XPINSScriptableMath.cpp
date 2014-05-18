@@ -890,6 +890,10 @@ Polynomial Polynomial::Integrate(Polynomial poly, int var)
 }
 
 //Polynomial Cleanup
+size_t Polynomial::Size()
+{
+	return values.size();
+}
 void Polynomial::Clean(){
 	//Add matching monomials
 	for (int i=0; i<values.size(); ++i)

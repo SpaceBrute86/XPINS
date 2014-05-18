@@ -15,6 +15,262 @@ using namespace std;
 using namespace XPINSParser;
 using namespace XPINSScriptableMath;
 
+#pragma mark Constant Processing
+
+bool XPINSBuiltIn::ParseBoolConst(XPINSParser::XPINSScriptSpace& script)
+{
+	if(script.currentChar()!='~')return false;
+	++script.index;
+	return script.currentChar()=='T';
+}
+double XPINSBuiltIn::ParseNumConst(XPINSParser::XPINSScriptSpace& script,char stop)
+{
+	if(script.currentChar()!='~')return 0;
+	double val=0;
+	int exp=0;
+	bool fpart=false;
+	bool isNeg=false;
+	while(++script.index<script.instructions.length()&&script.currentChar()!=stop&&script.currentChar()!=')'&&script.currentChar()!='e'&&script.currentChar()!='E')
+	{
+		if(fpart)--exp;//record decimal place
+		val*=10;
+		if(script.currentChar()=='1')val+=1;
+		else if(script.currentChar()=='2')val+=2;
+		else if(script.currentChar()=='3')val+=3;
+		else if(script.currentChar()=='4')val+=4;
+		else if(script.currentChar()=='5')val+=5;
+		else if(script.currentChar()=='6')val+=6;
+		else if(script.currentChar()=='7')val+=7;
+		else if(script.currentChar()=='8')val+=8;
+		else if(script.currentChar()=='9')val+=9;
+		else if(script.currentChar()!='0')val/=10;
+		if(script.currentChar()=='-')isNeg=true;
+		if(script.currentChar()=='.')fpart=true;//Start recording decimal places
+	}
+	bool isENeg=false;
+	--script.index;
+	while(++script.index<script.instructions.length()&&script.currentChar()!=stop&&script.currentChar()!=')')
+	{
+		exp*=10;
+		if(script.currentChar()=='1')exp+=1;
+		else if(script.currentChar()=='2')exp+=2;
+		else if(script.currentChar()=='3')exp+=3;
+		else if(script.currentChar()=='4')exp+=4;
+		else if(script.currentChar()=='5')exp+=5;
+		else if(script.currentChar()=='6')exp+=6;
+		else if(script.currentChar()=='7')exp+=7;
+		else if(script.currentChar()=='8')exp+=8;
+		else if(script.currentChar()=='9')exp+=9;
+		else if(script.currentChar()!='0')exp/=10;
+		if(script.currentChar()=='-')isENeg=true;
+	}
+	val=(isNeg?-1:1) * val * pow(10, (isENeg?-1:1)*exp);
+	return val;
+}
+XPINSScriptableMath::Vector XPINSBuiltIn::ParseVecConst(XPINSParser::XPINSScriptSpace& script)
+{
+	if(script.currentChar()!='~')return Vector();
+	if(script.matchesString("~<"))//Cartesian vector
+	{
+		script.index+=2;
+		double x=*ParseNumArg(script, ',');
+		double y=*ParseNumArg(script, ',');
+		double z=*ParseNumArg(script, '>');
+		return Vector(x,y ,z);
+	}
+	else if(script.matchesString("~P<"))//Polar Vector
+	{
+		script.index+=3;
+		double r=*ParseNumArg(script, ',');
+		double t=*ParseNumArg(script, ',');
+		double z=*ParseNumArg(script, '>');
+		return Vector::PolarVector(r, t, z);
+	}
+	else if(script.matchesString("~S<"))//Spherical Vector
+	{
+		script.index+=3;
+		double r=*ParseNumArg(script, ',');
+		double t=*ParseNumArg(script, ',');
+		double p=*ParseNumArg(script, '>');
+		return Vector::SphericalVector(r, t ,p);
+	}
+	return Vector();
+}
+
+
+ XPINSScriptableMath::Matrix XPINSBuiltIn::ParseMatConst(XPINSParser::XPINSScriptSpace& script)
+{
+	if(script.currentChar()!='~')return Matrix();
+	size_t rows=1,cols=1;
+	script.index+=2;
+	int temp=script.index;
+	for (;script.currentChar()!='|'&&script.currentChar()!=']'; ++script.index)//Find Column Count
+	{
+		if(script.currentChar()=='(')//Skip Parenthesis blocks
+		{
+			++script.index;
+			for (int count=1; count>0; ++script.index) {
+				if(script.currentChar()=='(')++count;
+				else if(script.currentChar()==')')--count;
+			}
+		}
+		if(script.currentChar()==',')++cols;
+	}
+	for (script.index=temp; script.currentChar()!=']'; ++script.index)//Find Row Count
+	{
+		if(script.currentChar()=='(')//Skip Parenthesis blocks
+		{
+			++script.index;
+			for (int count=1; count>0; ++script.index) {
+				if(script.currentChar()=='(')++count;
+				else if(script.currentChar()==')')--count;
+			}
+		}
+		if(script.currentChar()=='|')++rows;
+	}
+	Matrix mat=Matrix(rows,cols);//Create Matrix
+	script.index=temp;
+	for(int r=0;r<rows;++r)
+	{
+		for(int c=0;c<cols;++c)
+		{
+			double val;
+			if(c==cols-1)
+			{
+				if(r==rows-1)val=*ParseNumArg(script, ']');
+				else val=*ParseNumArg(script, '|');
+			}
+			else val=*ParseNumArg(script, ',');
+			mat.SetValueAtPosition(val,r,c);
+		}
+	}
+	return mat;
+}
+
+XPINSScriptableMath::Polynomial XPINSBuiltIn::ParsePolyConst(XPINSParser::XPINSScriptSpace& script)
+{
+	if(script.currentChar()!='~')return Polynomial();
+	while (script.currentChar()!='(')++script.index;
+	++script.index;
+	vector<Polynomial::Monomial> mons=vector<Polynomial::Monomial>();
+	for (int i=0;true;++i)
+	{
+		mons.resize(i+1);
+		mons[i].coeff=*ParseNumArg(script, '_');
+		mons[i].exponents=vector<unsigned int>();
+		while (script.currentChar()=='_')
+		{
+			++script.index;
+			unsigned int expIndex=0;
+			switch (script.currentChar())
+			{
+				case 'X':
+				case 'x':
+					expIndex=1;
+					break;
+				case 'Y':
+				case 'y':
+					expIndex=2;
+					break;
+				case 'Z':
+				case 'z':
+					expIndex=3;
+					break;
+				case 'T':
+				case 't':
+					expIndex=4;
+					break;
+			}
+			++script.index;
+			if(script.currentChar()=='+'||script.currentChar()=='-'||script.currentChar()==')')
+			{
+				if(expIndex>mons[i].exponents.size())mons[i].exponents.resize(expIndex);
+				mons[i].exponents[expIndex-1]+=1;
+				break;
+			}
+			if(script.currentChar()=='_')
+			{
+				if(expIndex>mons[i].exponents.size())mons[i].exponents.resize(expIndex);
+				mons[i].exponents[expIndex-1]+=1;
+			}
+			if(expIndex!=0)
+			{
+				if(expIndex>mons[i].exponents.size())mons[i].exponents.resize(expIndex);
+				mons[i].exponents[expIndex-1]+=readInt(script, '_');
+			}
+		}
+		if(script.currentChar()==')')break;
+	}
+	++script.index;
+	return Polynomial(mons);
+}
+string XPINSBuiltIn::ParseStrConst(XPINSParser::XPINSScriptSpace& script)
+{
+	if(script.currentChar()!='~')return "";
+	string str="";
+	++script.index;
+	while (++script.index<script.instructions.length())
+	{
+		if(script.currentChar()=='\\')
+		{
+			++script.index;
+			switch (script.currentChar()) {
+				case 'n':str+='\n';
+					break;
+				case '\t':str+='\t';
+					break;
+				case '\\':str+='\\';
+					break;
+				case '\'':str+='\'';
+					break;
+				case '\"':str+='\"';
+					break;
+				case '\r':str+='\r';
+					break;
+				case 'a':str+='\a';
+					break;
+				case 'b':str+='\b';
+					break;
+				case 'f':str+='\f';
+					break;
+				case 'v':str+='\v';
+					break;
+				case 'e':str+='\e';
+					break;
+				default:
+					break;
+			}
+		}
+		else if(script.currentChar()=='\"')break;
+		else str+=script.currentChar();
+	}
+	return str;
+}
+XPINSParser::XPINSArray XPINSBuiltIn::ParseArrConst(XPINSParser::XPINSScriptSpace& script)
+{
+	if(script.currentChar()!='~')return XPINSArray();
+	XPINSArray arr=XPINSArray();
+	while (script.currentChar()!='{')++script.index;
+	size_t size=1;
+	int temp=script.index;
+	for (;script.currentChar()!='}'; ++script.index)//Find Col Count
+		if(script.currentChar()==',')++size;
+	arr.values.resize(size);
+	script.index=temp;
+	for(int i=0;i<size;++i)
+	{
+		char type='O';
+		if(i==size-1)
+			arr.values[i]=*ParsePointerArg(script, '}',&type);
+		else
+			arr.values[i]=*ParsePointerArg(script, ',',&type);
+		arr.types[i]=type;
+	}
+	return arr;
+}
+
+#pragma mark Expression Processing
+
 enum opCode{
 	NOT,OR,AND,//LOGICAL
 	LESS,LESSEQ,GREATER,GREATEREQ,NOTEQUAL,EQAUAL,//RELATIONAL
@@ -110,7 +366,6 @@ opCode FindOp(XPINSScriptSpace sc, bool* assign,resType type)
 }
 
 
-#pragma mark Expression Processing
 
 void XPINSBuiltIn::ParseVoidExp(XPINSParser::XPINSScriptSpace& script)
 {
@@ -670,7 +925,6 @@ double XPINSBuiltIn::ParseNumBIF(int fNum, XPINSScriptSpace& script)
 		{
 			Matrix arg1=*ParseMatArg(script, ',');
 			double arg2=*ParseNumArg(script, ',');
-			double arg3=*ParseNumArg(script, ',');
 			return Probability::SteadyStateProbability(arg1, arg2);
 
 		}
