@@ -363,7 +363,11 @@ Matrix::Matrix (size_t r, size_t c, double val)
 }
 Matrix::~Matrix()
 {
-//	delete values;
+	//delete values;
+}
+void Matrix::Clear()
+{
+	delete values;
 }
 Matrix Matrix::Copy()
 {
@@ -697,6 +701,10 @@ Polynomial::Polynomial ()
 Polynomial::Polynomial (vector<Monomial> v)
 {
 	values=v;
+}
+void Polynomial::Clear()
+{
+	values.resize(0);
 }
 Polynomial::Monomial Polynomial::Monomial::monomial(double coeff,double xp, double yp, double zp, double tp)
 {

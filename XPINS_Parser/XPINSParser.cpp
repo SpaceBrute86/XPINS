@@ -19,7 +19,7 @@ void ParseCode(XPINSScriptSpace& script, int, int);
 
 vector<XPINSVarSpace*>allVarSpaces;
 
-#pragma mark Variable Space and Script Space
+#pragma mark Variable Space, Script Space, and Array Management
 
 XPINSVarSpace::~XPINSVarSpace(){
 	delete[] bVars;
@@ -49,6 +49,33 @@ XPINSScriptSpace::XPINSScriptSpace(string cluster,string name,vector<XPINSBindin
 	inFile.close();
 	index=0;
 	bindings=bind;
+}
+void clearArr(XPINSArray* arr, size_t index=-1)
+{
+	if (index==-1)
+	{
+		for (size_t i=0; i<arr->values.size(); ++i)
+		{
+			clearArr(arr,i);
+		}
+		arr->values.resize(0);
+	}
+	else
+	{
+		switch (arr->types[index]) {
+			case 'M':
+				((Matrix*)arr->values[index])->Clear();
+				break;
+			case 'P':
+				((Polynomial*)arr->values[index])->Clear();
+				break;
+			case 'A':
+				clearArr((XPINSArray*)arr->values[index]);
+				break;
+			default:
+				break;
+		}
+	}
 }
 size_t arrSize(XPINSArray* arr)
 {
@@ -836,38 +863,46 @@ void ParseCode(XPINSScriptSpace& script,int start,int stop)
 					case 'B'://Bool Variable
 					{
 						int index=readInt(script, '=');
-						script.data->bVars[index]=*ParseBoolArg(script, '\n');
+						bool b=*ParseBoolArg(script, '\n');
+						script.data->bVars[index]=b;
 					}break;
 					case 'N'://NUM variable
 					{
 						int index=readInt(script, '=');
-						script.data->nVars[index]=*ParseNumArg(script, '\n');
+						double d=*ParseNumArg(script, '\n');
+						script.data->nVars[index]=d;
 					}break;
 					case 'V'://VEC variable
 					{
 						int index=readInt(script, '=');
-						script.data->vVars[index]=*ParseVecArg(script, '\n');
+						Vector v=*ParseVecArg(script, '\n');
+						script.data->vVars[index]=v;
 					}break;
 					case 'M'://MAT variable
 					{
 						int index=readInt(script, '=');
-						script.data->mVars[index]=*ParseMatArg(script, '\n');
+						Matrix m=*ParseMatArg(script, '\n');
+						script.data->mVars[index].Clear();
+						script.data->mVars[index]=m;
 					}break;
 					case 'P'://POLY variable
 					{
 						int index=readInt(script, '=');
-						Polynomial poly=*ParsePolyArg(script, '\n');
-						script.data->pVars[index]=poly;
+						Polynomial p=*ParsePolyArg(script, '\n');
+						script.data->pVars[index].Clear();
+						script.data->pVars[index]=p;
 					}break;
 					case 'S'://STR variable
 					{
 						int index=readInt(script, '=');
-						script.data->sVars[index]=*ParseStrArg(script, '\n');
+						string s=*ParseStrArg(script, '\n');
+						script.data->sVars[index]=s;
 					}break;
 					case 'O'://Pointer variable
 					{
 						int index=readInt(script, '=');
-						script.data->oVars[index]=*ParsePointerArg(script, '\n');
+						void* o=*ParsePointerArg(script, '\n');
+						script.data->oVars[index]=o;
 					}break;
 					case 'A'://Array variable
 					{
@@ -886,12 +921,16 @@ void ParseCode(XPINSScriptSpace& script,int start,int stop)
 							XPINSArray*arr=ParseArrayArg(script, '[');
 							++script.index;
 							int arrIndex=readInt(script, ']');
-							arr->values[arrIndex]=*ParsePointerArg(script, '\n');
+							void* val=*ParsePointerArg(script, '\n');
+							clearArr(arr,arrIndex);
+							arr->values[arrIndex]=val;
 						}
 						else
 						{
 							int index=readInt(script, '=');
-							script.data->aVars[index]=*ParseArrayArg(script, '\n');
+							XPINSArray a=*ParseArrayArg(script, '\n');
+							clearArr(&script.data->aVars[index]);
+							script.data->aVars[index]=a;
 						}
 					}break;
 				}

@@ -63,7 +63,8 @@ namespace XPINSScriptableMath{
 		Matrix (size_t rows, size_t cols);				//Zero Matrix
 		Matrix (size_t rows, size_t cols, double val);	//Constant Value matrix
 		Matrix Copy();									//Copy Matrix
-		~Matrix();										//Delete values
+		void Clear();									//Delete values
+		~Matrix();										
 	// Creating Special Matrices
 		static Matrix IdentityMatrixOfSize(size_t size);							//Identity Matrix
 		static Matrix RotationMatrixWithAngleAroundVector(Vector v,double angle);	//Rotation Matrix
@@ -141,7 +142,8 @@ namespace XPINSScriptableMath{
 		Polynomial ();					//Empty Polynomial
 		Polynomial (vector<Monomial>);	//Polynomial with monomials
 		Polynomial Copy();				//Copy of Polynomial
-		size_t Size();
+		void Clear();					//Delete elements to avoid leaks
+		size_t Size();					//Number of elements
 	// Polynomial Arithmetic
 		static Polynomial Add(Polynomial a,Polynomial b);				//Polynomial Addition
 		static Polynomial Scale(Polynomial,double);						//Polynomial-Scalar Multiplication
