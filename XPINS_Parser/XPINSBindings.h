@@ -6,8 +6,8 @@
 //  Copyright (c) 2013 Robbie Markwick. All rights reserved.
 //
 
-#ifndef __XPINS__XPINSBridge__
-#define __XPINS__XPINSBridge__
+#ifndef __XPINS__XPINSBindings__
+#define __XPINS__XPINSBindings__
 
 #include <iostream>
 #include <string>

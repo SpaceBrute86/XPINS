@@ -78,10 +78,8 @@ using namespace XPINSScriptableMath;
 -(XPNVector *) multiplyWithMatrix:(XPNMatrix *)matrix{
 	return [XPNVector vectorWithVector:Matrix::MVMultiply(matrix->matrix, vector)];
 }
--(XPNVector*)projectionInDirectionOfVector:(XPNVector*)vec{
-	double a,b;
-	vec->vector.SphericalCoords(NULL, &a, &b);
-	return [XPNVector vectorWithVector:(Vector::ProjectionInDirection(self->vector, a,b))];
+-(XPNVector*)projectoinOntoVector:(XPNVector*)vector{
+	return [XPNVector vectorWithVector:(Vector::ProjectionOntoVector(self->vector, vector->vector))];
 }
 -(double)angleFromVector:(XPNVector*)vec{
 	return Vector::AngleBetweenVectors(self->vector, vec->vector);

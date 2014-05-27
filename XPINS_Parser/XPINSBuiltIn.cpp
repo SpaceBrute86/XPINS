@@ -10,7 +10,6 @@
 #include "XPINSBindings.h"
 #include <math.h>
 
-
 using namespace std;
 using namespace XPINSParser;
 using namespace XPINSScriptableMath;
@@ -19,7 +18,7 @@ using namespace XPINSScriptableMath;
 
 bool XPINSBuiltIn::ParseBoolConst(XPINSParser::XPINSScriptSpace& script)
 {
-	if(script.currentChar()!='~')return false;
+	if(script.currentChar()!='~')return new bool(false);
 	++script.index;
 	return script.currentChar()=='T';
 }
@@ -76,7 +75,7 @@ XPINSScriptableMath::Vector XPINSBuiltIn::ParseVecConst(XPINSParser::XPINSScript
 		double x=*ParseNumArg(script, ',');
 		double y=*ParseNumArg(script, ',');
 		double z=*ParseNumArg(script, '>');
-		return Vector(x,y ,z);
+		return Vector(x,y ,z, Vector::Cartesian);
 	}
 	else if(script.matchesString("~P<"))//Polar Vector
 	{
@@ -84,7 +83,7 @@ XPINSScriptableMath::Vector XPINSBuiltIn::ParseVecConst(XPINSParser::XPINSScript
 		double r=*ParseNumArg(script, ',');
 		double t=*ParseNumArg(script, ',');
 		double z=*ParseNumArg(script, '>');
-		return Vector::PolarVector(r, t, z);
+		return Vector(r, t, z, Vector::Polar);
 	}
 	else if(script.matchesString("~S<"))//Spherical Vector
 	{
@@ -92,13 +91,28 @@ XPINSScriptableMath::Vector XPINSBuiltIn::ParseVecConst(XPINSParser::XPINSScript
 		double r=*ParseNumArg(script, ',');
 		double t=*ParseNumArg(script, ',');
 		double p=*ParseNumArg(script, '>');
-		return Vector::SphericalVector(r, t ,p);
+		return Vector(r, t ,p, Vector::Spherical);
 	}
 	return Vector();
 }
-
-
- XPINSScriptableMath::Matrix XPINSBuiltIn::ParseMatConst(XPINSParser::XPINSScriptSpace& script)
+XPINSScriptableMath::Quaternion XPINSBuiltIn::ParseQuatConst(XPINSParser::XPINSScriptSpace& script)
+{
+	if(!script.matchesString("~Q<"))return Quaternion();
+	script.index+=3;
+	double r=*ParseNumArg(script, ',');
+	if(script.instructions[script.index+2]=='V'||script.instructions[script.index+2]=='<'||script.instructions[script.index+3]=='<')
+	{
+		Vector v=*ParseVecArg(script, '>');
+		return Quaternion(r,v);
+	}
+	
+	double x=*ParseNumArg(script, ',');
+	double y=*ParseNumArg(script, ',');
+	double z=*ParseNumArg(script, '>');
+	Vector v=Vector(x,y,z,Vector::Cartesian);
+	return Quaternion(r,v);
+}
+XPINSScriptableMath::Matrix XPINSBuiltIn::ParseMatConst(XPINSParser::XPINSScriptSpace& script)
 {
 	if(script.currentChar()!='~')return Matrix();
 	size_t rows=1,cols=1;
@@ -180,6 +194,18 @@ XPINSScriptableMath::Polynomial XPINSBuiltIn::ParsePolyConst(XPINSParser::XPINSS
 				case 't':
 					expIndex=4;
 					break;
+				case 'U':
+				case 'u':
+					expIndex=5;
+					break;
+				case 'V':
+				case 'v':
+					expIndex=6;
+					break;
+				case 'W':
+				case 'w':
+					expIndex=7;
+					break;
 			}
 			++script.index;
 			if(script.currentChar()=='+'||script.currentChar()=='-'||script.currentChar()==')')
@@ -203,6 +229,15 @@ XPINSScriptableMath::Polynomial XPINSBuiltIn::ParsePolyConst(XPINSParser::XPINSS
 	}
 	++script.index;
 	return Polynomial(mons);
+}
+XPINSScriptableMath::VectorField ParseFieldConst(XPINSParser::XPINSScriptSpace& script)
+{
+	if(!script.matchesString("~F<"))return VectorField();
+	script.index+=3;
+	Polynomial x=*ParsePolyArg(script, ',');
+	Polynomial y=*ParsePolyArg(script, ',');
+	Polynomial z=*ParsePolyArg(script, '>');
+	return VectorField(x,y,z);
 }
 string XPINSBuiltIn::ParseStrConst(XPINSParser::XPINSScriptSpace& script)
 {
@@ -249,12 +284,12 @@ string XPINSBuiltIn::ParseStrConst(XPINSParser::XPINSScriptSpace& script)
 XPINSParser::XPINSArray XPINSBuiltIn::ParseArrConst(XPINSParser::XPINSScriptSpace& script)
 {
 	if(script.currentChar()!='~')return XPINSArray();
-	XPINSArray arr=XPINSArray();
 	while (script.currentChar()!='{')++script.index;
 	size_t size=1;
 	int temp=script.index;
 	for (;script.currentChar()!='}'; ++script.index)//Find Col Count
 		if(script.currentChar()==',')++size;
+	XPINSArray arr=XPINSArray();
 	arr.values.resize(size);
 	script.index=temp;
 	for(int i=0;i<size;++i)
@@ -264,14 +299,15 @@ XPINSParser::XPINSArray XPINSBuiltIn::ParseArrConst(XPINSParser::XPINSScriptSpac
 			arr.values[i]=*ParsePointerArg(script, '}',&type);
 		else
 			arr.values[i]=*ParsePointerArg(script, ',',&type);
-		arr.types[i]=type;
+		arr.types+=type;
 	}
 	return arr;
 }
 
 #pragma mark Expression Processing
 
-enum opCode{
+enum opCode
+{
 	NOT,OR,AND,//LOGICAL
 	LESS,LESSEQ,GREATER,GREATEREQ,NOTEQUAL,EQAUAL,//RELATIONAL
 	ADD,SUBTRACT,MULTIPLY,DIVIDE,POWER,MODULUS,//ARITHMATIC
@@ -279,12 +315,12 @@ enum opCode{
 	COMPOSITION,EVALUATE,
 	INVALID//INVALID op code
 };
-enum resType{
-	BOOL,NUM,VEC,MAT,POLY
-};
-opCode FindOp(XPINSScriptSpace sc, bool* assign,resType type)
+enum resType
 {
-	XPINSScriptSpace script=sc;
+	BOOL,NUM,VEC,QUAT,MAT,POLY,FIELD
+};
+opCode FindOp(XPINSScriptSpace& script, bool* assign,resType type)
+{
 	for (; script.index<script.instructions.length(); ++script.index) {
 		if(script.currentChar()=='(')
 		{
@@ -304,7 +340,7 @@ opCode FindOp(XPINSScriptSpace sc, bool* assign,resType type)
 					break;
 				case '&':
 					if(type==BOOL)return AND;
-					if(type==POLY){
+					if(type==POLY||type==FIELD){
 						if(assign&&script.instructions[script.index+1]=='=')*assign=true;
 						return COMPOSITION;
 					}break;
@@ -321,26 +357,26 @@ opCode FindOp(XPINSScriptSpace sc, bool* assign,resType type)
 					if(type==BOOL) return EQAUAL;
 					break;
 				case '+':
-					if(type==NUM||type==VEC||type==MAT||type==POLY){
+					if(type==NUM||type==VEC||type==QUAT||type==MAT||type==POLY||type==FIELD){
 						if(script.instructions[script.index+1]=='+')
 							return script.instructions[script.index-1]=='('?PREINCREMENT:POSTINCREMENT;
 						if(assign&&script.instructions[script.index+1]=='=')*assign=true;
 						return ADD;
 					}break;
 				case '-':
-					if(type==NUM||type==VEC||type==MAT||type==POLY){
+					if(type==NUM||type==VEC||type==QUAT||type==MAT||type==POLY||type==FIELD){
 						if(script.instructions[script.index+1]=='-')
 							return script.instructions[script.index-1]=='('?PREDECREMENT:POSTDECREMENT;
 						if(assign&&script.instructions[script.index+1]=='=')*assign=true;
 						return SUBTRACT;
 					}break;
 				case '*':
-					if(type==NUM||type==VEC||type==MAT||type==POLY){
+					if(type==NUM||type==VEC||type==QUAT||type==MAT||type==POLY||type==FIELD){
 						if(assign&&script.instructions[script.index+1]=='=')*assign=true;
 						return MULTIPLY;
 					}break;
 				case '/':
-					if(type==NUM||type==VEC||type==MAT||type==POLY){
+					if(type==NUM||type==VEC||type==QUAT||type==MAT||type==POLY||type==FIELD){
 						if(assign&&script.instructions[script.index+1]=='=')*assign=true;
 						return DIVIDE;
 					}break;
@@ -355,8 +391,8 @@ opCode FindOp(XPINSScriptSpace sc, bool* assign,resType type)
 						return MODULUS;
 					}break;
 				case ':':
-					if(type==NUM) return EVALUATE;
-					if(type==POLY){
+					if(type==NUM||type==VEC) return EVALUATE;
+					if(type==POLY||type==FIELD){
 						if(assign&&script.instructions[script.index+1]=='=')*assign=true;
 						return EVALUATE;
 					}break;
@@ -364,9 +400,6 @@ opCode FindOp(XPINSScriptSpace sc, bool* assign,resType type)
 	}
 	return INVALID;
 }
-
-
-
 void XPINSBuiltIn::ParseVoidExp(XPINSParser::XPINSScriptSpace& script)
 {
 	switch (script.instructions[script.index+1])
@@ -377,14 +410,24 @@ void XPINSBuiltIn::ParseVoidExp(XPINSParser::XPINSScriptSpace& script)
 			break;
 		case 'V': ParseVecExp(script);
 			break;
+		case 'Q': ParseQuatExp(script);
+			break;
 		case 'M': ParseMatExp(script);
+			break;
+		case 'P': ParsePolyExp(script);
+			break;
+		case 'F': ParseFieldExp(script);
 			break;
 	}
 }
 bool XPINSBuiltIn::ParseBoolExp(XPINSScriptSpace& script){
 	while(script.currentChar()!='?')++script.index;
 	script.index+=3;
-	switch (FindOp(script, NULL,BOOL)) {
+	int temp=script.index;
+	opCode op=FindOp(script, NULL,BOOL);
+	script.index=temp;
+	switch (op)
+	{
 		case NOT:
 		{
 			bool arg=*ParseBoolArg(script, ')');
@@ -447,7 +490,11 @@ double XPINSBuiltIn::ParseNumExp(XPINSScriptSpace& script){
 	while(script.currentChar()!='?')++script.index;
 	script.index+=3;
 	bool assign=false;
-	switch (FindOp(script, &assign,NUM)) {
+	int temp=script.index;
+	opCode op=FindOp(script, NULL,NUM);
+	script.index=temp;
+	switch (op)
+	{
 		case ADD:
 		{
 			double* var=ParseNumArg(script,'+');
@@ -466,21 +513,24 @@ double XPINSBuiltIn::ParseNumExp(XPINSScriptSpace& script){
 		}
 		case MULTIPLY:
 		{
-			if(script.instructions[script.index+1]=='V'||script.instructions[script.index+1]=='<'||script.instructions[script.index+1]=='P'||script.instructions[script.index+1]=='S')//Dot Product
+			char t1='N';
+			char t2='N';
+			void* arg1=ParseArg(script, '*', t1);
+			void* arg2=ParseArg(script, ')', t2);
+			if(t1=='V'&&t2=='V')//Dot Product
 			{
-				Vector v1=*ParseVecArg(script, '*');
-				Vector v2=*ParseVecArg(script, ')');
-				return Vector::DotProduct(v1, v2);
+				return Vector::DotProduct(*(Vector*)arg1, *(Vector*)arg2);
 			}
-			else
+			else if(t1=='N'&&t2=='N')
 			{
-				double* var=ParseNumArg(script,'*');
+				double* var=(double*)arg1;
 				double result=*var;
-				double a=*ParseNumArg(script,')');
+				double a=*(double*)arg2;
 				result*=a;
 				if(assign) *var=result;
 				return result;
 			}
+			else return 0;
 		}
 		case DIVIDE:
 		{
@@ -528,7 +578,8 @@ double XPINSBuiltIn::ParseNumExp(XPINSScriptSpace& script){
 		{
 			Polynomial* poly=ParsePolyArg(script,':');
 			vector<double>args=vector<double>();
-			for (int i=0;script.currentChar()==','||script.currentChar()==':'; ++i) {
+			for (int i=0;script.currentChar()==','||script.currentChar()==':'; ++i)
+			{
 				args.resize(i+1);
 				double arg=*ParseNumArg(script, ',');
 				args[i]=arg;
@@ -542,7 +593,11 @@ Vector XPINSBuiltIn::ParseVecExp(XPINSScriptSpace& script){
 	while(script.currentChar()!='?')++script.index;
 	script.index+=3;
 	bool assign=false;
-	switch (FindOp(script, &assign,VEC)) {
+	int temp=script.index;
+	opCode op=FindOp(script, NULL,VEC);
+	script.index=temp;
+	switch (op)
+	{
 		case ADD:
 		{
 			Vector* var=ParseVecArg(script,'+');
@@ -561,25 +616,45 @@ Vector XPINSBuiltIn::ParseVecExp(XPINSScriptSpace& script){
 		}
 		case MULTIPLY:
 		{
-			if(script.instructions[script.index+1]=='M'||script.instructions[script.index+1]=='[')//Matrix
+			char t1='N';
+			char t2='N';
+			void* arg1=ParseArg(script, '*', t1);
+			void* arg2=ParseArg(script, ')', t2);
+			if(t1=='M'&&t2=='V')//Matrix-Vector
 			{
-				Matrix mat=*ParseMatArg(script, '*');
-				Vector* var=ParseVecArg(script,')');
+				Matrix mat=*(Matrix*)arg1;
+				Vector* var=(Vector*)arg2;
 				Vector result=mat*(*var);
 				if(assign) *var=result;
 				return result;
 			}
-			else{
-				Vector* var=ParseVecArg(script,'*');
+			else if(t1=='V'&&t2=='V')//Cross Product
+			{
+				Vector* var=(Vector*)arg1;
 				Vector result=*var;
-				if(script.instructions[script.index+2]=='V'||script.instructions[script.index+2]=='<'||script.	instructions[script.index+2]=='P'||script.instructions[script.index+2]=='S')//Cross Product
-				{
-					result=Vector::CrossProduct(result, *ParseVecArg(script, ')'));
-				}
-				else result*=*ParseNumArg(script,')');
+				result=Vector::CrossProduct(result,*(Vector*)arg2);
 				if(assign) *var=result;
 				return result;
 			}
+			else if(t1=='V'&&t2=='N')//Vector Scale
+			{
+				Vector* var=(Vector*)arg1;
+				Vector result=*var;
+				double a=*(double*)arg2;
+				result*=a;
+				if(assign) *var=result;
+				return result;
+
+			}
+			else if(t1=='N'&&t2=='V')//Vector Scale
+			{
+				Vector* var=(Vector*)arg2;
+				Vector result=*var;
+				double a=*(double*)arg1;
+				result*=a;
+				return result;
+			}
+			else return Vector();
 		}
 		case DIVIDE:
 		{
@@ -589,14 +664,101 @@ Vector XPINSBuiltIn::ParseVecExp(XPINSScriptSpace& script){
 			if(assign) *var=result;
 			return result;
 		}
+		case EVALUATE:
+		{
+			VectorField* field=ParseFieldArg(script,':');
+			vector<double>args=vector<double>();
+			for (int i=0;script.currentChar()==','||script.currentChar()==':'; ++i)
+			{
+				args.resize(i+1);
+				double arg=*ParseNumArg(script, ',');
+				args[i]=arg;
+			}
+			return field->Evaluate(args);
+		}
 		default:return Vector();
+			
+	}
+}
+Quaternion XPINSBuiltIn::ParseQuatExp(XPINSScriptSpace& script){
+	while(script.currentChar()!='?')++script.index;
+	script.index+=3;
+	bool assign=false;
+	int temp=script.index;
+	opCode op=FindOp(script, NULL,QUAT);
+	script.index=temp;
+	switch (op)
+	{
+		case ADD:
+		{
+			Quaternion* var=ParseQuatArg(script,'+');
+			Quaternion result=*var;
+			result+=*ParseQuatArg(script,')');
+			if(assign) *var=result;
+			return result;
+		}
+		case SUBTRACT:
+		{
+			Quaternion* var=ParseQuatArg(script,'-');
+			Quaternion result=*var;
+			result-=*ParseQuatArg(script,')');
+			if(assign) *var=result;
+			return result;
+		}
+		case MULTIPLY:
+		{
+			char t1='N';
+			char t2='N';
+			void* arg1=ParseArg(script, '*', t1);
+			void* arg2=ParseArg(script, ')', t2);
+			if(t1=='Q'&&t2=='Q')//Quaternion-Quaternion
+			{
+				Quaternion* var=(Quaternion*)arg1;
+				Quaternion result=*var;
+				Quaternion q=*(Quaternion*)arg2;
+				result*=q;
+				if(assign) *var=result;
+				return result;
+			}
+			else if(t1=='Q'&&t2=='N')//Quatnerion-Scalar
+			{
+				Quaternion* var=(Quaternion*)arg1;
+				Quaternion result=*var;
+				double a=*(double*)arg2;
+				result*=a;
+				if(assign) *var=result;
+				return result;
+			}
+			else if(t1=='N'&&t2=='Q')//Quatnerion-Scalar
+			{
+				Quaternion* var=(Quaternion*)arg2;
+				Quaternion result=*var;
+				double a=*(double*)arg1;
+				result*=a;
+				return result;
+			}
+			else return Quaternion();
+		}
+		case DIVIDE:
+		{
+			Quaternion* var=ParseQuatArg(script,'/');
+			Quaternion result=*var;
+			result/=*ParseNumArg(script,')');
+			if(assign) *var=result;
+			return result;
+		}
+		default:return Quaternion();
 	}
 }
 Matrix XPINSBuiltIn::ParseMatExp(XPINSScriptSpace& script){
 	while(script.currentChar()!='?')++script.index;
 	script.index+=3;
 	bool assign=false;
-	switch (FindOp(script, &assign,MAT)) {
+	int temp=script.index;
+	opCode op=FindOp(script, NULL,MAT);
+	script.index=temp;
+	switch (op)
+	{
 		case ADD:
 		{
 			Matrix* var=ParseMatArg(script,'+');
@@ -615,20 +777,36 @@ Matrix XPINSBuiltIn::ParseMatExp(XPINSScriptSpace& script){
 		}
 		case MULTIPLY:
 		{
-			Matrix* var=ParseMatArg(script,'*');
-			Matrix result=*var;
-			if(script.instructions[script.index+2]=='M'||script.instructions[script.index+2]=='[')//Matrix-Matrix
+			char t1='N',t2='N';
+			void* arg1=ParseArg(script, '*', t1);
+			void* arg2=ParseArg(script, ')', t2);
+			if(t1=='M'&&(t2=='M'||t2=='V'))//Matrix-Matrix
 			{
-				result=result * *ParseMatArg(script, ')');
-			}
-			else
-			{
-				double a=*ParseNumArg(script,')');
+				Matrix* var=(Matrix*)arg1;
+				Matrix result=*var;
+				Matrix a=(t2=='M')?(*(Matrix*)arg2):(Matrix::MatrixForVector(*(Vector*)arg2));
 				result*=a;
+				if(assign) *var=result;
+				return result;
 			}
-			if(assign) *var=result;
-			return result;
-			
+			else if(t1=='M'&&t2=='N')//Matrix Scale
+			{
+				Matrix* var=(Matrix*)arg1;
+				Matrix result=*var;
+				double a=*(double*)arg2;
+				result*=a;
+				if(assign) *var=result;
+				return result;
+			}
+			else if(t1=='N'&&t2=='M')//Matrix Scale
+			{
+				Matrix* var=(Matrix*)arg2;
+				Matrix result=*var;
+				double a=*(double*)arg1;
+				result*=a;
+				return result;
+			}
+			else return Matrix();
 		}
 		case DIVIDE:
 		{
@@ -645,7 +823,11 @@ Polynomial XPINSBuiltIn::ParsePolyExp(XPINSScriptSpace& script){
 	while(script.currentChar()!='?')++script.index;
 	script.index+=3;
 	bool assign=false;
-	switch (FindOp(script, &assign,POLY)) {
+	int temp=script.index;
+	opCode op=FindOp(script, NULL,POLY);
+	script.index=temp;
+	switch (op)
+	{
 		case ADD:
 		{
 			Polynomial* var=ParsePolyArg(script,'+');
@@ -664,15 +846,43 @@ Polynomial XPINSBuiltIn::ParsePolyExp(XPINSScriptSpace& script){
 		}
 		case MULTIPLY:
 		{
-			Polynomial* var=ParsePolyArg(script,'*');
-			Polynomial result=*var;
-			if(script.instructions[script.index+2]=='P'||script.instructions[script.index+2]=='(')//Cross Product
+			char t1='N';
+			char t2='N';
+			void* arg1=ParseArg(script, '*', t1);
+			void* arg2=ParseArg(script, ')', t2);
+			if(t1=='P'&&t2=='P')//Polynomial-Polynomial
 			{
-				result=Polynomial::Multiply(result, *ParsePolyArg(script, ')'));
+				Polynomial* var=(Polynomial*)arg1;
+				Polynomial result=*var;
+				Polynomial a=*(Polynomial*)arg2;
+				result*=a;
+				if(assign) *var=result;
+				return result;
 			}
-			else result*=*ParseNumArg(script,')');
-			if(assign) *var=result;
-			return result;
+			else if(t1=='P'&&t2=='N')//Polynomial-Scalar
+			{
+				Polynomial* var=(Polynomial*)arg1;
+				Polynomial result=*var;
+				double a=*(double*)arg2;
+				result*=a;
+				if(assign) *var=result;
+				return result;
+			}
+			else if(t1=='N'&&t2=='P')//Polynomial-Scalar
+			{
+				Polynomial* var=(Polynomial*)arg2;
+				Polynomial result=*var;
+				double a=*(double*)arg1;
+				result*=a;
+				return result;
+			}
+			else if((t1=='F'||t1=='V')&&(t2=='F'||t2=='V'))//Vector Field Dot Product
+			{
+				if(t1=='N')arg1=new VectorField(*(VectorField*)arg1);
+				if(t2=='N')arg2=new VectorField(*(VectorField*)arg2);
+				return VectorField::Dot(*(VectorField*)arg1, *(VectorField*)arg2);
+			}
+			else return Polynomial();
 		}
 		case DIVIDE:
 		{
@@ -710,12 +920,127 @@ Polynomial XPINSBuiltIn::ParsePolyExp(XPINSScriptSpace& script){
 		default:return Polynomial();
 	}
 }
+VectorField XPINSBuiltIn::ParseFieldExp(XPINSScriptSpace& script){
+	while(script.currentChar()!='?')++script.index;
+	script.index+=3;
+	bool assign=false;
+	int temp=script.index;
+	opCode op=FindOp(script, NULL,FIELD);
+	script.index=temp;
+	switch (op)
+	{
+		case ADD:
+		{
+			VectorField* var=ParseFieldArg(script,'+');
+			VectorField result=*var;
+			result+=*ParseFieldArg(script,')');
+			if(assign) *var=result;
+			return result;
+		}
+		case SUBTRACT:
+		{
+			VectorField* var=ParseFieldArg(script,'-');
+			VectorField result=*var;
+			result-=*ParseVecArg(script,')');
+			if(assign) *var=result;
+			return result;
+		}
+		case MULTIPLY:
+		{
+			char t1='N';
+			char t2='N';
+			void* arg1=ParseArg(script, '*', t1);
+			void* arg2=ParseArg(script, ')', t2);
+			if(t1=='M'&&t2=='F')//Matrix-VectorField
+			{
+				Matrix mat=*(Matrix*)arg1;
+				VectorField* var=(VectorField*)arg2;
+				VectorField result=VectorField::MatMult(mat,*var);
+				if(assign) *var=result;
+				return result;
+			}
+			else if((t1=='F'||t1=='V')&&(t2=='F'||t2=='V'))//Cross Product
+			{
+				VectorField result=(t1=='F')?*(VectorField*)arg1:VectorField(*(Vector*)arg1);
+				VectorField v2=(t2=='F')?*(VectorField*)arg2:VectorField(*(Vector*)arg2);
+				result=VectorField::Cross(result,v2);
+				if(t1=='F'&&assign) *(VectorField*)arg1=result;
+				return result;
+			}
+			else if(t1=='F'&&t2=='P')//VectorField Scale
+			{
+				VectorField* var=(VectorField*)arg1;
+				VectorField result=*var;
+				Polynomial a=*(Polynomial*)arg2;
+				result*=a;
+				if(assign) *var=result;
+				return result;
+			}
+			else if(t1=='P'&&t2=='F')//VectorField Scale
+			{
+				VectorField* var=(VectorField*)arg2;
+				VectorField result=*var;
+				Polynomial a=*(Polynomial*)arg1;
+				result*=a;
+				if(assign) *var=result;
+				return result;
+			}
+			else if(t1=='F'&&t2=='N')//VectorField Scale
+			{
+				VectorField* var=(VectorField*)arg1;
+				VectorField result=*var;
+				double a=*(double*)arg2;
+				result*=a;
+				if(assign) *var=result;
+				return result;
+			}
+			else if(t1=='N'&&t2=='F')//VectorField Scale
+			{
+				VectorField* var=(VectorField*)arg2;
+				VectorField result=*var;
+				double a=*(double*)arg1;
+				result*=a;
+				if(assign) *var=result;
+				return result;
+			}
+			else return Vector();
+		}
+		case DIVIDE:
+		{
+			VectorField* var=ParseFieldArg(script,'/');
+			VectorField result=*var;
+			result*= 1/(*ParseNumArg(script,')'));
+			if(assign) *var=result;
+			return result;
+		}
+		case COMPOSITION:
+		{
+			VectorField* var=ParseFieldArg(script,'&');
+			Polynomial inner=*ParsePolyArg(script,',');
+			int variable=*ParseNumArg(script, ')');
+			VectorField result=VectorField::Compose(*var,inner,variable);
+			if(assign) *var=result;
+			return result;
+		}
+		case EVALUATE:
+		{
+			VectorField* var=ParseFieldArg(script,':');
+			int value=*ParseNumArg(script,',');
+			int variable=*ParseNumArg(script, ')');
+			VectorField result=var->PartialEvaluate(value,variable);
+			if(assign) *var=result;
+			return result;
+		}
+		default:return Vector();
+	}
+}
 #pragma mark BIF processing
 
 bool XPINSBuiltIn::ParseBoolBIF(int fNum, XPINSScriptSpace& script)
 {
-	switch (fNum) {
-		case 1://X_PMREACHABLE
+	switch (fNum)
+	{
+		case 1://X_MARKOV_REACHABLE
 		{
 			Matrix arg1=*ParseMatArg(script, ',');
 			double arg2=*ParseNumArg(script, ',');
@@ -728,33 +1053,34 @@ bool XPINSBuiltIn::ParseBoolBIF(int fNum, XPINSScriptSpace& script)
 
 double XPINSBuiltIn::ParseNumBIF(int fNum, XPINSScriptSpace& script)
 {
-	switch (fNum) {
-		case 1://X_TSIN
+	switch (fNum)
+	{
+		case 1://X_SIN
 		{
 			double arg1=*ParseNumArg(script, ')');
 			return sin(arg1);
 		}
-		case 2://X_TCOS
+		case 2://X_COS
 		{
 			double arg1=*ParseNumArg(script, ')');
 			return cos(arg1);
 		}
-		case 3://X_TTAN
+		case 3://X_TAN
 		{
 			double arg1=*ParseNumArg(script, ')');
 			return tan(arg1);
 		}
-		case 4://X_TASIN
+		case 4://X_ASIN
 		{
 			double arg1=*ParseNumArg(script, ',');
 			return asin(arg1);
 		}
-		case 5://X_TACOS
+		case 5://X_ACOS
 		{
 			double arg1=*ParseNumArg(script, ',');
 			return acos(arg1);
 		}
-		case 6://X_TATAN
+		case 6://X_ATAN
 		{
 			double arg1=*ParseNumArg(script, ',');
 			double arg2=*ParseNumArg(script, ')');
@@ -786,13 +1112,13 @@ double XPINSBuiltIn::ParseNumBIF(int fNum, XPINSScriptSpace& script)
 			double arg1=*ParseNumArg(script, ',');
 			return floor(arg1);
 		}
-		case 12://X_VADDPOLAR
+		case 12://X_ADDPOLAR
 		{
 			double arg1=*ParseNumArg(script, ',');
 			double arg2=*ParseNumArg(script, ')');
 			return Vector::AddPolar(arg1, arg2);
 		}
-		case 13://X_VDIST
+		case 13://X_DIST
 		{
 			double arg1=*ParseNumArg(script, ',');
 			double arg2=*ParseNumArg(script, ',');
@@ -802,118 +1128,116 @@ double XPINSBuiltIn::ParseNumBIF(int fNum, XPINSScriptSpace& script)
 		case 14://X_VX
 		{
 			Vector arg1=*ParseVecArg(script, ')');
-			double x=0,y=0,z=0;
-			arg1.RectCoords(&x, &y, &z);
+			double x=0;
+			arg1.Coords(&x, NULL,NULL,Vector::Cartesian);
 			return x;
 		}
 		case 15://X_VY
 		{
 			Vector arg1=*ParseVecArg(script, ')');
-			double x=0,y=0,z=0;
-			arg1.RectCoords(&x, &y, &z);
+			double y=0;
+			arg1.Coords(NULL, &y, NULL,Vector::Cartesian);
 			return y;
 		}
 		case 16://X_VZ
 		{
 			Vector arg1=*ParseVecArg(script, ')');
-			double x=0,y=0,z=0;
-			arg1.RectCoords(&x, &y, &z);
+			double z=0;
+			arg1.Coords(NULL, NULL,&z,Vector::Cartesian);
 			return z;
 		}
 		case 17://X_VR
 		{
 			Vector arg1=*ParseVecArg(script, ')');
-			double x=0,y=0,z=0;
-			arg1.PolarCoords(&x, &y, &z);
-			return x;
+			double r=0;
+			arg1.Coords(&r, NULL, NULL,Vector::Polar);
+			return r;
 		}
 		case 18://X_VTHETA
 		{
 			Vector arg1=*ParseVecArg(script, ')');
-			double x=0,y=0,z=0;
-			arg1.PolarCoords(&x, &y, &z);
-			return y;
+			double t=0;
+			arg1.Coords(NULL,&t, NULL,Vector::Polar);
+			return t;
 		}
-		case 19://X_VRHO
+		case 19://X_VMAG
 		{
 			Vector arg1=*ParseVecArg(script, ')');
-			double x=0,y=0,z=0;
-			arg1.SphericalCoords(&x, &y, &z);
-			return x;
+			return arg1.Magnitude();
 		}
 		case 20://X_VPHI
 		{
 			Vector arg1=*ParseVecArg(script, ')');
-			double x=0,y=0,z=0;
-			arg1.SphericalCoords(&x, &y, &z);
+			double z=0;
+			arg1.Coords(NULL, NULL,&z,Vector::Spherical);
 			return z;
 		}
-		case 21://X_VANG
+		case 21://X_VECTOR_ANGLE
 		{
 			Vector arg1=*ParseVecArg(script, ',');
 			Vector arg2=*ParseVecArg(script, ')');
 			return Vector::AngleBetweenVectors(arg1, arg2);
 			
 		}
-		case 22://X_MGET
+		case 22://X_MATRIX_GET
 		{
 			Matrix arg1=*ParseMatArg(script, ',');
 			int arg2=*ParseNumArg(script, ',');
 			int arg3=*ParseNumArg(script, ')');
 			return arg1.ValueAtPosition(arg2, arg3);
 		}
-		case 23://X_MDET
+		case 23://X_DETERMINANT
 		{
 			Matrix arg1=*ParseMatArg(script, ')');
 			return Matrix::Determinant(arg1);
 		}
-		case 24://X_PRAND
+		case 24://X_RAND
 		{
 			double arg1=*ParseNumArg(script, ',');
 			double arg2=*ParseNumArg(script, ')');
 			return Probability::UniformRV(arg1, arg2-arg1);
 		}
-		case 25://X_PBERN
+		case 25://X_RV_BERNOULLI
 		{
 			double arg1=*ParseNumArg(script, ',');
 			return Probability::BernoulliRV(arg1);
 		}
-		case 26://X_PNormal
+		case 26://X_RV_NOMRAL
 		{
 			double arg1=*ParseNumArg(script, ',');
 			double arg2=*ParseNumArg(script, ')');
 			return Probability::NormalRV(arg1, arg2);
 		}
-		case 27://X_PEXP
+		case 27://X_RV_EXP
 		{
 			double arg1=*ParseNumArg(script, ',');
 			return Probability::ExponentialRV(arg1);
 		}
-		case 28://X_PPOISSON
+		case 28://X_RV_POISSON
 		{
 			double arg1=*ParseNumArg(script, ',');
 			return Probability::PoissonRV(arg1);
 		}
-		case 29://X_PCOIN
+		case 29://X_COIN_FLIP
 		{
 			double arg1=*ParseNumArg(script, ',');
 			double arg2=*ParseNumArg(script, ')');
 			return Probability::CoinFlip(arg1, arg2);
 		}
-		case 30://X_PDICE
+		case 30://X_DICE_ROLL
 		{
 			double arg1=*ParseNumArg(script, ',');
 			double arg2=*ParseNumArg(script, ')');
 			return Probability::FairDiceRoll(arg1, arg2);
 		}
-		case 31://X_PMSIM
+		case 31://X_MARKOV_SIM
 		{
 			Matrix arg1=*ParseMatArg(script, ',');
 			double arg2=*ParseNumArg(script, ',');
 			double arg3=*ParseNumArg(script, ',');
 			return Probability::SimulateMarkovChain(arg1, arg2, arg3);
 		}
-		case 32://X_PMPROB
+		case 32://X_MARKOV_PROB
 		{
 			Matrix arg1=*ParseMatArg(script, ',');
 			double arg2=*ParseNumArg(script, ',');
@@ -921,14 +1245,14 @@ double XPINSBuiltIn::ParseNumBIF(int fNum, XPINSScriptSpace& script)
 			double arg4=*ParseNumArg(script, ',');
 			return Probability::TransitionProbability(arg1, arg2, arg3, arg4);
 		}
-		case 33://X_PMSTEADYSTATE
+		case 33://X_MARKOV_STEADYSTATE
 		{
 			Matrix arg1=*ParseMatArg(script, ',');
 			double arg2=*ParseNumArg(script, ',');
 			return Probability::SteadyStateProbability(arg1, arg2);
 
 		}
-		case 34://X_PMABSORBPROB
+		case 34://X_MARKOV_ABSORB_PROB
 		{
 			Matrix arg1=*ParseMatArg(script, ',');
 			double arg2=*ParseNumArg(script, ',');
@@ -936,19 +1260,31 @@ double XPINSBuiltIn::ParseNumBIF(int fNum, XPINSScriptSpace& script)
 			return Probability::AbsorbtionProbability(arg1, arg2, arg3);
 
 		}
-		case 35://X_PMABSORBTIME
+		case 35://X_MARKOV_ABSORB_TIME
 		{
 			Matrix arg1=*ParseMatArg(script, ',');
 			double arg2=*ParseNumArg(script, ',');
 			double arg3=*ParseNumArg(script, ',');
 			return Probability::AbsorbtionTime(arg1, arg2, arg3);
 		}
-		case 36://X_PMABSORBSIM
+		case 36://X_MARKOV_ABSORB_SIM
 		{
 			Matrix arg1=*ParseMatArg(script, ',');
 			double arg2=*ParseNumArg(script, ',');
 			double arg3=*ParseNumArg(script, ',');
 			return Probability::SimulateAbsorbtionTime(arg1, arg2, arg3);
+		}
+		case 37://X_QR
+		{
+			Quaternion arg1=*ParseQuatArg(script, ',');
+			double r;
+			arg1.Components(NULL,NULL,NULL,&r);
+			return r;
+		}
+		case 38://X_QMAG
+		{
+			Quaternion arg1=*ParseQuatArg(script, ',');
+			return arg1.Magnitude();
 		}
 	}
 	return 0;
@@ -956,64 +1292,117 @@ double XPINSBuiltIn::ParseNumBIF(int fNum, XPINSScriptSpace& script)
 XPINSScriptableMath::Vector XPINSBuiltIn::ParseVecBIF(int fNum, XPINSScriptSpace& script)
 {
 	
-	switch (fNum) {
-		case 1://X_VPROJ
+	switch (fNum)
+	{
+		case 1://X_VPROJECT
 		{
 			Vector arg1=*ParseVecArg(script, ',');
-			double arg2=*ParseNumArg(script, ',');
-			double arg3=*ParseNumArg(script, ')');
-			return Vector::ProjectionInDirection(arg1,arg2,arg3);
+			Vector arg2=*ParseVecArg(script, ',');
+			return Vector::ProjectionOntoVector(arg1,arg2);
 		}
-		case 2://X_VUNIT
+		case 2://X_UNIT_VECTOR
 		{
 			Vector arg1=*ParseVecArg(script, ',');
 			return Vector::UnitVectorFromVector(arg1);
 		}
-		case 3://X_MMTV
+		case 3://X_QV
 		{
-			Matrix arg1=*ParseMatArg(script, ')');
-			return Matrix::VectorForMatrix(arg1);
-			
+			Quaternion arg1=*ParseQuatArg(script, ',');
+			double x,y,z;
+			arg1.Components(&x, &y, &z, NULL);
+			return Vector(x,y,z,Vector::Cartesian);
+		}
+		case 4://X_QUATERNION_ROTATE
+		{
+			Quaternion arg1=*ParseQuatArg(script, ',');
+			Vector arg2=*ParseVecArg(script, ',');
+			return Quaternion::RotateVector(arg1, arg2);
 		}
 	}
 	return Vector();
+}
+XPINSScriptableMath::Quaternion XPINSBuiltIn::ParseQuatBIF(int fNum, XPINSScriptSpace& script)
+{
 	
+	switch (fNum)
+	{
+		case 1://X_QUATERNION_CONJUGATE
+		{
+			Quaternion arg1=*ParseQuatArg(script, ',');
+			return Quaternion::ConjugateQuaternion(arg1);
+		}
+		case 2://X_QUATERNION_INVERSE
+		{
+			Quaternion arg1=*ParseQuatArg(script, ',');
+			return Quaternion::InvertQuaternion(arg1);
+		}
+		case 3://X_UNIT_QUATERNION
+		{
+			Quaternion arg1=*ParseQuatArg(script, ',');
+			return Quaternion::UnitQuaternion(arg1);
+		}
+	}
+	return Quaternion();
 }
 XPINSScriptableMath::Matrix XPINSBuiltIn::ParseMatBIF(int fNum, XPINSScriptSpace& script)
 {
 	
-	switch (fNum) {
-		case 1://X_MMAKE
+	switch (fNum)
+	{
+		case 1://X_ZERO_MATRIX
 		{
 			int arg1=*ParseNumArg(script, ',');
 			int arg2=*ParseNumArg(script, ')');
 			return Matrix(arg1,arg2);
 		}
-		case 2://X_MID
+		case 2://X_IDENTITY_MATRIX
 		{
 			int arg1=*ParseNumArg(script, ')');
 			return Matrix::IdentityMatrixOfSize(arg1);
 		}
-		case 3://X_MROT
+		case 3://X_ROTATION_MATRIX
 		{
 			double arg1=*ParseNumArg(script, ',');
 			Vector arg2=*ParseVecArg(script, ')');
 			return Matrix::RotationMatrixWithAngleAroundVector(arg2,arg1);
 		}
-		case 4://X_MINV
+		case 4://X_EULER_ANGLE_MATRIX
+		{
+			double arg1=*ParseNumArg(script, ',');
+			double arg2=*ParseNumArg(script, ',');
+			double arg3=*ParseNumArg(script, ',');
+			return Matrix::RotationMatrixWithEulerAngles(arg1, arg2, arg3);
+		}
+		case 5://X_QUATERNION_MATRIX
+		{
+			Quaternion arg1=*ParseQuatArg(script, ',');
+			return Matrix::RotationMatrixWithQuaternion(arg1);
+		}
+		case 6://X_INVERT
 		{
 			Matrix arg1=*ParseMatArg(script, ')');
 			return Matrix::Invert(arg1);
 		}
-		case 5://X_MTRANS
+		case 7://X_TRANSPOSE
 		{
 			Matrix arg1=*ParseMatArg(script, ')');
 			return Matrix::Transpose(arg1);
 		}
-		case 6://X_MVTM
+		case 8://X_APPEND
 		{
-			Vector arg1=*ParseVecArg(script, ')');
-			return Matrix::MatrixForVector(arg1);
+			Matrix arg1=*ParseMatArg(script, ',');
+			Matrix arg2=*ParseMatArg(script, ')');
+			return Matrix::Append(arg1, arg2);
+		}
+		case 9://X_ROW_ECHELON
+		{
+			Matrix arg1=*ParseMatArg(script, ')');
+			return Matrix::RowEchelon(arg1);
+		}
+		case 10://X_REDUCED_ROW_ECHELON
+		{
+			Matrix arg1=*ParseMatArg(script, ')');
+			return Matrix::ReducedRowEchelon(arg1);
 		}
 	}
 	return Matrix();
@@ -1021,30 +1410,117 @@ XPINSScriptableMath::Matrix XPINSBuiltIn::ParseMatBIF(int fNum, XPINSScriptSpace
 XPINSScriptableMath::Polynomial XPINSBuiltIn::ParsePolyBIF(int fNum, XPINSScriptSpace& script)
 {
 	
-	switch (fNum) {
-		case 1://X_ADERIVE
+	switch (fNum)
+	{
+		case 1://X_DERIVE
 		{
 			Polynomial arg1=*ParsePolyArg(script, ',');
 			int arg2=*ParseNumArg(script, ',');
 			return Polynomial::Derivative(arg1, arg2);
 		}
-		case 2://X_AINTEGRATE
+		case 2://X_INTEGRATE
 		{
 			Polynomial arg1=*ParsePolyArg(script, ',');
 			int arg2=*ParseNumArg(script, ',');
 			return Polynomial::Integrate(arg1, arg2);
 		}
+		case 3://X_DIVERGENCE
+		{
+			VectorField arg1=*ParseFieldArg(script, ',');
+			return arg1.Divergence();
+		}
+		case 4://X_SCALAR_LINE_INTEGRAL
+		{
+			Polynomial arg1=*ParsePolyArg(script, ',');
+			VectorField arg2=*ParseFieldArg(script, ',');
+			Polynomial arg3=*ParsePolyArg(script, ',');
+			Polynomial arg4=*ParsePolyArg(script, ',');
+			VectorField::bound::bound(arg3,arg4);
+			return VectorField::LineIntegral(arg1, arg2, VectorField::bound(arg3,arg4));
+		}
+		case 5://X_VECTOR_LINE_INTEGRAL
+		{
+			VectorField arg1=*ParseFieldArg(script, ',');
+			VectorField arg2=*ParseFieldArg(script, ',');
+			Polynomial arg3=*ParsePolyArg(script, ',');
+			Polynomial arg4=*ParsePolyArg(script, ',');
+			return VectorField::LineIntegral(arg1, arg2, VectorField::bound(arg3,arg4));
+		}
+		case 6://X_SCALAR_SURFACE_INTEGRAL
+		{
+			Polynomial arg1=*ParsePolyArg(script, ',');
+			VectorField arg2=*ParseFieldArg(script, ',');
+			Polynomial arg3=*ParsePolyArg(script, ',');
+			Polynomial arg4=*ParsePolyArg(script, ',');
+			Polynomial arg5=*ParsePolyArg(script, ',');
+			Polynomial arg6=*ParsePolyArg(script, ',');
+			return VectorField::SurfaceIntegral(arg1, arg2, VectorField::bound(arg3,arg4),VectorField::bound(arg5,arg6));
+		}
+		case 7://X_VECTOR_LINE_INTEGRAL
+		{
+			VectorField arg1=*ParseFieldArg(script, ',');
+			VectorField arg2=*ParseFieldArg(script, ',');
+			Polynomial arg3=*ParsePolyArg(script, ',');
+			Polynomial arg4=*ParsePolyArg(script, ',');
+			Polynomial arg5=*ParsePolyArg(script, ',');
+			Polynomial arg6=*ParsePolyArg(script, ',');
+			return VectorField::SurfaceIntegral(arg1, arg2, VectorField::bound(arg3,arg4),VectorField::bound(arg5,arg6));
+		}
+		case 8://X_VOLUME_INTEGRAL
+		{
+			Polynomial arg1=*ParsePolyArg(script, ',');
+			VectorField arg2=*ParseFieldArg(script, ',');
+			Polynomial arg3=*ParsePolyArg(script, ',');
+			Polynomial arg4=*ParsePolyArg(script, ',');
+			Polynomial arg5=*ParsePolyArg(script, ',');
+			Polynomial arg6=*ParsePolyArg(script, ',');
+			Polynomial arg7=*ParsePolyArg(script, ',');
+			Polynomial arg8=*ParsePolyArg(script, ',');
+			return VectorField::VolumeIntegral(arg1, arg2, VectorField::bound(arg3,arg4),VectorField::bound(arg5,arg6),VectorField::bound(arg7,arg8));
+		}
 	}
 	return Polynomial();
+}
+XPINSScriptableMath::VectorField XPINSBuiltIn::ParseFieldBIF(int fNum, XPINSScriptSpace& script)
+{
+	
+	switch (fNum)
+	{
+		case 1://X_GRADIENT_VECTOR
+		{
+			Polynomial arg1=*ParsePolyArg(script, ',');
+			return VectorField::GradientField(arg1);
+		}
+		case 2://X_VECTOR_DERIVE
+		{
+			VectorField arg1=*ParseFieldArg(script, ',');
+			double  arg2=*ParseNumArg(script, ',');
+			return VectorField::Derivative(arg1, arg2);
+		}
+		case 3://X_VECTOR_INTEGRATE
+		{
+			VectorField arg1=*ParseFieldArg(script, ',');
+			double  arg2=*ParseNumArg(script, ',');
+			return VectorField::Integrate(arg1, arg2);
+		}
+		case 4://X_CURL
+		{
+			VectorField arg1=*ParseFieldArg(script, ',');
+			return arg1.Curl();
+		}
+	}
+	return VectorField();
 }
 void XPINSBuiltIn::ParseVoidBIF(int fNum, XPINSScriptSpace& script)
 {
 	switch (fNum) {
-		case 1:{//X_PRINT
+		case 1://X_PRINT
+		{
 			string str=*XPINSParser::ParseStrArg(script, ')');
 			cout<<str;
 		}break;
-		case 2:{//X_MSET
+		case 2://X_MSET
+		{
 			Matrix* arg1=ParseMatArg(script, ',');
 			double arg2=*ParseNumArg(script, ',');
 			int arg3=*ParseNumArg(script, ',');

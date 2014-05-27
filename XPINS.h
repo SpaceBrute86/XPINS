@@ -11,4 +11,5 @@
 #include "XPINS_Parser/XPINSParser.h"
 #include "XPINS_Compiler/XPINSCompiler.h"
 #include "XPINS_Parser/XPINSBindings.h"
+#include "XPINS_Parser/XPINSMathModule.h"
 #endif

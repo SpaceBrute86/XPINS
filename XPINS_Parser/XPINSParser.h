@@ -25,18 +25,20 @@ namespace XPINSParser
 // Variable space
 	struct XPINSVarSpace{
 	// Variables
-		bool* bVars;							//bool variables
-		double* nVars;							//number variables
-		XPINSScriptableMath::Vector* vVars;		//Vector Variables
-		XPINSScriptableMath::Matrix* mVars;		//Matrix Variables
-		XPINSScriptableMath::Polynomial* pVars;	//Polynomial Variables
-		string* sVars;							//String Variables
-		void** oVars;							//Custom type variables
-		XPINSArray* aVars;						//Array variables
+		bool* bVars;								//Boolean variables
+		double* nVars;								//Number variables
+		XPINSScriptableMath::Vector* vVars;			//Vector Variables
+		XPINSScriptableMath::Quaternion* qVars;		//Quaternion Variables
+		XPINSScriptableMath::Matrix* mVars;			//Matrix Variables
+		XPINSScriptableMath::Polynomial* pVars;		//Polynomial Variables
+		XPINSScriptableMath::VectorField* fVars;	//Vector Field Variables
+		string* sVars;								//String Variables
+		void** oVars;								//Custom type variables
+		XPINSArray* aVars;							//Array variables
 	//Other
-		list<void*>Garbage;
+		XPINSArray Garbage;
 		size_t GarbageCost;
-		list<void*>Trash;
+		XPINSArray Trash;
 
 	// Deconstructor
 		~XPINSVarSpace();	//Clears All Variables
@@ -61,16 +63,21 @@ namespace XPINSParser
 	};
 //Miscllaneous Functions
 	int readInt(XPINSScriptSpace& script,char expectedEnd);	//Read an Integer from the script
+	void SetGarbageCapcaity(size_t capacity);				//Set Garbage Capacity
 	void EmptyGarbage(XPINSVarSpace& vars);					//Delete unused values to avoid leaks
 	void EmptyAllGarbage();									//Deal withMemory Pressure
 
 
 // Argument Parsing
+	void* ParseArg(XPINSScriptSpace& script, char expectedEnd, char& type);						//Any type
 	bool* ParseBoolArg(XPINSScriptSpace& script,char expectedEnd);								//Boolean
 	double* ParseNumArg(XPINSScriptSpace& script,char expectedEnd);								//Number
 	XPINSScriptableMath::Vector* ParseVecArg(XPINSScriptSpace& script,char expectedEnd);		//Vector
+	XPINSScriptableMath::Quaternion* ParseQuatArg(XPINSScriptSpace& script,char expectedEnd);	//Quaternion
 	XPINSScriptableMath::Matrix* ParseMatArg(XPINSScriptSpace& script,char expectedEnd);		//Matrix
 	XPINSScriptableMath::Polynomial* ParsePolyArg(XPINSScriptSpace& script,char expectedEnd);	//Polynomial
+	XPINSScriptableMath::VectorField* ParseFieldArg(XPINSScriptSpace& script,char expectedEnd);	//VectorField
+
 	string* ParseStrArg(XPINSScriptSpace& script,char expectedEnd);								//String
 	void** ParsePointerArg(XPINSScriptSpace& script,char expectedEnd, char* type=NULL);			//Pointer
 	XPINSArray* ParseArrayArg(XPINSScriptSpace& script,char expectedEnd);						//Array
@@ -84,29 +91,35 @@ namespace XPINSParser
 namespace XPINSBuiltIn{
 	
 // Constant Parsing
-	bool ParseBoolConst(XPINSParser::XPINSScriptSpace& script);								//BOOL constant
-	double ParseNumConst(XPINSParser::XPINSScriptSpace& script,char stop);					//NUM constant
-	XPINSScriptableMath::Vector ParseVecConst(XPINSParser::XPINSScriptSpace& script);		//VEC constant
-	XPINSScriptableMath::Matrix ParseMatConst(XPINSParser::XPINSScriptSpace& script);		//MAT constant
-	XPINSScriptableMath::Polynomial ParsePolyConst(XPINSParser::XPINSScriptSpace& script);	//POLY constant
-	string ParseStrConst(XPINSParser::XPINSScriptSpace& script);							//STR constant
-	XPINSParser::XPINSArray ParseArrConst(XPINSParser::XPINSScriptSpace& script);			//ARR constant
+	bool ParseBoolConst(XPINSParser::XPINSScriptSpace& script);									//BOOL
+	double ParseNumConst(XPINSParser::XPINSScriptSpace& script,char stop);						//NUM
+	XPINSScriptableMath::Vector ParseVecConst(XPINSParser::XPINSScriptSpace& script);			//VEC
+	XPINSScriptableMath::Quaternion ParseQuatConst(XPINSParser::XPINSScriptSpace& script);		//QUAT
+	XPINSScriptableMath::Matrix ParseMatConst(XPINSParser::XPINSScriptSpace& script);			//MAT
+	XPINSScriptableMath::Polynomial ParsePolyConst(XPINSParser::XPINSScriptSpace& script);		//POLY
+	XPINSScriptableMath::VectorField ParseFieldConst(XPINSParser::XPINSScriptSpace& script);	//FIELD
+	string ParseStrConst(XPINSParser::XPINSScriptSpace& script);								//STR
+	XPINSParser::XPINSArray ParseArrConst(XPINSParser::XPINSScriptSpace& script);				//ARR
 	
 // Expression Parsing:
-	bool ParseBoolExp(XPINSParser::XPINSScriptSpace&);								//Boolean Expression
-	double ParseNumExp(XPINSParser::XPINSScriptSpace&);								//Numerical Expression
-	XPINSScriptableMath::Vector ParseVecExp(XPINSParser::XPINSScriptSpace&);		//Vector Expression
-	XPINSScriptableMath::Matrix ParseMatExp(XPINSParser::XPINSScriptSpace&);		//Matrix Expression
-	XPINSScriptableMath::Polynomial ParsePolyExp(XPINSParser::XPINSScriptSpace&);	//Polynomial Expression
-	void ParseVoidExp(XPINSParser::XPINSScriptSpace&);								//Void Expression
+	bool ParseBoolExp(XPINSParser::XPINSScriptSpace&);								//BOOL
+	double ParseNumExp(XPINSParser::XPINSScriptSpace&);								//NUM
+	XPINSScriptableMath::Vector ParseVecExp(XPINSParser::XPINSScriptSpace&);		//VEC
+	XPINSScriptableMath::Quaternion ParseQuatExp(XPINSParser::XPINSScriptSpace&);	//QUAT
+	XPINSScriptableMath::Matrix ParseMatExp(XPINSParser::XPINSScriptSpace&);		//MAT
+	XPINSScriptableMath::Polynomial ParsePolyExp(XPINSParser::XPINSScriptSpace&);	//POLY
+	XPINSScriptableMath::VectorField ParseFieldExp(XPINSParser::XPINSScriptSpace&);	//FIELD
+	void ParseVoidExp(XPINSParser::XPINSScriptSpace&);								//VOID
 
 // BIF (Built In Function) Parsing:
-	bool ParseBoolBIF(int fNum,XPINSParser::XPINSScriptSpace&);								//Boolean BIF
-	double ParseNumBIF(int fNum, XPINSParser::XPINSScriptSpace&);							//Number BIF
-	XPINSScriptableMath::Vector ParseVecBIF(int fNum, XPINSParser::XPINSScriptSpace&);		//Vector BIF
-	XPINSScriptableMath::Matrix ParseMatBIF(int fNum, XPINSParser::XPINSScriptSpace&);		//Matrix BIF
-	XPINSScriptableMath::Polynomial ParsePolyBIF(int fNum, XPINSParser::XPINSScriptSpace&);	//Polynomial BIF
-	void ParseVoidBIF(int fNum, XPINSParser::XPINSScriptSpace&);							//Void BIF
+	bool ParseBoolBIF(int fNum,XPINSParser::XPINSScriptSpace&);									//BOOL
+	double ParseNumBIF(int fNum, XPINSParser::XPINSScriptSpace&);								//NUM
+	XPINSScriptableMath::Vector ParseVecBIF(int fNum, XPINSParser::XPINSScriptSpace&);			//VEC
+	XPINSScriptableMath::Quaternion ParseQuatBIF(int fNum, XPINSParser::XPINSScriptSpace&);		//QUAT
+	XPINSScriptableMath::Matrix ParseMatBIF(int fNum, XPINSParser::XPINSScriptSpace&);			//MAT
+	XPINSScriptableMath::Polynomial ParsePolyBIF(int fNum, XPINSParser::XPINSScriptSpace&);		//POLY
+	XPINSScriptableMath::VectorField ParseFieldBIF(int fNum, XPINSParser::XPINSScriptSpace&);	//FIELD
+	void ParseVoidBIF(int fNum, XPINSParser::XPINSScriptSpace&);								//VOID
 	
 }
 

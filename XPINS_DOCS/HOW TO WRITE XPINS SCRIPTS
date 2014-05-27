@@ -2,7 +2,7 @@ Copyright (c) 2013 Robert Markwick
 See the file license.txt for copying permission
 
 This document explains how to write XPINS scripts.
-XPINS stands for eXtensible Program Instruction Notation/Script
+XPINS stands for XPINS: Program Instruction Notation/Script
 
 Each XPINS file has the following components:
 -Version Compatibility Statements

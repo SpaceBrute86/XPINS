@@ -34,7 +34,7 @@
 -(double)dotProductWithVector:(XPNVector*)vector;
 -(XPNVector*)crossProductWithVector:(XPNVector*)vector;
 -(XPNVector*)multiplyWithMatrix:(XPNMatrix*)matrix;
--(XPNVector*)projectionInDirectionOfVector:(XPNVector*)vector;
+-(XPNVector*)projectoinOntoVector:(XPNVector*)vector;
 -(double)angleFromVector:(XPNVector*)vector;
 
 @end

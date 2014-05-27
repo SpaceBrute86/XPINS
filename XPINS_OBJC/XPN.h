@@ -11,4 +11,5 @@
 #import "XPNCompiler.h"
 #import "XPNParser.h"
 #import "XPNBindings.h"
+#import "XPNMathModule.h"
 #endif

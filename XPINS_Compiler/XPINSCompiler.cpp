@@ -12,7 +12,7 @@
 using namespace std;
 
 const int kMajor=0;
-const int kMinor=5;
+const int kMinor=6;
 
 namespace XPINSCompileUtil
 {
@@ -216,6 +216,10 @@ string renameFuncBlock(string input, string intermediate1, int modNum, int block
 			case 'n':
 				functionType='N';//NUM
 				break;
+			case 'Q':
+			case 'q':
+				functionType='Q';//QUAT
+				break;
 			case 'M':
 			case 'm':
 				functionType='M';//MAT
@@ -223,6 +227,10 @@ string renameFuncBlock(string input, string intermediate1, int modNum, int block
 			case 'P':
 			case 'p':
 				functionType='P';//POLY
+				break;
+			case 'F':
+			case 'f':
+				functionType='F';//FIELD
 				break;
 			case 'S':
 			case 's':
@@ -330,61 +338,83 @@ bool XPINSCompiler::renameBuiltIns(string &text)
 			while (input[i]!='(') name+=input[i++];
 			//Rename Function
 			//Bool Functions
-			if(name.compare("PMREACHABLE")==0)return "B1";
+			if(name.compare("MARKOV_REACHABLE")==0)return "B1";
 			//Number Functions
-			else if(name.compare("TSIN")==0)output+= "N1";
-			else if(name.compare("TCOS")==0)output+= "N2";
-			else if(name.compare("TTAN")==0)output+= "N3";
-			else if(name.compare("TASIN")==0)output+= "N4";
-			else if(name.compare("TACOS")==0)output+= "N5";
-			else if(name.compare("TATAN")==0)output+= "N6";
+			else if(name.compare("SIN")==0)output+= "N1";
+			else if(name.compare("COS")==0)output+= "N2";
+			else if(name.compare("TAN")==0)output+= "N3";
+			else if(name.compare("ASIN")==0)output+= "N4";
+			else if(name.compare("ACOS")==0)output+= "N5";
+			else if(name.compare("ATAN")==0)output+= "N6";
 			else if(name.compare("SQRT")==0)output+= "N7";
 			else if(name.compare("LN")==0)output+= "N8";
 			else if(name.compare("LOG")==0)output+= "N9";
 			else if(name.compare("ABS")==0)output+= "N10";
 			else if(name.compare("FLOOR")==0)output+= "N11";
-			else if(name.compare("VADDPOLAR")==0)output+= "N12";
-			else if(name.compare("VDIST")==0)output+= "N13";
+			else if(name.compare("ADDPOLAR")==0)output+= "N12";
+			else if(name.compare("DIST")==0)output+= "N13";
 			else if(name.compare("VX")==0)output+= "N14";
 			else if(name.compare("VY")==0)output+= "N15";
 			else if(name.compare("VZ")==0)output+= "N16";
 			else if(name.compare("VR")==0)output+= "N17";
 			else if(name.compare("VTHETA")==0)output+= "N18";
-			else if(name.compare("VRHO")==0)output+= "N19";
+			else if(name.compare("VMAG")==0)output+= "N19";
 			else if(name.compare("VPHI")==0)output+= "N20";
-			else if(name.compare("VANG")==0)output+= "N21";
-			else if(name.compare("MGET")==0)output+= "N22";
-			else if(name.compare("MDET")==0)output+= "N23";
-			else if(name.compare("PRAND")==0)output+= "N24";
-			else if(name.compare("PBERN")==0)output+= "N25";
-			else if(name.compare("PNORMAL")==0)output+= "N26";
-			else if(name.compare("PEXP")==0)output+= "N27";
-			else if(name.compare("PPOISSON")==0)output+= "N28";
-			else if(name.compare("PCOIN")==0)output+= "N29";
-			else if(name.compare("PDICE")==0)output+= "N30";
-			else if(name.compare("PMSIM")==0)output+= "N31";
-			else if(name.compare("PMPROB")==0)output+= "N32";
-			else if(name.compare("PMSTEADYSTATE")==0)output+= "N33";
-			else if(name.compare("PMABSORBPROB")==0)output+= "N34";
-			else if(name.compare("PMABSORBTIME")==0)output+= "N35";
-			else if(name.compare("PMABSORBSIM")==0)output+= "N36";
+			else if(name.compare("VECTOR_ANGLE")==0)output+= "N21";
+			else if(name.compare("MATRIX_GET")==0)output+= "N22";
+			else if(name.compare("DETERMINANT")==0)output+= "N23";
+			else if(name.compare("RAND")==0)output+= "N24";
+			else if(name.compare("RV_BERNOUILLI")==0)output+= "N25";
+			else if(name.compare("RV_NORMAL")==0)output+= "N26";
+			else if(name.compare("RV_EXP")==0)output+= "N27";
+			else if(name.compare("RV_POISSON")==0)output+= "N28";
+			else if(name.compare("COIN_FLIP")==0)output+= "N29";
+			else if(name.compare("DICE_ROLL")==0)output+= "N30";
+			else if(name.compare("MARKOV_SIM")==0)output+= "N31";
+			else if(name.compare("MARKOV_PROB")==0)output+= "N32";
+			else if(name.compare("MARKOV_STEADYSTATE")==0)output+= "N33";
+			else if(name.compare("MARKOV_ABSORB_PROB")==0)output+= "N34";
+			else if(name.compare("MARKOV_ABSORB_TIME")==0)output+= "N35";
+			else if(name.compare("MARKOV_ABSORB_SIM")==0)output+= "N36";
+			else if(name.compare("QR")==0)output+= "N37";
+			else if(name.compare("QMAG")==0)output+= "N38";
 			//Vector Functions
-			else if(name.compare("VPROJ")==0)output+= "V1";
-			else if(name.compare("VUNIT")==0)output+= "V2";
-			else if(name.compare("MMTV")==0)output+= "V3";
+			else if(name.compare("VPROJECT")==0)output+= "V1";
+			else if(name.compare("UNIT_VECTOR")==0)output+= "V2";
+			else if(name.compare("QV")==0)output+= "V3";
+			else if(name.compare("QUATERNION_ROTATE")==0)output+= "V4";
+			//Quaternion Functions
+			else if(name.compare("QUATERNION_CONJUGATE")==0)output+= "Q1";
+			else if(name.compare("QUATERNION_INVERSE")==0)output+= "Q2";
+			else if(name.compare("UNIT_QUATERNION")==0)output+= "Q3";
 			//Matrix Functions
-			else if(name.compare("MMAKE")==0)output+= "M1";
-			else if(name.compare("MID")==0)output+= "M2";
-			else if(name.compare("MROT")==0)output+= "M3";
-			else if(name.compare("MINV")==0)output+= "M4";
-			else if(name.compare("MTRANS")==0)output+= "M5";
-			else if(name.compare("MVTM")==0)output+= "M6";
+			else if(name.compare("ZERO_MATRIX")==0)output+= "M1";
+			else if(name.compare("IDENTITY_MATRIX")==0)output+= "M2";
+			else if(name.compare("ROTATION_MATRIX")==0)output+= "M3";
+			else if(name.compare("EULER_ANGLE_MATRIX")==0)output+= "M4";
+			else if(name.compare("QUATERNION_MATRIX")==0)output+= "M5";
+			else if(name.compare("INVERT")==0)output+= "M6";
+			else if(name.compare("TRANSPOSE")==0)output+= "M7";
+			else if(name.compare("APPEND")==0)output+= "M8";
+			else if(name.compare("ROW_ECHELON")==0)output+= "M9";
+			else if(name.compare("REDUCED_ROW_ECHELON")==0)output+= "M10";
 			//Polynomial Functions
-			else if(name.compare("ADERIVE")==0)output+= "P1";
-			else if(name.compare("AINTEGRATE")==0)output+= "P2";
+			else if(name.compare("DERIVE")==0)output+= "P1";
+			else if(name.compare("INTEGRATE")==0)output+= "P2";
+			else if(name.compare("DIVERGENCE")==0)output+= "P3";
+			else if(name.compare("SCALAR_LINE_INTEGRAL")==0)output+= "P4";
+			else if(name.compare("VECTOR__LINE_INTEGRAL")==0)output+= "P5";
+			else if(name.compare("SCALAR_SURFACE_INTEGRAL")==0)output+= "P6";
+			else if(name.compare("VECTOR_SURFACE_INTEGRAL")==0)output+= "P7";
+			else if(name.compare("VOLUME_INTEGRAL")==0)output+= "P8";
+			//Vector Field Functions
+			else if(name.compare("VECTOR_DERIVE")==0)output+= "F1";
+			else if(name.compare("VECTOR_INTEGRATE")==0)output+= "F2";
+			else if(name.compare("GRADIENT_VECTOR")==0)output+= "F3";
+			else if(name.compare("CURL")==0)output+= "F4";
 			//Void Functoins
 			else if(name.compare("PRINT")==0)output+= "_1";
-			else if(name.compare("MSET")==0)output+= "_2";
+			else if(name.compare("MATRIX_SET")==0)output+= "_2";
 			else return false;
 			output+='(';
 		}
@@ -398,7 +428,7 @@ bool XPINSCompiler::renameVars(string &text){
 	//Rename Types
 	for(int i=0;i<input.length();++i)
 	{
-		if((input[i]=='B'||input[i]=='N'||input[i]=='V'||input[i]=='M'||input[i]=='S'||input[i]=='*')&&input[i-1]=='\n')//Found Variable Declaration
+		if((input[i]=='B'||input[i]=='N'||input[i]=='V'||input[i]=='Q'||input[i]=='M'||input[i]=='P'||input[i]=='F'||input[i]=='S'||input[i]=='*')&&input[i-1]=='\n')//Found Variable Declaration
 		{
 			intermediate+=input[i];
 			while (input[++i]!=' ');
@@ -420,16 +450,18 @@ bool XPINSCompiler::renameVars(string &text){
 	int xb=0;
 	int xn=0;
 	int xv=0;
+	int xq=0;
 	int xm=0;
 	int xs=0;
 	int xp=0;
+	int xf=0;
 	int xa=0;
 	int xo=0;
 	char varType='O';
 	while(i<input.length()&&!XPINSCompileUtil::stringsMatch(i, input, "@END"))
 	{
 		while (i<input.length()&&input[i++]!='\n');//Get to next line
-		if(input[i]=='B'||input[i]=='N'||input[i]=='V'||input[i]=='M'||input[i]=='S'||input[i]=='P'||input[i]=='*'||input[i]=='A')//If we have a new variable type
+		if(input[i]=='B'||input[i]=='N'||input[i]=='V'||input[i]=='Q'||input[i]=='M'||input[i]=='S'||input[i]=='P'||input[i]=='F'||input[i]=='*'||input[i]=='A')//If we have a new variable type
 		{
 			//determine new variable name
 			varType=input[i];
@@ -445,6 +477,9 @@ bool XPINSCompiler::renameVars(string &text){
 				case 'V':
 					varNum=xv++;//VEC
 					break;
+				case 'Q':
+					varNum=xq++;//QUAT
+					break;
 				case 'M':
 					varNum=xm++;//MAT
 					break;
@@ -453,6 +488,9 @@ bool XPINSCompiler::renameVars(string &text){
 					break;
 				case 'P':
 					varNum=xp++;//POLY
+					break;
+				case 'F':
+					varNum=xf++;//FIELD
 					break;
 				case 'A':
 					varNum=xa++;//ARR
@@ -532,8 +570,10 @@ bool XPINSCompiler::renameVars(string &text){
 	varSizes+='B'+XPINSCompileUtil::strRepresentationOfInt(xb)+' ';
 	varSizes+='N'+XPINSCompileUtil::strRepresentationOfInt(xn)+' ';
 	varSizes+='V'+XPINSCompileUtil::strRepresentationOfInt(xv)+' ';
+	varSizes+='Q'+XPINSCompileUtil::strRepresentationOfInt(xq)+' ';
 	varSizes+='M'+XPINSCompileUtil::strRepresentationOfInt(xm)+' ';
 	varSizes+='P'+XPINSCompileUtil::strRepresentationOfInt(xp)+' ';
+	varSizes+='F'+XPINSCompileUtil::strRepresentationOfInt(xf)+' ';
 	varSizes+='S'+XPINSCompileUtil::strRepresentationOfInt(xs)+' ';
 	varSizes+='O'+XPINSCompileUtil::strRepresentationOfInt(xo)+' ';
 	varSizes+='A'+XPINSCompileUtil::strRepresentationOfInt(xa)+' ';
@@ -543,7 +583,7 @@ bool XPINSCompiler::renameVars(string &text){
 	//Remove Variable Types
 	intermediate2="";
 	for(int i=0;i<intermediate1.length();++i){
-		if((intermediate1[i]=='B'||intermediate1[i]=='N'||intermediate1[i]=='V'||intermediate1[i]=='M'||intermediate1[i]=='S'||intermediate1[i]=='*'||intermediate1[i]=='A')&&intermediate1[i-1]=='\n')
+		if((intermediate1[i]=='B'||intermediate1[i]=='N'||intermediate1[i]=='V'||intermediate1[i]=='Q'||intermediate1[i]=='M'||intermediate1[i]=='P'||intermediate1[i]=='F'||intermediate1[i]=='S'||intermediate1[i]=='*'||intermediate1[i]=='A')&&intermediate1[i-1]=='\n')
 		{
 			while (intermediate1[++i]!='$');
 		}

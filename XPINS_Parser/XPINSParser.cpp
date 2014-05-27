@@ -11,22 +11,29 @@ using namespace XPINSParser;
 using namespace XPINSScriptableMath;
 
 const int kPMajor=0;
-const int kPMinor=11;
-const size_t garbageCapacity=0x100;
+const int kPMinor=12;
 
 void* runScript(XPINSScriptSpace& script);
 void ParseCode(XPINSScriptSpace& script, int, int);
 
+size_t garbageCapcity=0x400/sizeof(double); //Default is about 1 KB
 vector<XPINSVarSpace*>allVarSpaces;
 
 #pragma mark Variable Space, Script Space, and Array Management
+
+void SetGarbageCapcaity(size_t capacity)
+{
+	garbageCapcity=capacity;
+}
 
 XPINSVarSpace::~XPINSVarSpace(){
 	delete[] bVars;
 	delete[] nVars;
 	delete[] vVars;
+	delete[] qVars;
 	delete[] mVars;
 	delete[] pVars;
+	delete[] fVars;
 	delete[] sVars;
 	delete[] oVars;
 	delete[] aVars;
@@ -59,20 +66,23 @@ void clearArr(XPINSArray* arr, size_t index=-1)
 			clearArr(arr,i);
 		}
 		arr->values.resize(0);
+		arr->types="";
 	}
 	else
 	{
-		switch (arr->types[index]) {
+		switch (arr->types[index])
+		{
 			case 'M':
 				((Matrix*)arr->values[index])->Clear();
 				break;
 			case 'P':
 				((Polynomial*)arr->values[index])->Clear();
 				break;
+			case 'F':
+				((VectorField*)arr->values[index])->Clear();
+				break;
 			case 'A':
 				clearArr((XPINSArray*)arr->values[index]);
-				break;
-			default:
 				break;
 		}
 	}
@@ -92,11 +102,19 @@ size_t arrSize(XPINSArray* arr)
 			case 'V':
 				size+=3;
 				break;
+			case 'Q':
+				size+=4;
+				break;
 			case 'M':
 				size+=((Matrix*)arr->values[i])->GetRows()*((Matrix*)arr->values[i])->GetCols();
 				break;
 			case 'P':
 				size+=((Polynomial*)arr->values[i])->Size()*2;
+				break;
+			case 'F':
+				size+=((VectorField*)arr->values[i])->P.Size()*2;
+				size+=((VectorField*)arr->values[i])->Q.Size()*2;
+				size+=((VectorField*)arr->values[i])->R.Size()*2;
 				break;
 			case 'S':
 				size+=((string*)arr->values[i])->length()/8;
@@ -131,22 +149,17 @@ char readType(XPINSScriptSpace& script)
 		return script.instructions[script.index+1]=='A'?'O':script.instructions[script.index+1];
 	else switch(script.instructions[script.index+1])
 	{
-		case 'T':
-		case 'F':
-			return'B';
+		case 'T':	return'B';
+		case 'F':	return script.instructions[script.index+2]=='<'?'F':'B';
 		case '<':
 		case 'S':
-		case 'P':
-			return'V';
-		case '[':
-			return'M';
-		case '\"':
-			return'S';
-		case '(':
-			return'P';
-		case '{':
-			return'A';
-		default:return'N';
+		case 'P':	return'V';
+		case 'Q':	return'Q';
+		case '[':	return'M';
+		case '\"':	return'S';
+		case '(':	return'P';
+		case '{':	return'A';
+		default:	return'N';
 	}
 }
 int XPINSParser::readInt(XPINSScriptSpace& script,char expectedEnd)//Read an Integer from the script
@@ -171,13 +184,47 @@ int XPINSParser::readInt(XPINSScriptSpace& script,char expectedEnd)//Read an Int
 
 #pragma mark Argument Parsing
 
+void*  XPINSParser::ParseArg(XPINSScriptSpace& script, char expectedEnd, char& type)
+{
+	while (script.index<script.instructions.length()&&script.currentChar()!='$'&&script.currentChar()!='~'&&script.currentChar()!='?'&&script.currentChar()!='#'&&script.currentChar()!='X'&&script.currentChar()!='@') ++script.index;//Get to Key Character
+	type=readType(script);
+	switch (type) {
+		case 'B':
+			return ParseBoolArg(script, expectedEnd);
+		case 'N':
+			return ParseNumArg(script, expectedEnd);
+		case 'V':
+			return ParseVecArg(script, expectedEnd);
+		case 'Q':
+			return ParseQuatArg(script, expectedEnd);
+		case 'M':
+			return ParseMatArg(script, expectedEnd);
+		case 'P':
+			return ParsePolyArg(script, expectedEnd);
+		case 'F':
+			return ParseFieldArg(script, expectedEnd);
+		case 'S':
+			return ParseStrArg(script, expectedEnd);
+		case 'O':
+			return ParsePointerArg(script, expectedEnd);
+		case 'A':
+		{
+			XPINSArray* arr=ParseArrayArg(script, expectedEnd);
+			if(script.currentChar()==':')return arr;
+			int index=readInt(script, ']');
+			type=arr->types[index];
+			return arr->values[index];
+		}
+	}
+	return NULL;
+}
 bool* XPINSParser::ParseBoolArg(XPINSScriptSpace& script,char expectedEnd)
 {
 	bool* retVal=NULL;
 	while (script.index<script.instructions.length()&&script.currentChar()!='$'&&script.currentChar()!='~'&&script.currentChar()!='?'&&script.currentChar()!='#'&&script.currentChar()!='X'&&script.currentChar()!='@') ++script.index;//Get to Key Character
 	if (script.index>=script.instructions.length()) return NULL;
 	bool temporary=script.currentChar()!='$';
-	if(script.matchesString("@RUN["))//Run another Script
+	if(script.matchesString("@BRUN["))//Run another Script
 	{
 		script.index+=5;
 		retVal= (bool*)runScript(script);
@@ -204,10 +251,9 @@ bool* XPINSParser::ParseBoolArg(XPINSScriptSpace& script,char expectedEnd)
 		int fNum=readInt(script,'(');
 		retVal=(bool*)script.bindings[mNum]->BindFunction(fNum, script);
 	}
-	else if(script.matchesString("#A")||script.matchesString("$A"))//Array Value
+	else if(script.matchesString("#A")||script.matchesString("$A")||script.matchesString("@ARUN["))//Array Value
 	{
-		XPINSArray* arr= ParseArrayArg(script, '[');
-		++script.index;
+		XPINSArray* arr= ParseArrayArg(script, expectedEnd);
 		int arrIndex=readInt(script, ']');
 		retVal=((bool*)arr->values[arrIndex]);
 	}
@@ -219,7 +265,9 @@ bool* XPINSParser::ParseBoolArg(XPINSScriptSpace& script,char expectedEnd)
 	}
 	if(temporary)
 	{
-		script.data->Trash.push_back(retVal);
+		script.data->Trash.values.resize(script.data->Trash.values.size()+1);
+		script.data->Trash.values[script.data->Trash.values.size()-1]=retVal;
+		script.data->Trash.types+='B';
 		++script.data->GarbageCost;
 	}
 	while(script.currentChar()!=expectedEnd&&(script.currentChar()!=')'))++script.index;
@@ -231,7 +279,7 @@ double* XPINSParser::ParseNumArg(XPINSScriptSpace& script,char expectedEnd)
 	double* retVal=NULL;
 	while (script.currentChar()!='$'&&script.currentChar()!='~'&&script.currentChar()!='?'&&script.currentChar()!='#'&&script.currentChar()!='X'&&script.currentChar()!='@') ++script.index;//Get to Key Character
 	bool temporary=script.currentChar()!='$';
-	if(script.matchesString("@RUN["))//Run another Script
+	if(script.matchesString("@NRUN["))//Run another Script
 	{
 		script.index+=5;
 		retVal= (double*)runScript(script);
@@ -258,10 +306,9 @@ double* XPINSParser::ParseNumArg(XPINSScriptSpace& script,char expectedEnd)
 		int fNum=readInt(script,'(');
 		retVal=(double*)script.bindings[mNum]->BindFunction(fNum, script);
 	}
-	else if(script.matchesString("#A")||script.matchesString("$A"))//Array Value
+	else if(script.matchesString("#A")||script.matchesString("$A")||script.matchesString("@ARUN["))//Array Value
 	{
-		XPINSArray* arr= ParseArrayArg(script, '[');
-		++script.index;
+		XPINSArray* arr= ParseArrayArg(script, expectedEnd);
 		int arrIndex=readInt(script, ']');
 		retVal=(double*)arr->values[arrIndex];
 	}
@@ -273,7 +320,9 @@ double* XPINSParser::ParseNumArg(XPINSScriptSpace& script,char expectedEnd)
 	}
 	if(temporary)
 	{
-		script.data->Trash.push_back(retVal);
+		script.data->Trash.values.resize(script.data->Trash.values.size()+1);
+		script.data->Trash.values[script.data->Trash.values.size()-1]=retVal;
+		script.data->Trash.types+='N';
 		++script.data->GarbageCost;
 	}
 	while(script.currentChar()!=expectedEnd&&script.currentChar()!=')')++script.index;
@@ -284,7 +333,13 @@ Vector* XPINSParser::ParseVecArg(XPINSScriptSpace& script,char expectedEnd)
 	Vector *retVal=NULL;
 	while (script.currentChar()!='$'&&script.currentChar()!='~'&&script.currentChar()!='?'&&script.currentChar()!='#'&&script.currentChar()!='X'&&script.currentChar()!='@') ++script.index;//Get to Key Character
 	bool temporary=script.currentChar()!='$';
-	if(script.matchesString("@RUN["))//Run another Script
+	if((script.currentChar()=='~'&&script.instructions[script.index+1]=='[')||script.instructions[script.index+1]=='M')//Convert MAT to VEC
+	{
+		temporary=true;
+		Matrix mat=*ParseMatArg(script, expectedEnd);
+		retVal=new Vector(Matrix::VectorForMatrix(mat));
+	}
+	else if(script.matchesString("@VRUN["))//Run another Script
 	{
 		script.index+=5;
 		retVal= (Vector*)runScript(script);
@@ -311,8 +366,7 @@ Vector* XPINSParser::ParseVecArg(XPINSScriptSpace& script,char expectedEnd)
 	}
 	else if(script.matchesString("#A")||script.matchesString("$A"))//Array Value
 	{
-		XPINSArray* arr= ParseArrayArg(script, '[');
-		++script.index;
+		XPINSArray* arr= ParseArrayArg(script, expectedEnd);
 		int arrIndex=readInt(script, ']');
 		retVal=((Vector*)arr->values[arrIndex]);
 	}
@@ -324,8 +378,69 @@ Vector* XPINSParser::ParseVecArg(XPINSScriptSpace& script,char expectedEnd)
 	}
 	if(temporary)
 	{
-		script.data->Trash.push_back(retVal);
+		script.data->Trash.values.resize(script.data->Trash.values.size()+1);
+		script.data->Trash.values[script.data->Trash.values.size()-1]=retVal;
+		script.data->Trash.types+='V';
 		script.data->GarbageCost+=3;
+	}
+	while(script.currentChar()!=expectedEnd&&script.currentChar()!=')'&&script.currentChar()!='\n')++script.index;
+	if(script.instructions[script.index+1]=='?'&&script.currentChar()!='\n')script.index+=2;
+	return retVal;
+}
+Quaternion* XPINSParser::ParseQuatArg(XPINSScriptSpace& script,char expectedEnd)
+{
+	Quaternion *retVal=NULL;
+	while (script.currentChar()!='$'&&script.currentChar()!='~'&&script.currentChar()!='?'&&script.currentChar()!='#'&&script.currentChar()!='X'&&script.currentChar()!='@') ++script.index;//Get to Key Character
+	bool temporary=script.currentChar()!='$';
+	if((script.currentChar()=='~'&&script.instructions[script.index+1]!='Q')||script.instructions[script.index+1]!='Q')//Convert MAT or VEC to QUAT
+	{
+		temporary=true;
+		Vector vec=*ParseVecArg(script, expectedEnd);
+		retVal=new Quaternion(0,vec);
+	}
+	else if(script.matchesString("@QRUN["))//Run another Script
+	{
+		script.index+=5;
+		retVal= (Quaternion*)runScript(script);
+	}
+	else if(script.matchesString("$Q"))//variable
+	{
+		script.index+=2;
+		int index=readInt(script, expectedEnd);
+		retVal=&script.data->qVars[index];
+	}
+	else if(script.currentChar()=='~')//Constant
+	{
+		retVal=new Quaternion(XPINSBuiltIn::ParseQuatConst(script));
+	}
+	else if(script.matchesString("?Q"))
+	{
+		retVal=new Quaternion(XPINSBuiltIn::ParseQuatExp(script));
+	}
+	else if(script.matchesString("#QM")){//User-defined Function
+		script.index+=3;
+		int mNum=readInt(script,'F');
+		int fNum=readInt(script,'(');
+		retVal=(Quaternion*)script.bindings[mNum]->BindFunction(fNum, script);
+	}
+	else if(script.matchesString("#A")||script.matchesString("$A"))//Array Value
+	{
+		XPINSArray* arr= ParseArrayArg(script, expectedEnd);
+		int arrIndex=readInt(script, ']');
+		retVal=((Quaternion*)arr->values[arrIndex]);
+	}
+	else if(script.matchesString("XQ"))//Built-in Function
+	{
+		script.index+=2;
+		int index=readInt(script, '(');
+		retVal=new Quaternion(XPINSBuiltIn::ParseQuatBIF(index,script));
+	}
+	if(temporary)
+	{
+		script.data->Trash.values.resize(script.data->Trash.values.size()+1);
+		script.data->Trash.values[script.data->Trash.values.size()-1]=retVal;
+		script.data->Trash.types+='Q';
+		script.data->GarbageCost+=4;
 	}
 	while(script.currentChar()!=expectedEnd&&script.currentChar()!=')'&&script.currentChar()!='\n')++script.index;
 	if(script.instructions[script.index+1]=='?'&&script.currentChar()!='\n')script.index+=2;
@@ -336,7 +451,13 @@ Matrix *XPINSParser::ParseMatArg(XPINSScriptSpace& script,char expectedEnd)
 	Matrix* retVal=new Matrix();
 	while (script.currentChar()!='$'&&script.currentChar()!='~'&&script.currentChar()!='?'&&script.currentChar()!='#'&&script.currentChar()!='X'&&script.currentChar()!='2') ++script.index;//Get to Key Character
 	bool temporary=script.currentChar()!='$';
-	if(script.matchesString("@RUN["))//Run another Script
+	if((script.currentChar()=='~'&&script.instructions[script.index+1]!='[')||script.instructions[script.index+1]=='V')//Convert VEC to MAT
+	{
+		temporary=true;
+		Vector vec=*ParseVecArg(script, expectedEnd);
+		retVal=new Matrix(Matrix::MatrixForVector(vec));
+	}
+	else if(script.matchesString("@MRUN["))//Run another Script
 	{
 		script.index+=5;
 		retVal= (Matrix*)runScript(script);
@@ -368,16 +489,17 @@ Matrix *XPINSParser::ParseMatArg(XPINSScriptSpace& script,char expectedEnd)
 		int index=readInt(script, '(');
 		retVal=new Matrix(XPINSBuiltIn::ParseMatBIF(index,script));
 	}
-	else if(script.matchesString("#A")||script.matchesString("$A"))//Array
+	else if(script.matchesString("#A")||script.matchesString("$A")||script.matchesString("@ARUN["))//Array
 	{
-		XPINSArray* arr= ParseArrayArg(script, '[');
-		++script.index;
+		XPINSArray* arr= ParseArrayArg(script, expectedEnd);
 		int arrIndex=readInt(script, ']');
 		retVal=((Matrix*)arr->values[arrIndex]);
 	}
 	if(temporary)
 	{
-		script.data->Trash.push_back(retVal);
+		script.data->Trash.values.resize(script.data->Trash.values.size()+1);
+		script.data->Trash.values[script.data->Trash.values.size()-1]=retVal;
+		script.data->Trash.types+='M';
 		script.data->GarbageCost+=retVal->GetRows()*retVal->GetCols();
 	}
 	while(script.currentChar()!=expectedEnd&&script.currentChar()!=')')++script.index;
@@ -389,7 +511,13 @@ Polynomial* XPINSParser::ParsePolyArg(XPINSScriptSpace& script, char expectedEnd
 	Polynomial* retVal=NULL;
 	while (script.currentChar()!='$'&&script.currentChar()!='~'&&script.currentChar()!='?'&&script.currentChar()!='#'&&script.currentChar()!='X'&&script.currentChar()!='@') ++script.index;//Get to Key Character
 	bool temporary=script.currentChar()!='$';
-	if(script.matchesString("@RUN["))//Run another Script
+	if((script.currentChar()=='~'&&script.instructions[script.index+1]!='(')||script.instructions[script.index+1]=='N')//Convert Num to Poly
+	{
+		temporary=true;
+		double num=*ParseNumArg(script, expectedEnd);
+		retVal= new Polynomial(num);
+	}
+	else if(script.matchesString("@PRUN["))//Run another Script
 	{
 		script.index+=5;
 		retVal= (Polynomial*)runScript(script);
@@ -421,28 +549,88 @@ Polynomial* XPINSParser::ParsePolyArg(XPINSScriptSpace& script, char expectedEnd
 		int index=readInt(script, '(');
 		retVal=new Polynomial(XPINSBuiltIn::ParsePolyBIF(index,script));
 	}
-	else if(script.matchesString("#A")||script.matchesString("$A"))//User-defined Function
+	else if(script.matchesString("#A")||script.matchesString("$A")||script.matchesString("@ARUN["))//User-defined Function
 	{
-		XPINSArray* arr= ParseArrayArg(script, '[');
-		++script.index;
+		XPINSArray* arr= ParseArrayArg(script, expectedEnd);
 		int arrIndex=readInt(script, ']');
 		retVal=((Polynomial*)arr->values[arrIndex]);
 	}
 	if(temporary)
 	{
-		script.data->Trash.push_back(retVal);
+		script.data->Trash.values.resize(script.data->Trash.values.size()+1);
+		script.data->Trash.values[script.data->Trash.values.size()-1]=retVal;
+		script.data->Trash.types+='P';
 		script.data->GarbageCost+=2*retVal->Size();
 	}
 	while(script.currentChar()!=expectedEnd&&script.currentChar()!=')')++script.index;
 	if(script.instructions[script.index+1]=='?')script.index+=2;
 	return retVal;
 }
-string *XPINSParser::ParseStrArg(XPINSScriptSpace& script,char expectedEnd)
+VectorField* XPINSParser::ParseFieldArg(XPINSScriptSpace& script,char expectedEnd)
+{
+	VectorField *retVal=NULL;
+	while (script.currentChar()!='$'&&script.currentChar()!='~'&&script.currentChar()!='?'&&script.currentChar()!='#'&&script.currentChar()!='X'&&script.currentChar()!='@') ++script.index;//Get to Key Character
+	bool temporary=script.currentChar()!='$';
+	if((script.currentChar()=='~'&&script.instructions[script.index+1]!='[')||script.instructions[script.index+1]=='V')//Convert VEC to FIELD
+	{
+		temporary=true;
+		Vector vec=*ParseVecArg(script, expectedEnd);
+		retVal=new VectorField(vec);
+	}
+	if(script.matchesString("@FRUN["))//Run another Script
+	{
+		script.index+=5;
+		retVal=(VectorField*)runScript(script);
+	}
+	else if(script.matchesString("$F"))//variable
+	{
+		script.index+=2;
+		int index=readInt(script, expectedEnd);
+		retVal=&script.data->fVars[index];
+	}
+	else if(script.currentChar()=='~')//Constant
+	{
+		retVal=new VectorField(XPINSBuiltIn::ParseFieldConst(script));
+	}
+	else if(script.matchesString("?F"))
+	{
+		retVal=new VectorField(XPINSBuiltIn::ParseFieldExp(script));
+	}
+	else if(script.matchesString("#FM")){//User-defined Function
+		script.index+=3;
+		int mNum=readInt(script,'F');
+		int fNum=readInt(script,'(');
+		retVal=(VectorField*)script.bindings[mNum]->BindFunction(fNum, script);
+	}
+	else if(script.matchesString("#A")||script.matchesString("$A"))//Array Value
+	{
+		XPINSArray* arr= ParseArrayArg(script, expectedEnd);
+		int arrIndex=readInt(script, ']');
+		retVal=((VectorField*)arr->values[arrIndex]);
+	}
+	else if(script.matchesString("XF"))//Built-in Function
+	{
+		script.index+=2;
+		int index=readInt(script, '(');
+		retVal=new VectorField(XPINSBuiltIn::ParseFieldBIF(index,script));
+	}
+	if(temporary)
+	{
+		script.data->Trash.values.resize(script.data->Trash.values.size()+1);
+		script.data->Trash.values[script.data->Trash.values.size()-1]=retVal;
+		script.data->Trash.types+='F';
+		script.data->GarbageCost+=(retVal->P.Size()+retVal->Q.Size()+retVal->R.Size())*2;
+	}
+	while(script.currentChar()!=expectedEnd&&script.currentChar()!=')'&&script.currentChar()!='\n')++script.index;
+	if(script.instructions[script.index+1]=='?'&&script.currentChar()!='\n')script.index+=2;
+	return retVal;
+}
+string* XPINSParser::ParseStrArg(XPINSScriptSpace& script,char expectedEnd)
 {
 	string *retVal=NULL;
 	while (script.currentChar()!='$'&&script.currentChar()!='~'&&script.currentChar()!='#'&&script.currentChar()!='@') ++script.index;//Get to Key Character
 	bool temporary=script.currentChar()!='$';
-	if(script.matchesString("@RUN["))//Run another Script
+	if(script.matchesString("@SRUN["))//Run another Script
 	{
 		script.index+=5;
 		retVal= (string*)runScript(script);
@@ -464,16 +652,17 @@ string *XPINSParser::ParseStrArg(XPINSScriptSpace& script,char expectedEnd)
 		int fNum=readInt(script,'(');
 		retVal=(string*)script.bindings[mNum]->BindFunction(fNum, script);
 	}
-	else if(script.matchesString("#A")||script.matchesString("$A"))//User-defined Function
+	else if(script.matchesString("#A")||script.matchesString("$A")||script.matchesString("@ARUN["))//User-defined Function
 	{
-		XPINSArray arr= *ParseArrayArg(script, '[');
-		++script.index;
+		XPINSArray* arr= ParseArrayArg(script, expectedEnd);
 		int arrIndex=readInt(script, ']');
-		retVal=((string*)arr.values[arrIndex]);
+		retVal=((string*)arr->values[arrIndex]);
 	}
 	if(temporary)
 	{
-		script.data->Trash.push_back(retVal);
+		script.data->Trash.values.resize(script.data->Trash.values.size()+1);
+		script.data->Trash.values[script.data->Trash.values.size()-1]=retVal;
+		script.data->Trash.types+='S';
 		script.data->GarbageCost+=retVal->length()/8;
 	}
 	while(script.currentChar()!=expectedEnd&&script.currentChar()!=')')++script.index;
@@ -486,8 +675,7 @@ void** XPINSParser::ParsePointerArg(XPINSScriptSpace& script,char expectedEnd, c
 	if(!type)type=new char();
 	while (script.currentChar()!='$'&&script.currentChar()!='~'&&script.currentChar()!='?'&&script.currentChar()!='#'&&script.currentChar()!='X'&&script.currentChar()!='@') ++script.index;//Get to Key Character
 	*type=readType(script);
-	bool temporary=script.currentChar()!='$'||*type!='O';
-	if(script.matchesString("@RUN["))//Run another Script
+	if(script.matchesString("@ORUN["))//Run another Script
 	{
 		script.index+=5;
 		return new void*(runScript(script));
@@ -509,7 +697,7 @@ void** XPINSParser::ParsePointerArg(XPINSScriptSpace& script,char expectedEnd, c
 				retVal=(void**)script.bindings[mNum]->BindFunction(fNum, script);
 				*type='O';
 			}
-			else if(script.matchesString("#A")||script.matchesString("$A"))//User-defined Function
+			else if(script.matchesString("#A")||script.matchesString("$A")||script.matchesString("@ARUN["))//Array
 			{
 				XPINSArray* arr=ParseArrayArg(script, '[');
 				++script.index;
@@ -522,7 +710,53 @@ void** XPINSParser::ParsePointerArg(XPINSScriptSpace& script,char expectedEnd, c
 				else
 				{
 					int arrIndex=readInt(script, ']');
-					retVal=(void**)arr->values[arrIndex];
+					switch (arr->types[arrIndex]) {
+						case 'B':
+						{
+							bool *val=new bool(*((bool*)arr->values[arrIndex]));
+							retVal=new void*(val);
+						}break;
+						case 'N':
+						{
+							double* val=new double(*((double*)arr->values[arrIndex]));
+							retVal=new void*(val);
+						}break;
+						case 'V':
+						{
+							Vector* val=new Vector(*((Vector*)arr->values[arrIndex]));
+							retVal=new void*(val);
+						}break;
+						case 'Q':
+						{
+							Vector* val=new Vector(*((Vector*)arr->values[arrIndex]));
+							retVal=new void*(val);
+						}break;
+						case 'M':
+						{
+							Matrix* val=new Matrix(*((Matrix*)arr->values[arrIndex]));
+							retVal=new void*(val);
+						}break;
+						case 'P':
+						{
+							Polynomial* val=new Polynomial(*((Polynomial*)arr->values[arrIndex]));
+							retVal=new void*(val);
+						}break;
+						case 'S':
+						{
+							string* val=new string(*((string*)arr->values[arrIndex]));
+							retVal=new void*(val);
+						}break;
+						case 'A':
+						{
+							XPINSArray* val=new XPINSArray(*((XPINSArray*)arr->values[arrIndex]));
+							retVal=new void*(val);
+						}break;
+						default:
+						{
+							void* val=new void*(*((void**)arr->values[arrIndex]));
+							retVal=new void*(val);
+						}break;
+					}
 					*type=arr->types[arrIndex];
 				}
 			}
@@ -542,6 +776,11 @@ void** XPINSParser::ParsePointerArg(XPINSScriptSpace& script,char expectedEnd, c
 			Vector* v=new Vector(*ParseVecArg(script, expectedEnd));
 			retVal=new void*(v);
 		}break;
+		case 'Q':
+		{
+			Quaternion* p=new Quaternion(*ParseQuatArg(script, expectedEnd));
+			retVal=new void*(p);
+		}break;
 		case 'M':
 		{
 			Matrix* m=new Matrix(*ParseMatArg(script, expectedEnd));
@@ -552,27 +791,28 @@ void** XPINSParser::ParsePointerArg(XPINSScriptSpace& script,char expectedEnd, c
 			Polynomial* p=new Polynomial(*ParsePolyArg(script, expectedEnd));
 			retVal=new void*(p);
 		}break;
+		case 'F':
+		{
+			VectorField* p=new VectorField(*ParseFieldArg(script, expectedEnd));
+			retVal=new void*(p);
+		}break;
 		case 'S':
 		{
 			string* s=new string(*ParseStrArg(script, expectedEnd));
 			retVal=new void*(s);
 		}break;
 	}
-	if(temporary)
-	{
-		script.data->Trash.push_back(retVal);
-		++script.data->GarbageCost;
-	}
 	while(script.currentChar()!=expectedEnd&&script.currentChar()!=')')++script.index;
 	if(script.instructions[script.index+1]=='?')script.index+=2;
 	return retVal;
 }
+	
 XPINSArray* XPINSParser::ParseArrayArg(XPINSScriptSpace& script,char expectedEnd)
 {
 	XPINSArray* retVal = nullptr;
 	while (script.currentChar()!='$'&&script.currentChar()!='~'&&script.currentChar()!='#'&&script.currentChar()!='@') ++script.index;//Get to Key Character
 	bool temporary=script.currentChar()!='$';
-	if(script.matchesString("@RUN["))//Run another Script
+	if(script.matchesString("@ARUN["))//Run another Script
 	{
 		script.index+=5;
 		retVal= (XPINSArray*)runScript(script);
@@ -580,21 +820,22 @@ XPINSArray* XPINSParser::ParseArrayArg(XPINSScriptSpace& script,char expectedEnd
 	else if(script.currentChar()=='$')//variable
 	{
 		script.index+=2;
-		int index=readInt(script, expectedEnd);
-		XPINSArray* arr=&script.data->aVars[index];
-		if(script.currentChar()=='[')
+		int index=readInt(script, '[');
+		retVal=&script.data->aVars[index];
+		while(true)
 		{
-			int temp=script.index;
 			++script.index;
-			int arrIndex=readInt(script, ']');
-			if(expectedEnd=='['&&script.instructions[script.index+1]!='[')
+			if(script.currentChar()==':')break;
+			int temp=script.index;
+			int arrIndex=*ParseNumArg(script, ']');
+			if(script.instructions[script.index+1]!='[')
 			{
-				retVal=arr;
 				script.index=temp;
+				break;
 			}
-			else retVal=(XPINSArray*)(arr->values[arrIndex]);
+			retVal=(XPINSArray*)(retVal->values[arrIndex]);
+			++script.index;
 		}
-		else retVal=arr;
 	}
 	else if(script.currentChar()=='~')//Constant
 	{
@@ -605,43 +846,54 @@ XPINSArray* XPINSParser::ParseArrayArg(XPINSScriptSpace& script,char expectedEnd
 		script.index+=3;
 		int mNum=readInt(script,'F');
 		int fNum=readInt(script,'(');
-		XPINSArray* arr=(XPINSArray*)script.bindings[mNum]->BindFunction(fNum, script);
+		retVal=(XPINSArray*)script.bindings[mNum]->BindFunction(fNum, script);
 		while (script.currentChar()!=')')++script.index;
-		if(script.instructions[script.index+1]=='[')
+		if (script.instructions[script.index+1]=='[')
 		{
-			int temp=++script.index;
 			++script.index;
-			int arrIndex=readInt(script, ']');
-			if(expectedEnd=='['&&script.instructions[script.index+1]!='[')
+			while(true)
 			{
-				retVal=arr;
-				script.index=temp;
+				++script.index;
+				if(script.currentChar()==':')break;
+				int temp=script.index;
+				int arrIndex=*ParseNumArg(script, ']');
+				++script.index;
+				if(script.currentChar()!='[')
+				{
+					script.index=temp;
+					break;
+				}
+				retVal=(XPINSArray*)(retVal->values[arrIndex]);
 			}
-			else retVal=(XPINSArray*)(arr->values[arrIndex]);
 		}
-		else retVal=arr;
 	}
 	else if(script.matchesString("@PARAMS"))//Script Parameters
 	{
 		script.index+=7;
-		XPINSArray* arr=script.scriptParams;
-		if(script.currentChar()=='[')
+		retVal=script.scriptParams;
+		if (script.currentChar()=='[')
 		{
-			int temp=script.index;
-			++script.index;
-			int arrIndex=readInt(script, ']');
-			if(expectedEnd=='['&&script.instructions[script.index+1]!='[')
+			while(true)
 			{
-				retVal=arr;
-				script.index=temp;
+				++script.index;
+				if(script.currentChar()==':')break;
+				int temp=script.index;
+				int arrIndex=*ParseNumArg(script, ']');
+				++script.index;
+				if(script.currentChar()!='[')
+				{
+					script.index=temp;
+					break;
+				}
+				retVal=(XPINSArray*)(retVal->values[arrIndex]);
 			}
-			else retVal=(XPINSArray*)(arr->values[arrIndex]);
 		}
-		else retVal=arr;
 	}
 	if(temporary)
 	{
-		script.data->Trash.push_back(retVal);
+		script.data->Trash.values.resize(script.data->Trash.values.size()+1);
+		script.data->Trash.values[script.data->Trash.values.size()-1]=retVal;
+		script.data->Trash.types+='A';
 		script.data->GarbageCost+=arrSize(retVal);
 	}
 	while(script.currentChar()!=expectedEnd&&script.currentChar()!=')')++script.index;
@@ -736,6 +988,11 @@ void allocVars(XPINSScriptSpace& script)//Allocate Variable space
 	size_t vsize=readInt(script, ' ');
 	script.data->vVars=new Vector[vsize];
 	for (int i=0; i<vsize; ++i)script.data->vVars[i]=*new Vector();
+	//QUATs
+	while(script.currentChar()!='Q')++script.index;
+	size_t qsize=readInt(script, ' ');
+	script.data->qVars=new Quaternion[qsize];
+	for (int i=0; i<qsize; ++i)script.data->qVars[i]=*new Quaternion();
 	//MATs
 	while(script.currentChar()!='M')++script.index;
 	size_t msize=readInt(script, ' ');
@@ -746,6 +1003,11 @@ void allocVars(XPINSScriptSpace& script)//Allocate Variable space
 	size_t psize=readInt(script, ' ');
 	script.data->pVars=new Polynomial[psize];
 	for (int i=0; i<psize; ++i)script.data->pVars[i]=*new Polynomial();
+	//FIELDs
+	while(script.currentChar()!='F')++script.index;
+	size_t fsize=readInt(script, ' ');
+	script.data->fVars=new VectorField[fsize];
+	for (int i=0; i<fsize; ++i)script.data->fVars[i]=*new VectorField();
 	//STRs
 	while(script.currentChar()!='S')++script.index;
 	size_t ssize=readInt(script, ' ');
@@ -762,15 +1024,11 @@ void allocVars(XPINSScriptSpace& script)//Allocate Variable space
 	script.data->aVars=new XPINSArray[asize];
 	for (int i=0; i<asize; ++i)script.data->aVars[i]=XPINSArray();
 	//Garbage
-	script.data->Garbage=list<void*>();
+	script.data->Garbage=XPINSArray();
 }
 void XPINSParser::EmptyGarbage(XPINSParser::XPINSVarSpace &vars)
 {
-	while (vars.Garbage.size()>0)
-	{
-		delete vars.Garbage.back();
-		vars.Garbage.pop_back();
-	}
+	clearArr(&vars.Garbage);
 }
 void XPINSParser::EmptyAllGarbage()
 {
@@ -781,6 +1039,7 @@ void XPINSParser::EmptyAllGarbage()
 }
 void XPINSParser::ParseScript(string scriptText,vector<XPINSBindings*> bindings)
 {
+	if(mathMod==NULL)mathMod=new XPINSMathModule();//Check Math Module
 	XPINSScriptSpace script=XPINSScriptSpace(scriptText,bindings);
 	if(!checkVersion(script))return;//Check Script Version
 	allocVars(script);//Set up scriptVars Space
@@ -878,19 +1137,32 @@ void ParseCode(XPINSScriptSpace& script,int start,int stop)
 						Vector v=*ParseVecArg(script, '\n');
 						script.data->vVars[index]=v;
 					}break;
+					case 'Q'://QUAT variable
+					{
+						int index=readInt(script, '=');
+						Quaternion q=*ParseQuatArg(script, '\n');
+						script.data->qVars[index]=q;
+					}break;
 					case 'M'://MAT variable
 					{
 						int index=readInt(script, '=');
-						Matrix m=*ParseMatArg(script, '\n');
+						Matrix m=ParseMatArg(script, '\n')->Copy();
 						script.data->mVars[index].Clear();
 						script.data->mVars[index]=m;
 					}break;
 					case 'P'://POLY variable
 					{
 						int index=readInt(script, '=');
-						Polynomial p=*ParsePolyArg(script, '\n');
+						Polynomial p=ParsePolyArg(script, '\n')->Copy();
 						script.data->pVars[index].Clear();
 						script.data->pVars[index]=p;
+					}break;
+					case 'F'://QUAT variable
+					{
+						int index=readInt(script, '=');
+						VectorField f=*ParseFieldArg(script, '\n');
+						script.data->fVars[index].Clear();
+						script.data->fVars[index]=f;
 					}break;
 					case 'S'://STR variable
 					{
@@ -918,12 +1190,28 @@ void ParseCode(XPINSScriptSpace& script,int start,int stop)
 						}
 						if(arrayVal)
 						{
-							XPINSArray*arr=ParseArrayArg(script, '[');
-							++script.index;
+							int index=readInt(script, '[');
+							XPINSArray* arr=&script.data->aVars[index];
+							while(true)
+							{
+								++script.index;
+								int temp=script.index;
+								int arrIndex=*ParseNumArg(script, ']');
+								++script.index;
+								if(script.currentChar()!='[')
+								{
+									script.index=temp;
+									break;
+								}
+								arr=(XPINSArray*)(arr->values[arrIndex]);
+							}
 							int arrIndex=readInt(script, ']');
-							void* val=*ParsePointerArg(script, '\n');
+							char type='O';
+							void* val=*ParsePointerArg(script, '\n',&type);
 							clearArr(arr,arrIndex);
 							arr->values[arrIndex]=val;
+							if(arr->types.size()<arrIndex+1)arr->types.resize(arrIndex+1, 'O');
+							arr->types[arrIndex]=type;
 						}
 						else
 						{
@@ -970,11 +1258,17 @@ void ParseCode(XPINSScriptSpace& script,int start,int stop)
 				}
 			}break;
 		}
-		while (script.data->Trash.size()>0)
+		size_t oldSize=script.data->Garbage.values.size();
+		script.data->Garbage.values.resize(oldSize+script.data->Trash.values.size());
+		for(int i=0;i<script.data->Trash.values.size();++i)
 		{
-			script.data->Garbage.push_back(script.data->Trash.front());
-			script.data->Trash.pop_front();
+			script.data->Garbage.values[oldSize+i]=script.data->Trash.values[i];
+			script.data->Garbage.types+=script.data->Trash.types[i];
 		}
-		if(script.data->Garbage.size()>garbageCapacity)EmptyGarbage(*script.data);
+		clearArr(&script.data->Trash);
+		if(script.data->Garbage.values.size()>garbageCapcity)
+		{
+			EmptyGarbage(*script.data);
+		}
 	}
 }

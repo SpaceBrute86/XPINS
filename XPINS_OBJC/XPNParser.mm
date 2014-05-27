@@ -9,6 +9,7 @@
 #import "XPNParser.h"
 #import "XPINS.h"
 #import "XPNBindings.h"
+#import "XPNMathModule.h"
 
 NSOperationQueue *XPINSQueue;
 @implementation XPNParser
@@ -21,6 +22,8 @@ NSOperationQueue *XPINSQueue;
 	for (NSUInteger i=0; i<bindings.count; ++i) {
 		bind[i]=new XPINSObjCBindings((XPNBindings*)bindings[i]);
 	}
+	//Set up Math module
+	XPINSScriptableMath::mathMod=new XPNMathModule();
 	//Set up Operation Queue
 	if(!XPINSQueue)
 	{
@@ -28,7 +31,7 @@ NSOperationQueue *XPINSQueue;
 		XPINSQueue.maxConcurrentOperationCount=NSOperationQueueDefaultMaxConcurrentOperationCount;
 	}
 	//Run script
-	[queue addOperationWithBlock:^{
+	[XPINSQueue addOperationWithBlock:^{
 		XPINSParser::ParseScript(str, bind);
 	}];
 }

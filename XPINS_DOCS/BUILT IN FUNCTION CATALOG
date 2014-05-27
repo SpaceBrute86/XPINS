@@ -12,31 +12,31 @@ X_PRINT(STR $A)
 
 TRIGONOMETRY
 
-X_TSIN(NUM $A)
+X_SIN(NUM $A)
 	Available in XPINS Parser: 0.2.0
 	Description: Takes the sine of a given angle
 	Arguments: The NUM representing the angle
 	Return: NUM, returns the sine of the angle
 
-X_TCOS(NUM $A)
+X_COS(NUM $A)
 	Available in XPINS Parser: 0.2.0
 	Description: Takes the cosine of a given angle
 	Arguments: The NUM representing the angle
 	Return: NUM, returns the cosine of the angle
 	
-X_TTAN(NUM $A)
+X_TAN(NUM $A)
 	Available in XPINS Parser: 0.2.0
 	Description: Takes the tangent of a given angle
 	Arguments: The NUM representing the angle
 	Return: NUM, returns the tangent of the angle
 
-X_TATAN(NUM $A, NUM $B)
+X_ATAN(NUM $A, NUM $B)
 	Available in XPINS Parser: 0.2.0
 	Description: Gets the base angle given the two legs of a right triangle
 	Arguments: The NUMs representing Y and X, repsectiely
 	Return: NUM, returns the angle
 
-X_VADDPOLAR(NUM $A, NUM $B)
+X_ADDPOLAR(NUM $A, NUM $B)
 	Available in XPINS Parser: 0.2.0
 	Description: Adds two numbers such that the sum is in the range of [0,2PI)
 	Arguments: The NUMs to be added
@@ -75,7 +75,7 @@ X_LOG(NUM $A, NUM $B)
 	Arguments: A is the value and B is the Base.
 	Return: NUM, returns the result of the logarithm
 
-X_VDIST(NUM $A, NUM $B, NUM $C)
+X_DIST(NUM $A, NUM $B, NUM $C)
 	Available in XPINS Parser: 0.2.0
 	Description: Finds distance between two poNUMs given the components
 	Arguments: The X, Y, and Z deltas
@@ -102,7 +102,7 @@ X_VZ(VEC $A)
 	Arguments: The vector for which the Z component is desired
 	Return: NUM, returns the Z component of the vector
 
-X_VRHO(VEC $A)
+X_VMAG(VEC $A)
 	Available in XPINS Parser: 0.2.0
 	Description: Gets the Magnitude (RHO) of a Vector
 	Arguments: The vector for which the Magnitude is desired
@@ -116,7 +116,7 @@ X_VR(VEC $A)
 
 
 X_VTHETA(VEC $A)
-	Available in XPINS Parser: 0.2.0
+	Available in XPINS Parser: 0.8.0
 	Description: Gets the THETA component of Vector
 	Arguments: The vector for which the THETA component is desired
 	Return: NUM, returns the THETA component of the vector
@@ -130,126 +130,189 @@ X_VPHI(VEC $A)
 
 VECTOR OPERATIONS
 
-X_VPROJ(VEC $A, NUM $B)
-	Available in XPINS Parser: 0.3.0
-	Description: Finds the projection of a vector onto a generic vector in a given direction
-	Arguments: The vector from whihc the projection is to be taken, and the direction of the result.
-	Return: VEC, returns the projection of A onto a vector in direction.	Return: VEC, returns a vector in the same direction as A with the magnitude multiplied by B
+X_VPROJECT(VEC $A, VEC $B)
+	Available in XPINS Parser: 0.12.0
+	Description: Finds the projection of a vector onto another Vector
+	Arguments: The vector that is being projected and the vector being projected onto, respectively
+	Return: VEC, returns the projection of A onto B.
 	
-X_VUNIT(VEC $A)
-	Available in XPINS Parser: 0.11.0
+X_UNIT_VECTOR(VEC $A)
+	Available in XPINS Parser: 0.12.0
 	Description: Finds the unit vector for a given vector
-	Arguments: The vector from whihc the projection is to be taken, and the direction of the result.
-	Return: VEC, returns the projection of A onto a vector in direction.	Return: VEC, returns a vector in the same direction as A with the magnitude multiplied by B
+	Arguments: The vector for which the unit vector is desired.
+	Return: VEC, returns the Unit Vector in the direcion of A
 
-
-X_VANG(VEC $A, VEC$B)
-	Available in XPINS Parser: 0.2.0
+X_VECTOR_ANGLE(VEC $A, VEC$B)
+	Available in XPINS Parser: 0.12.0
 	Description: Finds the angle between two vectors
 	Arguments: The vectors for which you want to find the angle between
 	Return: NUM, returns the Angle between the Vectors
 	
+	
+QUATERNION COMPONENTS
+
+X_QR(QUAT $A)
+	Available in XPINS Parser: 0.12.0
+	Description: Gets the Scalar component for a Quaternion
+	Arguments: The Quaternion for which the scalar component is desired
+	Return: NUM, returns the scalar component of the quaternion
+
+X_QV(QUAT $A)
+	Available in XPINS Parser: 0.12.0
+	Description: Gets the vector component for a Quaternion
+	Arguments: The Quaternion for which the vector component is desired
+	Return: NUM, returns the vector component of the quaternion
+
+X_VMAG(VEC $A)
+	Available in XPINS Parser: 0.12.0
+	Description: Gets the Magnitude of a Quatrernion
+	Arguments: The quaternion for which the Magnitude is desired
+	Return: NUM, returns the Magnitude of the quaternion
+	
+
+QUATERNION OPERATIONS
+
+X_QUATERNION_CONJUGATE(QUAT $A)
+	Available in XPINS Parser: 0.12.0
+	Description: Finds the conjugate of a quaternion
+	Arguments: The Quaternion for which the conjugate is desired
+	Return: QUAT, returns the conjugate of A
+	
+X_QUATERNION_INVERSE(QUAT $A)
+	Available in XPINS Parser: 0.12.0
+	Description: Finds the inverse of a quaternion
+	Arguments: The Quaternion for which the inverse is desired
+	Return: QUAT, returns the inverse of A
+
+X_UNIT_QUATERNION(VEC $A)
+	Available in XPINS Parser: 0.12.0
+	Description: Finds the unit quaternion for a given quaternion
+	Arguments: The quaternion for whihc the unit quaternion is desired.
+	Return: QUAT, returns the Unit quaternion in the direcion of A
+
+
+X_QUATERNION_ROTATE(QUAT $A, VEC$B)
+	Available in XPINS Parser: 0.2.0
+	Description: Rotates a vector according to a quaternion
+	Arguments: The quaternion and the vector
+	Return: VEC, returns the rotated vector
+	
+
 MATRIX CREATION
 
-X_MMAKE(NUM $A, NUM $B)
+X_ZERO_MATRIX(NUM $A, NUM $B)
 	Available in XPINS Parser: 0.9.0
 	Description: Create a Zero Matrix
 	Arguments: The number of rows and columns, respecitvely
 	Return: MAT, returns a zero matrix of size AxB.
 	
-X_MID(NUM $A)
+X_IDENTITY_MATRIX(NUM $A)
 	Available in XPINS Parser: 0.9.0
 	Description: Create an Identity Matrix of size A
 	Arguments: The number of rows and columns.
 	Return: MAT, returns a Identity matrix of size AxA.
 	
-X_MROT(NUM $A, VEC $B)
+X_ROTATION_MATRIX(NUM $A, VEC $B)
 	Available in XPINS Parser: 0.9.0
 	Description: Create an Rotation Matrix of A radians around B
 	Arguments: A is the angle the Matrix will rotate a vector, and B is the vector that it should be rotated around
 	Return: MAT, returns a Rotation matrix A radains around B.
 	
+X_EULER_ANGLE_MATRIX(NUM $A, NUM $B, NUM$C)
+	Available in XPINS Parser: 0.9.0
+	Description: Create an Rotation Matrix using Euler Angles (roll around X, then pitch around Y, then yaw around z)
+	Arguments: A is Roll, B is Pitch, and C is Yaw
+	Return: MAT, returns a Rotation matrix from Euler Angles A, B, and C
+	
+X_QUATERNION_MATRIX(QUAT $A)
+	Available in XPINS Parser: 0.9.0
+	Description: Create an Rotation Matrix from a Quaternion
+	Arguments: A is the Quaternion used to create the Matrix 
+	Return: MAT, returns a Rotation matrix based on A.
+	
 	
 MATRIX ACCESS
 
-X_MGET(MAT $A, NUM $B, NUM$C)
+X_MATRIX_GET(MAT $A, NUM $B, NUM$C)
 	Available in XPINS Parser: 0.9.0
 	Description: Gets a value from a Matrix
 	Arguments: A is the matrix, B is the row, and C is the column
 	Return: NUM, Value from A at B,C
 	
-X_MSET(MAT $A, NUM $B, NUM $C, NUM $D)
+X_MATRIX_SET(MAT $A, NUM $B, NUM $C, NUM $D)
 	Available in XPINS Parser: 0.9.0
 	Description: Sets a value in a Matrix
 	Arguments: A is the matrix, B is the new value, C is the row, and D is the column
 	Return: NONE
 	
-
-MATRIX-VECTOR CONVERSTION
-
-
-X_MMTV(MAT $A)
-	Available in XPINS Parser: 0.9.0
-	Description: Converts Matrix into Vector
-	Arguments: The Matrix to be converted
-	Return: VEC, Vector from Matrix A
-	
-X_MVTM(VEC $A)
-	Available in XPINS Parser: 0.9.0
-	Description: Converts Vector into Matrix
-	Arguments: The Vector to be converted
-	Return: MAT, Matrix from Vector A
-	
 	 
 MATRIX OPERATIONS
 
-X_MDET(MAT $A)
+X_DETERMINANT(MAT $A)
 	Available in XPINS Parser: 0.9.0
 	Description: Finds the determinant of a Matrix
 	Arguments: The Matrix for which the determinant is desired
 	Return: NUM, the Determinant of the Matrix
 	
-X_MINV(MAT $A)
+X_ROW_ECHELON(MAT $A)
+	Available in XPINS Parser: 0.12.0
+	Description: Finds the row echelon form of a Matrix
+	Arguments: The Matrix for which the row echelon form is desired
+	Return: MAT, the row echelon from of the Matrix
+	
+X_REDUCED_ROW_ECHELON(MAT $A)
+	Available in XPINS Parser: 0.12.0
+	Description: Finds the reduced row echelon form of a Matrix
+	Arguments: The Matrix for which the reduced row echelon form is desired
+	Return: MAT, the reduced row echelon from of the Matrix
+
+X_INVERT(MAT $A)
 	Available in XPINS Parser: 0.9.0
 	Description: Finds the inverse of a Matrix
 	Arguments: The Matrix for which the inverse is desired
 	Return: MAT, the inverse of the Matrix
+
 	
-X_MTRANS(MAT $A)
+X_TRANSPOSE(MAT $A)
 	Description: Finds the transposition of a Matrix
 	Arguments: The Matrix for which the transposition is desired
-	Return: NUM, the transposition of the Matrix
+	Return: MAT, the transposition of the Matrix
+	
+X_TRANSPOSE(MAT $A, MAT $B)
+	Description: Appends one matrix to another
+	Arguments: A is left Matrix, B is right matrix
+	Return: MAT, [A|B]
 
 
 
 PROBABILITY: RANDOM VALUES
 
-X_PBERN(NUM $A)
+X_RV_BERNOULLI(NUM $A)
 	Available in XPINS Parser: 0.9.0
 	Description: Generates a True or False from an Bernoulli Random Variable
 	Arguments: A is the probability that the number is one.
 	Return: BOOL, T if the random variable is 1 and F if it is zero
 
-X_PRAND(NUM $A, NUM$B)
+X_RAND(NUM $A, NUM$B)
 	Available in XPINS Parser: 0.2.0
 	Description: Generates a random number from a Uniform Random Variable
 	Arguments: A is the lower bound and B is the upper bound
 	Return: NUM, returns a random number between A and B
 
 
-X_PNORMAL(NUM $A,NUM $B)
+X_RV_NORMAL(NUM $A,NUM $B)
 	Available in XPINS Parser: 0.10.0
 	Description: Generates a random number from a Normal Random Variable
 	Arguments: A is the Mean, and B is the Standard Deviation
 	Return: NUM, the Random Number
 	
-X_PEXP(NUM $A)
+X_RV_EXP(NUM $A)
 	Available in XPINS Parser: 0.9.0
 	Description: Generates a random number from an Exponantial Random Variable
 	Arguments: A is the Parameter
 	Return: NUM, the Random Number
 	
-X_PPOISSON(NUM $A)
+X_RV_POISSON(NUM $A)
 	Available in XPINS Parser: 0.9.0
 	Description: Generates a random number from an Poisson Random Variable
 	Arguments: A is the Parameter
@@ -258,13 +321,13 @@ X_PPOISSON(NUM $A)
 
 PROBABILITY: EXPERIMENTS:
 
-X_PCOIN(NUM $A, NUM $B)
+X_COIN_FLIP(NUM $A, NUM $B)
 	Available in XPINS Parser: 0.11.0
 	Description: Simulates flipping B coins of bias A
 	Arguments: A is the probability of heads for a given flip. B is the number of flips.
 	Return: NUM, total number of heads
 
-X_PDICE(NUM $A, NUM $B)
+X_DICE_ROLL(NUM $A, NUM $B)
 	Available in XPINS Parser: 0.11.0
 	Description: Rolls B A-sided fair dice
 	Arguments: A is the number of sides, B is the number of rolls.
@@ -273,59 +336,138 @@ X_PDICE(NUM $A, NUM $B)
 
 PROBABILITY: MARKOV CHAINS:
 
-X_PMSIM(MAT $A, NUM $B, NUM $C)
+X_MARKOV_SIM(MAT $A, NUM $B, NUM $C)
 	Available in XPINS Parser: 0.11.0
 	Description: Simulates Markov Chain A for B steps starting in state C
 	Arguments: A is the transition probability Matrix (column in row out), B is the number of steps, C is the starting state
 	Return: NUM, a random stage weighted on probability of being in that state after B steps
 
-X_PMPROB(MAT $A, NUM $B, NUM $C, NUM $D)
+X_MARKOV_PROB(MAT $A, NUM $B, NUM $C, NUM $D)
 	Available in XPINS Parser: 0.11.0
 	Description: Calculates B-Step transition Probability
 	Arguments: A is the transition probability Matrix, B is the number of steps, C is the starting state, D is the end State
 	Return: NUM, probability fo being in state D after B steps.
 	
-X_PMSTEADYSTATE(MAT $A, NUM $B)
+X_MARKOV_STEADYSTATE(MAT $A, NUM $B)
 	Available in XPINS Parser: 0.11.0
 	Description: Calculates Steady-State Probability
 	Arguments: A is the transition probability Matrix, B is the state
 	Return: NUM, probability fo being in state B after a long time.
 
-X_PMREACHABLE(MAT $A, NUM $B, NUM $C)
+X_MARKOV_REACHABLE(MAT $A, NUM $B, NUM $C)
 	Available in XPINS Parser: 0.11.0
 	Description: Can state B be reached from state C
 	Arguments: A is the transition probability Matrix, B is the final state, C is the initial stae
 	Return: BOOL, TRUE if and only if state B can be arrived at given initial state C
 
-X_PMABSORBPROB(MAT $A, NUM $B, NUM $C)
+X_MARKOV_ABSORB_PROB(MAT $A, NUM $B, NUM $C)
 	Available in XPINS Parser: 0.11.0
 	Description: Calculates Steady-State Probability given initial state C
 	Arguments: A is the transition probability Matrix, B is the absorbing state, C is the initial stae
 	Return: NUM, probability fo being in state B after a long time.
 
-X_PMABSORBTIME(MAT $A, NUM $B, NUM $C)
+X_MARKOV_ABSORB_TIME(MAT $A, NUM $B, NUM $C)
 	Available in XPINS Parser: 0.11.0
 	Description: Calculates Expected Absorbtion time for State B
 	Arguments: A is the transition probability Matrix, B is the absorbing state, C is the initial stae
 	Return: NUM, Expected time to reach state B from state C.
 	
-X_PMABSORBSIM(MAT $A, NUM $B, NUM $C)
+X_MARKOV_ABSORB_SIM(MAT $A, NUM $B, NUM $C)
 	Available in XPINS Parser: 0.11.0
 	Description: Simulates Absorbtion time for State B
 	Arguments: A is the transition probability Matrix, B is the absorbing state, C is the initial stae
 	Return: NUM, A possible time to reach state B from state C.
 
 
-POLYNOMIALS: CALCULUS
+CALCULUS:
 
-X_ADERIVE(POLY $A,NUM $B)
+X_DERIVE(POLY $A,NUM $B)
 	Available in XPINS Parser: 0.11.0
 	Description: Takes the derivative of A with respect to the variable at index B;
 	Arguments: A is the Polynomial, B is the index of the Variable
 	Return: POLY, the Derivative
 	
-X_AINTEGRATE(POLY $A)
+X_INTEGRATE(POLY $A, NUM $B)
 	Available in XPINS Parser: 0.11.0
 	Description: Finds the Integral of A with respect to the variable at index B;
 	Arguments: A is the Polynomial, B is the index of the Variable
 	Return: POLY, the Indefinite Integaral
+	
+X_SCALAR_LINE_INTEGRAL(POLY $A, FIELD $B, POLY $C, POLY $D)
+	Available in XPINS Parser: 0.12.0
+	Description: Takes the Line integral of a Polynomial
+	Arguments: A is the Polynomial (in terms of X,Y,Z, and T), B is the curve (in terms of U and T),
+				C and D are respectively the starting and stopping U bounds (in terms of T)
+	Return: POLY, the Divergence of A
+
+X_SCALAR_SURFACE_INTEGRAL(FIELD $A, FIELD $B, POLY $C, POLY $D, POLY $E, POLY $F)
+	Available in XPINS Parser: 0.12.0
+	Description: Takes the Line integral of a Polynomial
+	Arguments: A is the Polynomial (in terms of X,Y,Z, and T), B is the surface (in terms of U,V and T),
+				C and D are respectively the starting and stopping U bounds (in terms of T),
+				E and F are respectively the starting and stopping V bounds (in terms of U and T)
+	Return: POLY, the Surface
+	
+X_VOLUME_INTEGRAL(FIELD $A, FIELD $B, POLY $C, POLY $D, POLY $E, POLY $F, POLY $G, POLY $H)
+	Available in XPINS Parser: 0.12.0
+	Description: Takes the Line integral of a Polynomial
+	Arguments: A is the Polynomial (in terms of X,Y,Z, and T), B is the map vector (in terms of U,V,W and T),
+				C and D are respectively the starting and stopping U bounds (in terms of T),
+				E and F are respectively the starting and stopping V bounds (in terms of U and T)
+				G and H are respectively the starting and stopping W bounds (in terms of U,V, andT)
+	Return: POLY, the Surface
+
+X_VECTOR_DERIVE(FIELD $A,NUM $B)
+	Available in XPINS Parser: 0.11.0
+	Description: Takes the derivative of A with respect to the variable at index B;
+	Arguments: A is the Vector Field, B is the index of the Variable
+	Return: FIELD, the Derivative
+	
+X_VECTOR_INTEGRATE(FIELD $A, NUM $B)
+	Available in XPINS Parser: 0.11.0
+	Description: Finds the Integral of A with respect to the variable at index B;
+	Arguments: A is the Vector Field, B is the index of the Variable
+	Return: FIELD, the Indefinite Integaral
+	
+
+VECTOR CALCULUS:
+
+X_GRADIENT_VECTOR(POLY $A)
+	Available in XPINS Parser: 0.12.0
+	Description: Takes the Gradient of A
+	Arguments: A is a Polynomial
+	Return: FIELD, the Gradient Vector Field of A
+
+X_DIVERGENCE(FIELD $A)
+	Available in XPINS Parser: 0.12.0
+	Description: Takes the Divergence of A
+	Arguments: A is a Vector Field
+	Return: POLY, the Divergence of A
+
+
+X_DIVERGENCE(FIELD $A)
+	Available in XPINS Parser: 0.12.0
+	Description: Takes the Divergence of A
+	Arguments: A is a Vector Field
+	Return: POLY, the Divergence of A
+
+X_CURL(FIELD $A)
+	Available in XPINS Parser: 0.12.0
+	Description: Takes the Curle of A
+	Arguments: A is a Vector Field
+	Return: FIELD, the Curle of A
+
+X_VECTOR_LINE_INTEGRAL(FIELD $A, FIELD $B, POLY $C, POLY $D)
+	Available in XPINS Parser: 0.12.0
+	Description: Takes the Line integral of a Vector Field
+	Arguments: A is the field (in terms of X,Y,Z, and T), B is the curve (in terms of U and T),
+				C and D are respectively the starting and stopping U bounds (in terms of T)
+	Return: POLY, the Divergence of A
+	
+X_VECTOR_SURFACE_INTEGRAL(FIELD $A, FIELD $B, POLY $C, POLY $D, POLY $E, POLY $F)
+	Available in XPINS Parser: 0.12.0
+	Description: Takes the Surface integral of a Vector Field
+	Arguments: A is the field (in terms of X,Y,Z, and T), B is the surface (in terms of U,V and T),
+				C and D are respectively the starting and stopping U bounds (in terms of T),
+				E and F are respectively the starting and stopping V bounds (in terms of U and T)
+	Return: POLY, the Surface Integral
