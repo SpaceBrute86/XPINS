@@ -218,6 +218,11 @@ namespace XPINSScriptableMath
 	};
 
 //Vector Field Calculations
+	struct Bound //Start and End points for Line Integral or Boundaries for surface integral
+	{
+		Polynomial start,stop;
+		Bound(Polynomial start, Polynomial stop);
+	};
 	class VectorField //Vector with Polynomail components, is superclass
 	{
 	public:
@@ -226,7 +231,7 @@ namespace XPINSScriptableMath
 		VectorField (Polynomial p,Polynomial q,Polynomial r);	//Vector Field with values
 		VectorField (Vector v);									//Constant Vector Field
 		VectorField Copy();										//Copy Field
-		void Clear();										//Clear Field
+		void Clear();											//Clear Field
 		//Copy Field
 		static VectorField GradientField(Polynomial poly);				//Gradient Vector field
 		// Vector-like Operations
@@ -248,16 +253,11 @@ namespace XPINSScriptableMath
 		Polynomial Divergence();
 		VectorField Curl();
 		// Line and Surface Integrals
-		struct bound //Start and End points for Line Integral or Boundaries for surface integral
-		{
-			Polynomial start,stop;
-			bound(Polynomial start, Polynomial stop);
-		};
-		static Polynomial LineIntegral(Polynomial f,VectorField curve, bound uB);
-		static Polynomial LineIntegral(VectorField v,VectorField curve, bound uB);
-		static Polynomial SurfaceIntegral(Polynomial f,VectorField surface, bound uB, bound vB);
-		static Polynomial SurfaceIntegral(VectorField v,VectorField surface, bound uB, bound vB);
-		static Polynomial VolumeIntegral(Polynomial f,VectorField map, bound uB, bound vB, bound wB);
+		static Polynomial LineIntegral(Polynomial f,VectorField curve, Bound uB);
+		static Polynomial LineIntegral(VectorField v,VectorField curve, Bound uB);
+		static Polynomial SurfaceIntegral(Polynomial f,VectorField surface, Bound uB, Bound vB);
+		static Polynomial SurfaceIntegral(VectorField v,VectorField surface, Bound uB, Bound vB);
+		static Polynomial VolumeIntegral(Polynomial f,VectorField map, Bound uB, Bound vB, Bound wB);
 
 		// Operator Overloads
 		VectorField	operator + (const VectorField &v)const	{	return Add(*this,v);		}//Add

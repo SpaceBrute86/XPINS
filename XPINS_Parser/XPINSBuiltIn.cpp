@@ -1435,8 +1435,8 @@ XPINSScriptableMath::Polynomial XPINSBuiltIn::ParsePolyBIF(int fNum, XPINSScript
 			VectorField arg2=*ParseFieldArg(script, ',');
 			Polynomial arg3=*ParsePolyArg(script, ',');
 			Polynomial arg4=*ParsePolyArg(script, ',');
-			VectorField::bound::bound(arg3,arg4);
-			return VectorField::LineIntegral(arg1, arg2, VectorField::bound(arg3,arg4));
+			Bound::Bound(arg3,arg4);
+			return VectorField::LineIntegral(arg1, arg2, Bound(arg3,arg4));
 		}
 		case 5://X_VECTOR_LINE_INTEGRAL
 		{
@@ -1444,7 +1444,7 @@ XPINSScriptableMath::Polynomial XPINSBuiltIn::ParsePolyBIF(int fNum, XPINSScript
 			VectorField arg2=*ParseFieldArg(script, ',');
 			Polynomial arg3=*ParsePolyArg(script, ',');
 			Polynomial arg4=*ParsePolyArg(script, ',');
-			return VectorField::LineIntegral(arg1, arg2, VectorField::bound(arg3,arg4));
+			return VectorField::LineIntegral(arg1, arg2, Bound(arg3,arg4));
 		}
 		case 6://X_SCALAR_SURFACE_INTEGRAL
 		{
@@ -1454,7 +1454,7 @@ XPINSScriptableMath::Polynomial XPINSBuiltIn::ParsePolyBIF(int fNum, XPINSScript
 			Polynomial arg4=*ParsePolyArg(script, ',');
 			Polynomial arg5=*ParsePolyArg(script, ',');
 			Polynomial arg6=*ParsePolyArg(script, ',');
-			return VectorField::SurfaceIntegral(arg1, arg2, VectorField::bound(arg3,arg4),VectorField::bound(arg5,arg6));
+			return VectorField::SurfaceIntegral(arg1, arg2, Bound(arg3,arg4),Bound(arg5,arg6));
 		}
 		case 7://X_VECTOR_LINE_INTEGRAL
 		{
@@ -1464,7 +1464,7 @@ XPINSScriptableMath::Polynomial XPINSBuiltIn::ParsePolyBIF(int fNum, XPINSScript
 			Polynomial arg4=*ParsePolyArg(script, ',');
 			Polynomial arg5=*ParsePolyArg(script, ',');
 			Polynomial arg6=*ParsePolyArg(script, ',');
-			return VectorField::SurfaceIntegral(arg1, arg2, VectorField::bound(arg3,arg4),VectorField::bound(arg5,arg6));
+			return VectorField::SurfaceIntegral(arg1, arg2, Bound(arg3,arg4),Bound(arg5,arg6));
 		}
 		case 8://X_VOLUME_INTEGRAL
 		{
@@ -1476,7 +1476,7 @@ XPINSScriptableMath::Polynomial XPINSBuiltIn::ParsePolyBIF(int fNum, XPINSScript
 			Polynomial arg6=*ParsePolyArg(script, ',');
 			Polynomial arg7=*ParsePolyArg(script, ',');
 			Polynomial arg8=*ParsePolyArg(script, ',');
-			return VectorField::VolumeIntegral(arg1, arg2, VectorField::bound(arg3,arg4),VectorField::bound(arg5,arg6),VectorField::bound(arg7,arg8));
+			return VectorField::VolumeIntegral(arg1, arg2, Bound(arg3,arg4),Bound(arg5,arg6),Bound(arg7,arg8));
 		}
 	}
 	return Polynomial();

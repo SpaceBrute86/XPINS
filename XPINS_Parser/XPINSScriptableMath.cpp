@@ -1297,8 +1297,8 @@ VectorField VectorField::Curl()
 	Polynomial z=Polynomial::Derivative(Q, 0)-Polynomial::Derivative(P, 1);
 	return VectorField(x,y,z);
 }
-//Line and Surface Integral Helpers (bounds and Normalization)
-VectorField::bound::bound(Polynomial start, Polynomial stop)
+//Line and Surface Integral Helpers (Bounds and Normalization)
+Bound::Bound(Polynomial start, Polynomial stop)
 {
 	this->start=start;
 	this->stop=stop;
@@ -1331,7 +1331,7 @@ Polynomial Magnitude(VectorField f)
 	return Polynomial::Composition(sqrtTaylor, xs+ys+zs, 0);
 }
 //Line Integrals
-Polynomial VectorField::LineIntegral(Polynomial f,VectorField curve,  bound bounds)
+Polynomial VectorField::LineIntegral(Polynomial f,VectorField curve,  Bound Bounds)
 {
 	VectorField dr=Derivative(curve, 4);
 	Polynomial poly=f*Magnitude(dr);
@@ -1339,9 +1339,9 @@ Polynomial VectorField::LineIntegral(Polynomial f,VectorField curve,  bound boun
 	poly=poly.Composition(poly, curve.Q, 1);
 	poly=poly.Composition(poly, curve.R, 2);
 	Polynomial integral=Polynomial::Integrate(poly, 4);
-	return Polynomial::Composition(integral, bounds.stop, 4)-Polynomial::Composition(integral, bounds.start, 4);
+	return Polynomial::Composition(integral, Bounds.stop, 4)-Polynomial::Composition(integral, Bounds.start, 4);
 }
-Polynomial VectorField::LineIntegral(VectorField v,VectorField curve,bound bounds)
+Polynomial VectorField::LineIntegral(VectorField v,VectorField curve,Bound Bounds)
 {
 	VectorField dr=Derivative(curve, 4);
 	Polynomial poly=Dot(v, dr);
@@ -1349,10 +1349,10 @@ Polynomial VectorField::LineIntegral(VectorField v,VectorField curve,bound bound
 	poly=poly.Composition(poly, curve.Q, 1);
 	poly=poly.Composition(poly, curve.R, 2);
 	Polynomial integral=Polynomial::Integrate(poly, 4);
-	return Polynomial::Composition(integral, bounds.stop, 4)-Polynomial::Composition(integral, bounds.start, 4);
+	return Polynomial::Composition(integral, Bounds.stop, 4)-Polynomial::Composition(integral, Bounds.start, 4);
 }
 
-Polynomial VectorField::SurfaceIntegral(Polynomial f,VectorField surface, bound uBound, bound vBound)
+Polynomial VectorField::SurfaceIntegral(Polynomial f,VectorField surface, Bound uBound, Bound vBound)
 {
 	//Find Normal Vector
 	VectorField drdu=Derivative(surface, 4);
@@ -1371,7 +1371,7 @@ Polynomial VectorField::SurfaceIntegral(Polynomial f,VectorField surface, bound 
 	poly=Polynomial::Composition(integral, uBound.stop,4)-Polynomial::Composition(integral, uBound.start,4);
 	return poly;
 }
-Polynomial VectorField::SurfaceIntegral(VectorField v,VectorField surface, bound uBound, bound vBound)
+Polynomial VectorField::SurfaceIntegral(VectorField v,VectorField surface, Bound uBound, Bound vBound)
 {
 	//Find Normal Vector
 	VectorField drdu=Derivative(surface, 4);
@@ -1390,7 +1390,7 @@ Polynomial VectorField::SurfaceIntegral(VectorField v,VectorField surface, bound
 	poly=Polynomial::Composition(integral, uBound.stop,4)-Polynomial::Composition(integral, uBound.start,4);
 	return poly;
 }
-Polynomial VectorField::VolumeIntegral(Polynomial f, VectorField map, bound uBound,bound vBound,bound wBound)
+Polynomial VectorField::VolumeIntegral(Polynomial f, VectorField map, Bound uBound,Bound vBound,Bound wBound)
 {
 	//Find Jacobian
 	VectorField drdu=VectorField::Derivative(map, 4);
