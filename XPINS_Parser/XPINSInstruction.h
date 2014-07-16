@@ -21,7 +21,8 @@ namespace XPINSInstructions {
 		FIELD,
 		STRING,
 		OBJECT,
-		ARRAY
+		ARRAY,
+		VOID
 	};
 	enum ArgType {
 		VAR,
@@ -31,6 +32,7 @@ namespace XPINSInstructions {
 		EXP
 	};
 	enum LineType {
+		NULLTYPE,
 		ASSIGN,
 		VOIDFUNC,
 		IF,
@@ -38,8 +40,7 @@ namespace XPINSInstructions {
 		WHILE,
 		LOOP,
 		RETURN,
-		BREAK,
-		NULLTYPE
+		BREAK
 	};
 	enum opCode
 	{

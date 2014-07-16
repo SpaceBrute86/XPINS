@@ -84,12 +84,12 @@ namespace XPINSInstructionsHelper {
 		for (; i<script.length(); ++i) {
 			if(script[i]=='(')
 			{
-				for (int i=1; i>0;) {
+				for (int x=1; x>0;) {
 					++i;
 					if(script[i]=='(')
-						++i;
+						++x;
 					else if(script[i]==')')
-						--i;
+						--x;
 				}
 				++i;
 			}
@@ -161,9 +161,8 @@ namespace XPINSInstructionsHelper {
 		return INVALID;
 	}
 
-	Argument parseArgument(string scriptText,int start,char expectedEnd)
+	Argument parseArgument(string scriptText,int &i,char expectedEnd)
 	{
-		int i=start;
 		Argument arg=Argument();
 		while (scriptText[i]!='$'&&scriptText[i]!='~'&&scriptText[i]!='?'&&scriptText[i]!='#'&&scriptText[i]!='X')++i;
 		switch (scriptText[i++]) {
@@ -207,6 +206,7 @@ namespace XPINSInstructionsHelper {
 					arg.arguments[arg.arguments.size()-1]=parseArgument(scriptText, i, ']');
 					++i;
 				}
+				--i;
 				break;
 			case '~':
 				arg.type=CONST;
@@ -252,7 +252,7 @@ namespace XPINSInstructionsHelper {
 						int exp=0;
 						bool fpart=false;
 						bool isNeg=scriptText[i]=='-';
-						while(i<scriptText.length()&&scriptText[i]!=')'&&scriptText[i]!='e'&&scriptText[i]!='E')
+						while(i<scriptText.length()&&scriptText[i]!=')'&&scriptText[i]!='e'&&scriptText[i]!='E'&&scriptText[i]!='+'&&scriptText[i]!='-'&&scriptText[i]!=expectedEnd)
 						{
 							if(fpart)--exp;//record decimal place
 							val*=10;
@@ -270,7 +270,7 @@ namespace XPINSInstructionsHelper {
 							++i;
 						}
 						bool isENeg=false;
-						while(i<scriptText.length()&&scriptText[i]!=')')
+						while(i<scriptText.length()&&scriptText[i]!=')'&&scriptText[i]!='+'&&scriptText[i]!='-'&&scriptText[i]!=expectedEnd)
 						{
 							exp*=10;
 							if(scriptText[i]=='1')exp+=1;
@@ -326,32 +326,31 @@ namespace XPINSInstructionsHelper {
 					case MATRIX:{
 						arg.modNumber=1;
 						arg.number=1;
-						int temp=++i;
-						for (;scriptText[i]!='|'&&scriptText[i]!=']'; ++i)//Find Column Count
+						int sizeCounter=++i;
+						for (;scriptText[sizeCounter]!='|'&&scriptText[sizeCounter]!=']'; ++sizeCounter)//Find Column Count
 						{
-							if(scriptText[i]=='(')//Skip Parenthesis blocks
+							if(scriptText[sizeCounter]=='(')//Skip Parenthesis blocks
 							{
-								++i;
-								for (int count=1; count>0; ++i) {
-									if(scriptText[i]=='(')++count;
-									else if(scriptText[i]==')')--count;
+								++sizeCounter;
+								for (int count=1; count>0; ++sizeCounter) {
+									if(scriptText[sizeCounter]=='(')++count;
+									else if(scriptText[sizeCounter]==')')--count;
 								}
 							}
-							if(scriptText[i]==',')++arg.number;
+							if(scriptText[sizeCounter]==',')++arg.number;
 						}
-						for (; scriptText[i]!=']'; ++i)//Find Row Count
+						for (; scriptText[sizeCounter]!=']'; ++sizeCounter)//Find Row Count
 						{
-							if(scriptText[i]=='(')//Skip Parenthesis blocks
+							if(scriptText[sizeCounter]=='(')//Skip Parenthesis blocks
 							{
-								++i;
-								for (int count=1; count>0; ++i) {
-									if(scriptText[i]=='(')++count;
-									else if(scriptText[i]==')')--count;
+								++sizeCounter;
+								for (int count=1; count>0; ++sizeCounter) {
+									if(scriptText[sizeCounter]=='(')++count;
+									else if(scriptText[sizeCounter]==')')--count;
 								}
 							}
-							if(scriptText[i]=='|')++arg.modNumber;
+							if(scriptText[sizeCounter]=='|')++arg.modNumber;
 						}
-						i=temp;
 						arg.arguments.resize(arg.modNumber*arg.number);
 						for (int r=0;r<arg.modNumber;++r){
 							for (int c=0;c<arg.number;++c){
@@ -370,6 +369,7 @@ namespace XPINSInstructionsHelper {
 						for (arg.number=0;true;++arg.number){
 							arg.arguments.resize(arg.number+1);
 							arg.arguments[arg.number]=parseArgument(scriptText, i, '_');
+							mons.resize(arg.number+1);
 							mons[arg.number].exponents=vector<unsigned int>();
 							while (scriptText[i]=='_')
 							{
@@ -427,6 +427,45 @@ namespace XPINSInstructionsHelper {
 						}
 						arg.literalValue=new vector<XPINSScriptableMath::Polynomial::Monomial>(mons);
 					}break;
+					case STRING:{
+						string str="";
+						while (++i<scriptText.length())
+						{
+							if(scriptText[i]=='\\')
+							{
+								++i;
+								switch (scriptText[i]) {
+									case 'n':str+='\n';
+										break;
+									case '\t':str+='\t';
+										break;
+									case '\\':str+='\\';
+										break;
+									case '\'':str+='\'';
+										break;
+									case '\"':str+='\"';
+										break;
+									case '\r':str+='\r';
+										break;
+									case 'a':str+='\a';
+										break;
+									case 'b':str+='\b';
+										break;
+									case 'f':str+='\f';
+										break;
+									case 'v':str+='\v';
+										break;
+									case 'e':str+='\e';
+										break;
+									default:
+										break;
+								}
+							}
+							else if(scriptText[i]=='\"')break;
+							else str+=scriptText[i];
+						}
+						arg.literalValue=new string(str);
+					}break;
 					default:
 						break;
 				}
@@ -472,7 +511,6 @@ namespace XPINSInstructionsHelper {
 				while (scriptText[i]!=')'&& scriptText[++i]!=')') {
 					arg.arguments.resize(arg.arguments.size()+1);
 					arg.arguments[arg.arguments.size()-1]=parseArgument(scriptText, i, ',');
-					++i;
 				}
 				break;
 			case 'X':
@@ -499,13 +537,15 @@ namespace XPINSInstructionsHelper {
 					case 'F':
 						arg.dataType=FIELD;
 						break;
+					case '_':
+						arg.dataType=VOID;
+						break;
 				}
 				arg.number=readInt(scriptText, i, '(');
 				arg.arguments.resize(0);
 				while (scriptText[i]!=')'&& scriptText[++i]!=')') {
 					arg.arguments.resize(arg.arguments.size()+1);
 					arg.arguments[arg.arguments.size()-1]=parseArgument(scriptText, i, ',');
-					++i;
 				}
 				break;
 			case '?':{
@@ -533,11 +573,12 @@ namespace XPINSInstructionsHelper {
 						arg.dataType=FIELD;
 						break;
 				}
-				++i;
+				while (scriptText[i++]!='(');
 				bool assign=false;
 				char opChar=' ';
 				opCode op=FindOp(scriptText, i, &assign, opChar, arg.dataType);
 				arg.number=assign?1:0;
+				if (op==INVALID) break;
 				if(op==NOT||op==PREINCREMENT||op==PREDECREMENT){
 					arg.arguments.resize(1);
 					arg.arguments[0]=parseArgument(scriptText, i, ')');
@@ -550,62 +591,79 @@ namespace XPINSInstructionsHelper {
 					arg.arguments[0]=parseArgument(scriptText, i, opChar);
 					arg.arguments[1]=parseArgument(scriptText, i, ')');
 				}
+				while (scriptText[i++]!='?');
 				arg.modNumber=op;
 			}break;
 			default:
 				break;
 		}
 		while (scriptText[i]!=expectedEnd&&scriptText[i]!=')'&&scriptText[i]!=',') ++i;
-		return Argument();
+		return arg;
 	}
 
 	vector<Instruction> parseInstructionsForScript(string scriptText,int start,int stop)
 	{
 		vector<Instruction> instructions=vector<Instruction>();
-		for(int i=start;i<stop;++i){
+		for(int i=start;i<stop;){
 			while(i<scriptText.length()&&scriptText[i++]!='\n');
 			if(i>scriptText.length()||i>=stop||stringsMatch(i, scriptText, "@END"))break;
 			Instruction instruction=Instruction();
-			switch (scriptText[i++]) {
+			switch (scriptText[i]) {
 				case '$'://Assignment
 					instruction.type=ASSIGN;
-					--i;
 					instruction.left=parseArgument(scriptText, i, '=');
 					instruction.right=parseArgument(scriptText, i, '\n');
 					break;
-				case '#':
+				case '#'://Void Function Call
 				case '?':
 				case 'X':
 					instruction.type=VOIDFUNC;
-					--i;
-					instruction.right=parseArgument(scriptText, start, '\n');
+					instruction.right=parseArgument(scriptText, i, '\n');
 					break;
-				case '@':
+				case '@'://Control Flow
+					++i;
 					switch (scriptText[i++]) {
-						case 'I':
+						case 'I':{
 							instruction.type=IF;
 							while (scriptText[i++]!='[');
 							instruction.right=parseArgument(scriptText, i, ']');
-							instruction.block=parseInstructionsForScript(scriptText, i, skipBlock(scriptText, i));
-							break;
-						case 'E':
+							while (scriptText[i]!='{')++i;
+							int temp=i;
+							i=skipBlock(scriptText, i);
+							instruction.block=parseInstructionsForScript(scriptText, temp, i);
+						}break;
+						case 'E':{
 							instruction.type=ELSE;
 							while (scriptText[i]!='{'&&scriptText[i]!='[')++i;
 							if (scriptText[i]=='[') instruction.right=parseArgument(scriptText, i, ']');
-							instruction.block=parseInstructionsForScript(scriptText, i, skipBlock(scriptText, i));
-							break;
-						case 'W':
+							else {
+								instruction.right.literalValue=new bool(true);
+								instruction.right.type=CONST;
+								instruction.right.dataType=BOOLEAN;
+							}
+							while (scriptText[i]!='{')++i;
+							int temp=i;
+							i=skipBlock(scriptText, i);
+							instruction.block=parseInstructionsForScript(scriptText, temp, i);
+						}break;
+						case 'W':{
 							instruction.type=WHILE;
 							while (scriptText[i++]!='[');
 							instruction.right=parseArgument(scriptText, i, ']');
-							instruction.block=parseInstructionsForScript(scriptText, i, skipBlock(scriptText, i));
-							break;
-						case 'L':
+							while (scriptText[i]!='{')++i;
+							int temp=i;
+							i=skipBlock(scriptText, i);
+							instruction.block=parseInstructionsForScript(scriptText, temp, i);
+						}break;
+						case 'L':{
 							instruction.type=LOOP;
 							while (scriptText[i++]!='[');
 							instruction.right=parseArgument(scriptText, i, ']');
-							instruction.block=parseInstructionsForScript(scriptText, i, skipBlock(scriptText, i));
-							break;
+							while (scriptText[i]!='{')++i;
+							int temp=i;
+							i=skipBlock(scriptText, i);
+							instruction.block=parseInstructionsForScript(scriptText, temp, i);
+						}break;
 						case 'R':
 							instruction.type=RETURN;
 							while (scriptText[i++]!='[');
@@ -641,30 +699,30 @@ XPINSInstructions::InstructionSet XPINSInstructions::instructionsForScriptText(s
 	int MINOR=XPINSInstructionsHelper::readInt(script,i, ']');
 	if (MAJOR!=kPMajor||MINOR>kPMinor)return InstructionSet();
 	//Determine Variable Allocations
-	while(i<script.length()&&!XPINSInstructionsHelper::stringsMatch(i, script, "@VARS"))++i;
-	while(script[i++]!='B');
+	while(i<script.length()&&(script[i]!='@'||script[i+1]!='V'))++i;
+	while(script[++i]!='B');
 	instructions.varSizes[0]=XPINSInstructionsHelper::readInt(script, i, ' ');
-	while(script[i++]!='N');
+	while(script[++i]!='N');
 	instructions.varSizes[1]=XPINSInstructionsHelper::readInt(script, i, ' ');
-	while(script[i++]!='V');
+	while(script[++i]!='V');
 	instructions.varSizes[2]=XPINSInstructionsHelper::readInt(script, i, ' ');
-	while(script[i++]!='Q');
+	while(script[++i]!='Q');
 	instructions.varSizes[3]=XPINSInstructionsHelper::readInt(script, i, ' ');
-	while(script[i++]!='M');
+	while(script[++i]!='M');
 	instructions.varSizes[4]=XPINSInstructionsHelper::readInt(script, i, ' ');
-	while(script[i++]!='P');
+	while(script[++i]!='P');
 	instructions.varSizes[5]=XPINSInstructionsHelper::readInt(script, i, ' ');
-	while(script[i++]!='F');
+	while(script[++i]!='F');
 	instructions.varSizes[6]=XPINSInstructionsHelper::readInt(script, i, ' ');
-	while(script[i++]!='S');
+	while(script[++i]!='S');
 	instructions.varSizes[7]=XPINSInstructionsHelper::readInt(script, i, ' ');
-	while(script[i++]!='O');
+	while(script[++i]!='O');
 	instructions.varSizes[8]=XPINSInstructionsHelper::readInt(script, i, ' ');
-	while(script[i++]!='A');
+	while(script[++i]!='A');
 	instructions.varSizes[9]=XPINSInstructionsHelper::readInt(script, i, ' ');
 	//Parse Instructions
-	while(i<script.length()&&!XPINSInstructionsHelper::stringsMatch(i, script, "@CODE"))++i;
-	i+=5;
+	while(i<script.length()&&(script[i]!='@'||script[i+1]!='C'))++i;
+	i+=4;
 	instructions.instructions=XPINSInstructionsHelper::parseInstructionsForScript(script, i, script.length());
 	return instructions;
 }

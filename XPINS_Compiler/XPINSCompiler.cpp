@@ -28,6 +28,7 @@ bool XPINSCompiler::compileScript(string &input)//Compile Script
 	if(!checkConstantSyntax(scriptText))return false;
 	if(!replaceConstants(scriptText))return false;
 	if(!renameFunctions(scriptText))return false;
+	//cout<<scriptText;
 	if(!renameBuiltIns(scriptText))return false;
 	if(!renameVars(scriptText))return false;
 	if(!cleanUp(scriptText))return false;
@@ -253,7 +254,7 @@ string renameFuncBlock(string input, string intermediate1, int modNum, int block
 				functionType=' ';//VOID
 				break;
 		}
-		while (i<input.length()&&input[i++]!=' ');
+		while (i<input.length()&&input[i++]!='#');
 		//read function name
 		string functionName;
 		for(j=i;j<input.length()&&input[j]!='(';j++)
