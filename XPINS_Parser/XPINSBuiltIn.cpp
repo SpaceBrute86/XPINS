@@ -230,7 +230,7 @@ XPINSScriptableMath::Polynomial XPINSBuiltIn::ParsePolyConst(XPINSParser::XPINSS
 	++script.index;
 	return Polynomial(mons);
 }
-XPINSScriptableMath::VectorField ParseFieldConst(XPINSParser::XPINSScriptSpace& script)
+XPINSScriptableMath::VectorField XPINSBuiltIn::ParseFieldConst(XPINSParser::XPINSScriptSpace& script)
 {
 	if(!script.matchesString("~F<"))return VectorField();
 	script.index+=3;

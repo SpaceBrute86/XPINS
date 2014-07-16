@@ -14,7 +14,7 @@ const int kPMajor=0;
 const int kPMinor=12;
 
 void* runScript(XPINSScriptSpace& script);
-void ParseCode(XPINSScriptSpace& script, int, int);
+bool ParseCode(XPINSScriptSpace& script, int, int);
 
 size_t garbageCapcity=0x400/sizeof(double); //Default is about 1 KB
 vector<XPINSVarSpace*>allVarSpaces;
@@ -935,7 +935,7 @@ void ParseIf(XPINSScriptSpace& script)
 	}
 	else while (script.currentChar()!='{')++script.index;//Execute if
 }
-void ParseLoop(XPINSScriptSpace & script)
+bool ParseWhile(XPINSScriptSpace & script)
 {
 	while (script.currentChar()!='$'&&script.currentChar()!='?'&&script.currentChar()!='~'&&script.currentChar()!='#'&&script.currentChar()!='X') ++script.index;
 	int expressionIndex=script.index--;
@@ -946,10 +946,25 @@ void ParseLoop(XPINSScriptSpace & script)
 	script.index=expressionIndex;
 	int temp=script.index;
 	while (*ParseBoolArg(script, ']')) {
-		ParseCode(script, loopStart, loopStop);
+		if (ParseCode(script, loopStart, loopStop)) return true;
 		script.index=temp;
 	}
 	skipBlock(script);
+	return false;
+}
+bool ParseLoop(XPINSScriptSpace & script)
+{
+	while (script.currentChar()!='$'&&script.currentChar()!='?'&&script.currentChar()!='~'&&script.currentChar()!='#'&&script.currentChar()!='X') ++script.index;
+	double times=*ParseNumArg(script, ']');
+	while (script.currentChar()!='{')++script.index;
+	int loopStart=script.index;
+	skipBlock(script);
+	int loopStop=script.index;
+	for (int i=0;i<times;++i) {
+		if (ParseCode(script, loopStart, loopStop)) return true;
+	}
+	script.index=loopStop;
+	return false;
 }
 
 #pragma mark Script Execution
@@ -1100,7 +1115,7 @@ void* runScript(XPINSParser::XPINSScriptSpace& rootScript)
 	return script.returnVal;
 }
 //This is the actual code parser (makes loops easier). Call ParseCode and it will call this.
-void ParseCode(XPINSScriptSpace& script,int start,int stop)
+bool ParseCode(XPINSScriptSpace& script,int start,int stop)
 {
 	script.index=start;
 	//Get to the start of the Script
@@ -1242,19 +1257,31 @@ void ParseCode(XPINSScriptSpace& script,int start,int stop)
 			{
 				if(script.matchesString("@IF"))//IF STATEMENT
 					ParseIf(script);
-				else if(script.matchesString("@WHILE"))//WHILE LOOP
-					ParseLoop(script);
+				else if(script.matchesString("@WHILE")){//WHILE LOOP
+					if(ParseWhile(script)) return true;
+				}
+				else if(script.matchesString("@LOOP")){//LOOP LOOP
+					if(ParseLoop(script)) return true;
+				}
 				else if(script.matchesString("@EL"))//ELSE/ELIF (bypass because IF was executed)
 				{
 					skipBlock(script);
 					while (script.currentChar()!='\n')++script.index;
+				}
+				else if(script.matchesString("@RUN")){//RUN statement
+					script.index+=4;
+					runScript(script);
 				}
 				else if(script.clusterURL.length()>0&&script.matchesString("@RETURN"))//RETURN statement
 				{
 					while (script.currentChar()!='[') ++script.index;
 					++script.index;
 					script.returnVal=*ParsePointerArg(script, ']');
-					return;
+					return true;
+				}
+				else if(script.clusterURL.length()>0&&script.matchesString("@BREAK"))//BREAK statement
+				{
+					return false;
 				}
 			}break;
 		}
@@ -1271,4 +1298,5 @@ void ParseCode(XPINSScriptSpace& script,int start,int stop)
 			EmptyGarbage(*script.data);
 		}
 	}
+	return false;
 }

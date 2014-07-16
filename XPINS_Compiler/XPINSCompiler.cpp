@@ -110,13 +110,13 @@ bool XPINSCompiler::checkConstantSyntax(string& input)
 		}
 		//If it is a character that could be followed by an input
 		if(input[i]=='('||input[i]=='='||input[i]==','||input[i]=='['||(input[i]=='{'&&input[i-1]=='~')||
-		   input[i]=='<'||//typical operations and Constants
+		   input[i]=='<'||input[i]==' '||//typical operations and Constants
 		   input[i]=='|'||input[i]=='&'||input[i]=='>'||input[i]=='!'||input[i]=='+'||input[i]=='-'||
 		   input[i]=='*'||input[i]=='/'||input[i]=='^'||input[i]==':'||input[i]=='%')//Expression Specific
 		{
 			while (input[i+1]==' ')++i;
 			//Check for following:
-			if(input[i+1]!='$'&&input[i+1]!='#'&&input[i+1]!='?'&&input[i+1]!='X'&&input[i+1]!='~'&&//Already given Key character
+			if(input[i+1]!='$'&&input[i+1]!='#'&&input[i+1]!='?'&&input[i+1]!='X'&&input[i+1]!='~'&&input[i+1]!='@'&&//Already given Key character
 			   input[i+1]!='='&&input[i+1]!='+'&&(input[i+1]!='-'||input[i]!='-')&&input[i+1]!=')'&&//Multi-char Expression Operators
 			   input[i+1]!='\n')//end of line
 			{

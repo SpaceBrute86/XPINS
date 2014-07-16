@@ -26,7 +26,7 @@ void* XPINSLocalBindings::BindFunction(int fNum,XPINSParser::XPINSScriptSpace& s
 			/*Bind Your Custom Functions*/
 		case 1:{
 			int num=*XPINSParser::ParseNumArg(script, ')');
-			cout<<num<<"\t";
+			cout<<num<<"\t\t";
 		}break;
 		case 2:{
 			cout<<endl;

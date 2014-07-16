@@ -10,7 +10,7 @@
 #include <string>
 #include <list>
 #include "XPINSScriptableMath.h"
-
+#include "XPINSInstruction.h"
 
 using namespace std;
 class XPINSBindings;
