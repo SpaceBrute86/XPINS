@@ -57,6 +57,7 @@ namespace XPINSInstructions {
 		int modNumber;
 		int number;
 		vector<Argument> arguments;
+		vector<Argument> subscripts;
 		void* literalValue;
 	};
 	struct Instruction {

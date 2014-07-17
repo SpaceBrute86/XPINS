@@ -96,16 +96,28 @@ namespace XPINSInstructionsHelper {
 			opChar=script[i];
 			switch (opChar) {
 				case '|':
-					if(type==BOOLEAN)return OR;
+					if(type==BOOLEAN){
+						*assign = script[i+1]=='=';
+						return OR;
+					}
 					break;
 				case '&':
-					if(type==BOOLEAN)return AND;
+					if(type==BOOLEAN){
+						*assign = script[i+1]=='=';
+						return AND;
+					}
 					if(type==POLYNOMIAL|type==FIELD){
 						if(assign&&script[i+1]=='=')*assign=true;
 						return COMPOSITION;
 					}break;
 				case '!':
-					if(type==BOOLEAN)return script[i+1]=='='?NOTEQUAL:NOT;
+					if(type==BOOLEAN){
+						if (script[i-1]=='('){
+							*assign = script[i+1]=='=';
+							return NOT;
+						}
+						else return NOTEQUAL;
+					}
 					break;
 				case '<':
 					if(type==BOOLEAN)return script[i+1]=='='?LESSEQ:LESS;
@@ -201,12 +213,6 @@ namespace XPINSInstructionsHelper {
 						break;
 				}
 				arg.number=readInt(scriptText, i, expectedEnd);
-				while (scriptText[i++]=='[') {
-					arg.arguments.resize(arg.arguments.size()+1);
-					arg.arguments[arg.arguments.size()-1]=parseArgument(scriptText, i, ']');
-					++i;
-				}
-				--i;
 				break;
 			case '~':
 				arg.type=CONST;
@@ -292,13 +298,13 @@ namespace XPINSInstructionsHelper {
 					case VECTOR:
 						switch (scriptText[i]) {
 							case 'P':
-								arg.number=1;
+								arg.number=XPINSScriptableMath::Vector::coordSystem::Polar;
 								break;
 							case 'S':
-								arg.number=2;
+								arg.number=XPINSScriptableMath::Vector::coordSystem::Spherical;
 								break;
 							default:
-								arg.number=0;
+								arg.number=XPINSScriptableMath::Vector::coordSystem::Cartesian;
 								break;
 						}
 					case FIELD:
@@ -366,16 +372,16 @@ namespace XPINSInstructionsHelper {
 					case POLYNOMIAL:{
 						++i;
 						vector<XPINSScriptableMath::Polynomial::Monomial> mons=vector<XPINSScriptableMath::Polynomial::Monomial>();
-						for (arg.number=0;true;++arg.number){
-							arg.arguments.resize(arg.number+1);
-							arg.arguments[arg.number]=parseArgument(scriptText, i, '_');
-							mons.resize(arg.number+1);
-							mons[arg.number].exponents=vector<unsigned int>();
+						for (arg.number=1;true;++arg.number){
+							arg.arguments.resize(arg.number);
+							arg.arguments[arg.number-1]=parseArgument(scriptText, i, '_');
+							mons.resize(arg.number);
+							mons[arg.number-1].exponents=vector<unsigned int>();
 							while (scriptText[i]=='_')
 							{
 								++i;
 								unsigned int expIndex=0;
-								switch (scriptText[i])
+								switch (scriptText[i++])
 								{
 									case 'X':
 									case 'x':
@@ -406,22 +412,17 @@ namespace XPINSInstructionsHelper {
 										expIndex=7;
 										break;
 								}
-								if(scriptText[i]=='+'||scriptText[i]=='-'||scriptText[i]==')')
+								if(scriptText[i]=='+'||scriptText[i]=='-'||scriptText[i]==')'||scriptText[i]=='_')
 								{
-									if(expIndex>mons[arg.number].exponents.size())mons[arg.number].exponents.resize(expIndex);
-									mons[arg.number].exponents[expIndex-1]+=1;
-									break;
+									if(expIndex>mons[arg.number-1].exponents.size())mons[arg.number-1].exponents.resize(expIndex,0);
+									mons[arg.number-1].exponents[expIndex-1]+=1;
 								}
-								if(scriptText[i]=='_')
+								else if(expIndex!=0)
 								{
-									if(expIndex>mons[arg.number].exponents.size())mons[arg.number].exponents.resize(expIndex);
-									mons[arg.number].exponents[expIndex-1]+=1;
+									if(expIndex>mons[arg.number-1].exponents.size())mons[arg.number-1].exponents.resize(expIndex,0);
+									mons[arg.number-1].exponents[expIndex-1]+=readInt(scriptText,i, '_');
 								}
-								if(expIndex!=0)
-								{
-									if(expIndex>mons[arg.number].exponents.size())mons[arg.number].exponents.resize(expIndex);
-									mons[arg.number].exponents[expIndex-1]+=readInt(scriptText,i, '_');
-								}
+								if(scriptText[i]=='+'||scriptText[i]=='-'||scriptText[i]==')')break;
 							}
 							if(scriptText[i]==')')break;
 						}
@@ -465,6 +466,15 @@ namespace XPINSInstructionsHelper {
 							else str+=scriptText[i];
 						}
 						arg.literalValue=new string(str);
+					}break;
+					case ARRAY:{
+						int temp=i;
+						for (;scriptText[temp]!='}'; ++temp)//Find Array Count
+							if(scriptText[temp]==',')++arg.number;
+						arg.arguments.resize(arg.number);
+						for (int item=0;item<arg.number;++item) {
+							arg.arguments[item]=parseArgument(scriptText, i, item==arg.number-1?'}':',');
+						}
 					}break;
 					default:
 						break;
@@ -585,8 +595,14 @@ namespace XPINSInstructionsHelper {
 				} else if(op==POSTINCREMENT||op==POSTDECREMENT){
 					arg.arguments.resize(1);
 					arg.arguments[0]=parseArgument(scriptText, i, opChar);
-				}
-				else {
+				} else if(op==EVALUATE||op==COMPOSITION){
+					arg.arguments.resize(1);
+					arg.arguments[0]=parseArgument(scriptText, i, opChar);
+					while (scriptText[i]!=')') {
+						arg.arguments.resize(arg.arguments.size()+1);
+						arg.arguments[arg.arguments.size()-1]=parseArgument(scriptText, i, ',');
+					}
+				} else {
 					arg.arguments.resize(2);
 					arg.arguments[0]=parseArgument(scriptText, i, opChar);
 					arg.arguments[1]=parseArgument(scriptText, i, ')');
@@ -597,6 +613,12 @@ namespace XPINSInstructionsHelper {
 			default:
 				break;
 		}
+		while (scriptText[i]=='[') {
+			++i;
+			arg.subscripts.resize(arg.subscripts.size()+1);
+			arg.subscripts[arg.subscripts.size()-1]=parseArgument(scriptText, i, ']');
+			++i;
+		}
 		while (scriptText[i]!=expectedEnd&&scriptText[i]!=')'&&scriptText[i]!=',') ++i;
 		return arg;
 	}
@@ -606,7 +628,7 @@ namespace XPINSInstructionsHelper {
 		vector<Instruction> instructions=vector<Instruction>();
 		for(int i=start;i<stop;){
 			while(i<scriptText.length()&&scriptText[i++]!='\n');
-			if(i>scriptText.length()||i>=stop||stringsMatch(i, scriptText, "@END"))break;
+			if(i>scriptText.length()||i>=stop)break;
 			Instruction instruction=Instruction();
 			switch (scriptText[i]) {
 				case '$'://Assignment
@@ -726,14 +748,3 @@ XPINSInstructions::InstructionSet XPINSInstructions::instructionsForScriptText(s
 	instructions.instructions=XPINSInstructionsHelper::parseInstructionsForScript(script, i, script.length());
 	return instructions;
 }
-
-
-
-
-
-
-
-
-
-
-

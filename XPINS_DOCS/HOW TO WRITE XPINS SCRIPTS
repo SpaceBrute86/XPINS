@@ -113,7 +113,10 @@ An expression always starts and ends with a '?'. At the beginning of the express
 	!  : Not (B):(B)
 	|| : Or (B):(B),(B)
 	&& : Or (B):(B),(B)
-	Add a '=' after +,-,*,/,^, or % to copy the result into the first (with the exception of ?V($M*=$V)? which will store the result in the Vector variable) variable, as long as it is of a matching type (e.g. dot product won't work but cross product will). Also, Order matters for expressions with differnet types, or expresons where the underlying mathematics is not commutative.
+	!= : Not Assign (B):(B)
+	|= : Or Assign (B):(B),(B)
+	&= : And Assign (B:)(B),(B)
+	Add a '=' after +,-,*,/,^, % to copy the result into the first (except ?V($M*=$V)? which will store the result in the Vector variable) variable, as long as it is of a matching type (e.g. dot product won't work but cross product will). Also, Order matters for expressions with differnet types, or expresons where the underlying mathematics is not commutative.
 
 
 BINDING FUNCTIONS:

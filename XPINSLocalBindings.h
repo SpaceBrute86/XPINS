@@ -17,7 +17,7 @@
 class XPINSLocalBindings : public XPINSBindings
 {
 public:
-	void* BindFunction(int,XPINSParser::XPINSScriptSpace&);
+	void* BindFunction(int,XPINSParser::XPINSScriptSpace&,vector<Argument>);
 	/*Define your custom parameters here*/
 	
 private:

@@ -18,6 +18,6 @@ using namespace std;
 class XPINSBindings
 {
 public:
-	virtual void* BindFunction(int,XPINSParser::XPINSScriptSpace&)=0;	//Bind Function
+	virtual void* BindFunction(int,XPINSParser::XPINSScriptSpace&,vector<Argument>)=0;	//Bind Function
 };
 #endif /* defined(__XPINS__XPINSBridge__) */
