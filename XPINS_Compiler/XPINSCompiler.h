@@ -22,8 +22,7 @@ namespace XPINSCompiler{
 	bool replaceConstants(string&);
 	bool renameFunctions(string&);
 	bool renameVars(string&);
-	bool renameBuiltIns(string&);
-	bool renameVars(string&);
+	bool convertDotSyntax(string&);
 	bool checkConstantSyntax(string&);
 	bool cleanUp(string&);
 }

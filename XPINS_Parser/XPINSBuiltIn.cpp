@@ -8,6 +8,7 @@
 
 #include "XPINSParser.h"
 #include "XPINSBindings.h"
+#include "XPINSBIFMap.h"
 
 #include <math.h>
 
@@ -136,11 +137,14 @@ double XPINSBuiltIn::ParseNumExp(opCode op,bool assign,XPINSScriptSpace& script,
 			if(assign) *var=result;
 			return result;
 		}
-		case MODULUS:
+		case REMAINDER:
 		{
 			double* var=ParseNumArg(script,args[0]);
-			int result=*var;
-			result %= (int)*ParseNumArg(script,args[1]);
+			
+			double num2 = (int)*ParseNumArg(script,args[1]);
+			double quotient= *var / num2;
+			quotient-=floor(quotient);
+			double result=*var-num2*quotient;
 			if(assign) *var=result;
 			return result;
 		}
@@ -594,7 +598,7 @@ bool XPINSBuiltIn::ParseBoolBIF(int fNum, XPINSScriptSpace& script, vector<Argum
 {
 	switch (fNum)
 	{
-		case 1://X_MARKOV_REACHABLE
+		case X_MARKOV_REACHABLE:
 		{
 			Matrix arg1=*ParseMatArg(script, args[0]);
 			double arg2=*ParseNumArg(script, args[1]);
@@ -609,189 +613,230 @@ double XPINSBuiltIn::ParseNumBIF(int fNum, XPINSScriptSpace& script, vector<Argu
 {
 	switch (fNum)
 	{
-		case 1://X_SIN
+		case X_SIN:
 		{
 			double arg1=*ParseNumArg(script, args[0]);
 			return sin(arg1);
 		}
-		case 2://X_COS
+		case X_COS:
 		{
 			double arg1=*ParseNumArg(script, args[0]);
 			return cos(arg1);
 		}
-		case 3://X_TAN
+		case X_TAN:
 		{
 			double arg1=*ParseNumArg(script, args[0]);
 			return tan(arg1);
 		}
-		case 4://X_ASIN
+		case X_CSC:
+		{
+			double arg1=*ParseNumArg(script, args[0]);
+			return 1/sin(arg1);
+		}
+		case X_SEC:
+		{
+			double arg1=*ParseNumArg(script, args[0]);
+			return 1/cos(arg1);
+		}
+		case X_COT:
+		{
+			double arg1=*ParseNumArg(script, args[0]);
+			return 1/tan(arg1);
+		}
+		case X_ASIN:
 		{
 			double arg1=*ParseNumArg(script, args[0]);
 			return asin(arg1);
 		}
-		case 5://X_ACOS
+		case X_ACOS:
 		{
 			double arg1=*ParseNumArg(script, args[0]);
 			return acos(arg1);
 		}
-		case 6://X_ATAN
+		case X_ATAN:
+		{
+			double arg1=*ParseNumArg(script, args[0]);
+			return atan(arg1);
+		}
+		case X_ACSC:
+		{
+			double arg1=*ParseNumArg(script, args[0]);
+			return asin(1/arg1);
+		}
+		case X_ASEC:
+		{
+			double arg1=*ParseNumArg(script, args[0]);
+			return acos(1/arg1);
+		}
+		case X_ACOT:
+		{
+			double arg1=*ParseNumArg(script, args[0]);
+			return atan(1/arg1);
+		}
+		case X_ATAN2:
 		{
 			double arg1=*ParseNumArg(script, args[0]);
 			double arg2=*ParseNumArg(script, args[1]);
 			return atan2(arg1, arg2);
 		}
-		case 7://X_SQRT
+		case X_ADDPOLAR:
+		{
+			double arg1=*ParseNumArg(script, args[0]);
+			double arg2=*ParseNumArg(script, args[1]);
+			return atan2(arg1, arg2);
+		}
+		case X_SQRT:
 		{
 			double arg1=*ParseNumArg(script, args[0]);
 			return sqrt(arg1);
 		}
-		case 8://X_LN
+		case X_ABS:
+		{
+			double arg1=*ParseNumArg(script, args[0]);
+			return fabs(arg1);
+		}
+		case X_FLOOR:
+		{
+			double arg1=*ParseNumArg(script, args[0]);
+			return floor(arg1);
+		}
+		case X_LN:
 		{
 			double arg1=*ParseNumArg(script, args[0]);
 			return log(arg1);
 		}
-		case 9://X_LOG
+		case X_LOG:
 		{
 			double arg1=*ParseNumArg(script, args[0]);
 			double arg2=*ParseNumArg(script, args[1]);
 			return log(arg1)/log(arg2);
 		}
-		case 10://X_ABS
-		{
-			double arg1=*ParseNumArg(script, args[0]);
-			return fabs(arg1);
-		}
-		case 11://X_FLOOR
-		{
-			double arg1=*ParseNumArg(script, args[0]);
-			return floor(arg1);
-		}
-		case 12://X_ADDPOLAR
-		{
-			double arg1=*ParseNumArg(script, args[0]);
-			double arg2=*ParseNumArg(script, args[1]);
-			return Vector::AddPolar(arg1, arg2);
-		}
-		case 13://X_DIST
+		case X_DIST:
 		{
 			double arg1=*ParseNumArg(script, args[0]);
 			double arg2=*ParseNumArg(script, args[1]);
 			double arg3=*ParseNumArg(script, args[2]);
 			return Vector::Dist(arg1, arg2,arg3);
 		}
-		case 14://X_VX
+		case X_X:
 		{
 			Vector arg1=*ParseVecArg(script, args[0]);
 			double x=0;
 			arg1.Coords(&x, NULL,NULL,Vector::Cartesian);
 			return x;
 		}
-		case 15://X_VY
+		case X_Y:
 		{
 			Vector arg1=*ParseVecArg(script, args[0]);
 			double y=0;
 			arg1.Coords(NULL, &y, NULL,Vector::Cartesian);
 			return y;
 		}
-		case 16://X_VZ
+		case X_Z:
 		{
 			Vector arg1=*ParseVecArg(script, args[0]);
 			double z=0;
 			arg1.Coords(NULL, NULL,&z,Vector::Cartesian);
 			return z;
 		}
-		case 17://X_VR
+		case X_R:
 		{
-			Vector arg1=*ParseVecArg(script, args[0]);
-			double r=0;
-			arg1.Coords(&r, NULL, NULL,Vector::Polar);
-			return r;
+			DataType t1=VECTOR;
+			void* arg1=ParseArg(script, args[0], t1);
+			if (t1==QUATERNION) {
+				double r;
+				((Quaternion*)arg1)->Components(NULL,NULL,NULL,&r);
+				return r;
+			} else if (t1==VECTOR) {
+				double r=0;
+				((Vector*)arg1)->Coords(&r, NULL, NULL,Vector::Polar);
+				return r;
+			} else return 0;
+			
 		}
-		case 18://X_VTHETA
+		case X_THETA:
 		{
 			Vector arg1=*ParseVecArg(script, args[0]);
 			double t=0;
 			arg1.Coords(NULL,&t, NULL,Vector::Polar);
 			return t;
 		}
-		case 19://X_VMAG
+		case X_MAGNITUDE:
 		{
-			Vector arg1=*ParseVecArg(script, args[0]);
-			return arg1.Magnitude();
+			DataType t1=VECTOR;
+			void* arg1=ParseArg(script, args[0], t1);
+			if (t1==QUATERNION) {
+				return ((Quaternion*)arg1)->Magnitude();
+			} else if (t1==VECTOR) {
+				return ((Vector*)arg1)->Magnitude();
+			} else return 0;
 		}
-		case 20://X_VPHI
+		case X_PHI:
 		{
 			Vector arg1=*ParseVecArg(script, args[0]);
 			double z=0;
 			arg1.Coords(NULL, NULL,&z,Vector::Spherical);
 			return z;
 		}
-		case 21://X_VECTOR_ANGLE
+		case X_ANGLE_BETWEEN_VECTORS:
 		{
 			Vector arg1=*ParseVecArg(script, args[0]);
 			Vector arg2=*ParseVecArg(script, args[1]);
 			return Vector::AngleBetweenVectors(arg1, arg2);
-			
 		}
-		case 22://X_MATRIX_GET
-		{
-			Matrix arg1=*ParseMatArg(script, args[0]);
-			int arg2=*ParseNumArg(script, args[1]);
-			int arg3=*ParseNumArg(script, args[2]);
-			return arg1.ValueAtPosition(arg2, arg3);
-		}
-		case 23://X_DETERMINANT
+		case X_DETERMINANT:
 		{
 			Matrix arg1=*ParseMatArg(script, args[0]);
 			return Matrix::Determinant(arg1);
 		}
-		case 24://X_RAND
+		case X_RAND:
 		{
 			double arg1=*ParseNumArg(script, args[0]);
 			double arg2=*ParseNumArg(script, args[1]);
-			return Probability::UniformRV(arg1, arg2-arg1);
+			double rv= Probability::UniformRV(arg1, arg2-arg1);
+			return rv;
 		}
-		case 25://X_RV_BERNOULLI
+		case X_RV_BERNOULLI:
 		{
 			double arg1=*ParseNumArg(script, args[0]);
 			return Probability::BernoulliRV(arg1);
 		}
-		case 26://X_RV_NOMRAL
+		case X_RV_NORMAL:
 		{
 			double arg1=*ParseNumArg(script, args[0]);
 			double arg2=*ParseNumArg(script, args[1]);
 			return Probability::NormalRV(arg1, arg2);
 		}
-		case 27://X_RV_EXP
+		case X_RV_EXP:
 		{
 			double arg1=*ParseNumArg(script, args[0]);
 			return Probability::ExponentialRV(arg1);
 		}
-		case 28://X_RV_POISSON
+		case X_RV_POISSON:
 		{
 			double arg1=*ParseNumArg(script, args[0]);
 			return Probability::PoissonRV(arg1);
 		}
-		case 29://X_COIN_FLIP
+		case X_COIN_FLIP:
 		{
 			double arg1=*ParseNumArg(script, args[0]);
 			double arg2=*ParseNumArg(script, args[1]);
 			return Probability::CoinFlip(arg1, arg2);
 		}
-		case 30://X_DICE_ROLL
+		case X_DICE_ROLL:
 		{
 			double arg1=*ParseNumArg(script, args[0]);
 			double arg2=*ParseNumArg(script, args[1]);
 			return Probability::FairDiceRoll(arg1, arg2);
 		}
-		case 31://X_MARKOV_SIM
+		case X_MARKOV_SIM:
 		{
 			Matrix arg1=*ParseMatArg(script, args[0]);
 			double arg2=*ParseNumArg(script, args[1]);
 			double arg3=*ParseNumArg(script, args[2]);
 			return Probability::SimulateMarkovChain(arg1, arg2, arg3);
 		}
-		case 32://X_MARKOV_PROB
+		case X_MARKOV_PROB:
 		{
 			Matrix arg1=*ParseMatArg(script, args[0]);
 			double arg2=*ParseNumArg(script, args[1]);
@@ -799,14 +844,14 @@ double XPINSBuiltIn::ParseNumBIF(int fNum, XPINSScriptSpace& script, vector<Argu
 			double arg4=*ParseNumArg(script, args[3]);
 			return Probability::TransitionProbability(arg1, arg2, arg3, arg4);
 		}
-		case 33://X_MARKOV_STEADYSTATE
+		case X_MARKOV_STEADYSTATE:
 		{
 			Matrix arg1=*ParseMatArg(script, args[0]);
 			double arg2=*ParseNumArg(script, args[0]);
 			return Probability::SteadyStateProbability(arg1, arg2);
 
 		}
-		case 34://X_MARKOV_ABSORB_PROB
+		case X_MARKOV_ABSORB_PROB:
 		{
 			Matrix arg1=*ParseMatArg(script, args[0]);
 			double arg2=*ParseNumArg(script, args[1]);
@@ -814,31 +859,19 @@ double XPINSBuiltIn::ParseNumBIF(int fNum, XPINSScriptSpace& script, vector<Argu
 			return Probability::AbsorbtionProbability(arg1, arg2, arg3);
 
 		}
-		case 35://X_MARKOV_ABSORB_TIME
+		case X_MARKOV_ABSORB_TIME:
 		{
 			Matrix arg1=*ParseMatArg(script, args[0]);
 			double arg2=*ParseNumArg(script, args[1]);
 			double arg3=*ParseNumArg(script, args[2]);
 			return Probability::AbsorbtionTime(arg1, arg2, arg3);
 		}
-		case 36://X_MARKOV_ABSORB_SIM
+		case X_MARKOV_ABSORB_SIM:
 		{
 			Matrix arg1=*ParseMatArg(script, args[0]);
 			double arg2=*ParseNumArg(script, args[1]);
 			double arg3=*ParseNumArg(script, args[2]);
 			return Probability::SimulateAbsorbtionTime(arg1, arg2, arg3);
-		}
-		case 37://X_QR
-		{
-			Quaternion arg1=*ParseQuatArg(script, args[0]);
-			double r;
-			arg1.Components(NULL,NULL,NULL,&r);
-			return r;
-		}
-		case 38://X_QMAG
-		{
-			Quaternion arg1=*ParseQuatArg(script, args[0]);
-			return arg1.Magnitude();
 		}
 	}
 	return 0;
@@ -848,29 +881,29 @@ XPINSScriptableMath::Vector XPINSBuiltIn::ParseVecBIF(int fNum, XPINSScriptSpace
 	
 	switch (fNum)
 	{
-		case 1://X_VPROJECT
+		case X_PROJECT_ONTO_VECTOR:
 		{
 			Vector arg1=*ParseVecArg(script, args[0]);
 			Vector arg2=*ParseVecArg(script, args[1]);
 			return Vector::ProjectionOntoVector(arg1,arg2);
 		}
-		case 2://X_UNIT_VECTOR
+		case X_UNIT_VECTOR:
 		{
 			Vector arg1=*ParseVecArg(script, args[0]);
 			return Vector::UnitVectorFromVector(arg1);
 		}
-		case 3://X_QV
+		case X_V:
 		{
 			Quaternion arg1=*ParseQuatArg(script, args[0]);
 			double x,y,z;
 			arg1.Components(&x, &y, &z, NULL);
 			return Vector(x,y,z,Vector::Cartesian);
 		}
-		case 4://X_QUATERNION_ROTATE
+		case X_ROTATE_VECTOR:
 		{
-			Quaternion arg1=*ParseQuatArg(script, args[0]);
-			Vector arg2=*ParseVecArg(script, args[1]);
-			return Quaternion::RotateVector(arg1, arg2);
+			Vector arg1=*ParseVecArg(script, args[0]);
+			Quaternion arg2=*ParseQuatArg(script, args[1]);
+			return Quaternion::RotateVector(arg2, arg1);
 		}
 	}
 	return Vector();
@@ -880,17 +913,17 @@ XPINSScriptableMath::Quaternion XPINSBuiltIn::ParseQuatBIF(int fNum, XPINSScript
 	
 	switch (fNum)
 	{
-		case 1://X_QUATERNION_CONJUGATE
+		case X_CONJUGATE:
 		{
 			Quaternion arg1=*ParseQuatArg(script, args[0]);
 			return Quaternion::ConjugateQuaternion(arg1);
 		}
-		case 2://X_QUATERNION_INVERSE
+		case X_INVERSE:
 		{
 			Quaternion arg1=*ParseQuatArg(script, args[0]);
 			return Quaternion::InvertQuaternion(arg1);
 		}
-		case 3://X_UNIT_QUATERNION
+		case X_UNIT_QUATERNION:
 		{
 			Quaternion arg1=*ParseQuatArg(script, args[0]);
 			return Quaternion::UnitQuaternion(arg1);
@@ -903,57 +936,57 @@ XPINSScriptableMath::Matrix XPINSBuiltIn::ParseMatBIF(int fNum, XPINSScriptSpace
 	
 	switch (fNum)
 	{
-		case 1://X_ZERO_MATRIX
+		case X_ZERO_MATRIX:
 		{
 			int arg1=*ParseNumArg(script, args[0]);
 			int arg2=*ParseNumArg(script, args[1]);
 			return Matrix(arg1,arg2);
 		}
-		case 2://X_IDENTITY_MATRIX
+		case X_IDENTITY_MATRIX:
 		{
 			int arg1=*ParseNumArg(script, args[0]);
 			return Matrix::IdentityMatrixOfSize(arg1);
 		}
-		case 3://X_ROTATION_MATRIX
+		case X_ROTATION_MATRIX:
 		{
 			double arg1=*ParseNumArg(script, args[0]);
 			Vector arg2=*ParseVecArg(script, args[1]);
 			return Matrix::RotationMatrixWithAngleAroundVector(arg2,arg1);
 		}
-		case 4://X_EULER_ANGLE_MATRIX
+		case X_EULER_ANGLE_MATRIX:
 		{
 			double arg1=*ParseNumArg(script, args[0]);
 			double arg2=*ParseNumArg(script, args[1]);
 			double arg3=*ParseNumArg(script, args[2]);
 			return Matrix::RotationMatrixWithEulerAngles(arg1, arg2, arg3);
 		}
-		case 5://X_QUATERNION_MATRIX
+		case X_QUATERNION_MATRIX:
 		{
 			Quaternion arg1=*ParseQuatArg(script, args[0]);
 			return Matrix::RotationMatrixWithQuaternion(arg1);
 		}
-		case 6://X_INVERT
+		case X_INVERT:
 		{
 			Matrix arg1=*ParseMatArg(script, args[0]);
 			return Matrix::Invert(arg1);
 		}
-		case 7://X_TRANSPOSE
+		case X_TRANSPOSE:
 		{
 			Matrix arg1=*ParseMatArg(script, args[0]);
 			return Matrix::Transpose(arg1);
 		}
-		case 8://X_APPEND
+		case X_APPEND:
 		{
 			Matrix arg1=*ParseMatArg(script, args[0]);
 			Matrix arg2=*ParseMatArg(script, args[1]);
 			return Matrix::Append(arg1, arg2);
 		}
-		case 9://X_ROW_ECHELON
+		case X_ROW_ECHELON:
 		{
 			Matrix arg1=*ParseMatArg(script, args[0]);
 			return Matrix::RowEchelon(arg1);
 		}
-		case 10://X_REDUCED_ROW_ECHELON
+		case X_REDUCED_ROW_ECHELON:
 		{
 			Matrix arg1=*ParseMatArg(script, args[0]);
 			return Matrix::ReducedRowEchelon(arg1);
@@ -966,61 +999,53 @@ XPINSScriptableMath::Polynomial XPINSBuiltIn::ParsePolyBIF(int fNum, XPINSScript
 	
 	switch (fNum)
 	{
-		case 1://X_DERIVE
+		case X_DERIVE:
 		{
 			Polynomial arg1=*ParsePolyArg(script, args[0]);
 			int arg2=*ParseNumArg(script, args[1]);
 			return Polynomial::Derivative(arg1, arg2);
 		}
-		case 2://X_INTEGRATE
+		case X_INTEGRATE:
 		{
 			Polynomial arg1=*ParsePolyArg(script, args[0]);
 			int arg2=*ParseNumArg(script, args[1]);
 			return Polynomial::Integrate(arg1, arg2);
 		}
-		case 3://X_DIVERGENCE
+		case X_DIVERGENCE:
 		{
 			VectorField arg1=*ParseFieldArg(script, args[0]);
 			return arg1.Divergence();
 		}
-		case 4://X_SCALAR_LINE_INTEGRAL
+		case X_LINE_INTEGRAL:
 		{
-			Polynomial arg1=*ParsePolyArg(script, args[0]);
+			DataType t1=POLYNOMIAL;
+			void* arg1=ParseArg(script, args[0], t1);
 			VectorField arg2=*ParseFieldArg(script, args[1]);
 			Polynomial arg3=*ParsePolyArg(script, args[2]);
 			Polynomial arg4=*ParsePolyArg(script, args[3]);
-			Bound::Bound(arg3,arg4);
-			return VectorField::LineIntegral(arg1, arg2, Bound(arg3,arg4));
+			if (t1==POLYNOMIAL) {
+				return VectorField::LineIntegral(*((Polynomial*)arg1), arg2, Bound(arg3,arg4));
+			} else if (t1==FIELD) {
+				return VectorField::LineIntegral(*((VectorField*)arg1), arg2, Bound(arg3,arg4));
+			} else return Polynomial();
 		}
-		case 5://X_VECTOR_LINE_INTEGRAL
+		case X_SURFACE_INTEGRAL:
 		{
-			VectorField arg1=*ParseFieldArg(script, args[0]);
-			VectorField arg2=*ParseFieldArg(script, args[1]);
-			Polynomial arg3=*ParsePolyArg(script, args[2]);
-			Polynomial arg4=*ParsePolyArg(script, args[3]);
-			return VectorField::LineIntegral(arg1, arg2, Bound(arg3,arg4));
-		}
-		case 6://X_SCALAR_SURFACE_INTEGRAL
-		{
-			Polynomial arg1=*ParsePolyArg(script, args[0]);
-			VectorField arg2=*ParseFieldArg(script, args[1]);
-			Polynomial arg3=*ParsePolyArg(script, args[2]);
-			Polynomial arg4=*ParsePolyArg(script, args[3]);
-			Polynomial arg5=*ParsePolyArg(script, args[4]);
-			Polynomial arg6=*ParsePolyArg(script, args[5]);
-			return VectorField::SurfaceIntegral(arg1, arg2, Bound(arg3,arg4),Bound(arg5,arg6));
-		}
-		case 7://X_VECTOR_LINE_INTEGRAL
-		{
-			VectorField arg1=*ParseFieldArg(script, args[0]);
+			DataType t1=POLYNOMIAL;
+			void* arg1=ParseArg(script, args[0], t1);
 			VectorField arg2=*ParseFieldArg(script, args[1]);
 			Polynomial arg3=*ParsePolyArg(script, args[2]);
 			Polynomial arg4=*ParsePolyArg(script, args[3]);
 			Polynomial arg5=*ParsePolyArg(script, args[4]);
 			Polynomial arg6=*ParsePolyArg(script, args[5]);
-			return VectorField::SurfaceIntegral(arg1, arg2, Bound(arg3,arg4),Bound(arg5,arg6));
+			if (t1==POLYNOMIAL) {
+				return VectorField::SurfaceIntegral(*((Polynomial*)arg1), arg2, Bound(arg3,arg4),Bound(arg5,arg6));
+			} else if (t1==FIELD) {
+				return VectorField::SurfaceIntegral(*((VectorField*)arg1), arg2, Bound(arg3,arg4),Bound(arg5,arg6));
+			} else return Polynomial();
+		
 		}
-		case 8://X_VOLUME_INTEGRAL
+		case X_VOLUME_INTEGRAL:
 		{
 			Polynomial arg1=*ParsePolyArg(script, args[0]);
 			VectorField arg2=*ParseFieldArg(script, args[1]);
@@ -1040,24 +1065,24 @@ XPINSScriptableMath::VectorField XPINSBuiltIn::ParseFieldBIF(int fNum, XPINSScri
 	
 	switch (fNum)
 	{
-		case 1://X_GRADIENT_VECTOR
+		case X_GRADIENT_VECTOR:
 		{
 			Polynomial arg1=*ParsePolyArg(script, args[0]);
 			return VectorField::GradientField(arg1);
 		}
-		case 2://X_VECTOR_DERIVE
+		case X_COMPONENT_DERIVE:
 		{
 			VectorField arg1=*ParseFieldArg(script, args[0]);
 			double  arg2=*ParseNumArg(script, args[1]);
 			return VectorField::Derivative(arg1, arg2);
 		}
-		case 3://X_VECTOR_INTEGRATE
+		case X_COMPONENT_INTEGRATE:
 		{
 			VectorField arg1=*ParseFieldArg(script, args[0]);
 			double  arg2=*ParseNumArg(script, args[1]);
 			return VectorField::Integrate(arg1, arg2);
 		}
-		case 4://X_CURL
+		case X_CURL:
 		{
 			VectorField arg1=*ParseFieldArg(script, args[0]);
 			return arg1.Curl();
@@ -1068,18 +1093,10 @@ XPINSScriptableMath::VectorField XPINSBuiltIn::ParseFieldBIF(int fNum, XPINSScri
 void XPINSBuiltIn::ParseVoidBIF(int fNum, XPINSScriptSpace& script,vector<Argument>args)
 {
 	switch (fNum) {
-		case 1://X_PRINT
+		case X_PRINT:
 		{
 			string str=*XPINSParser::ParseStrArg(script, args[0]);
 			cout<<str;
-		}break;
-		case 2://X_MSET
-		{
-			Matrix* arg1=ParseMatArg(script, args[0]);
-			double arg2=*ParseNumArg(script, args[1]);
-			int arg3=*ParseNumArg(script, args[2]);
-			int arg4=*ParseNumArg(script, args[3]);
-			arg1->SetValueAtPosition(arg2, arg3, arg4);
 		}break;
 	}
 }

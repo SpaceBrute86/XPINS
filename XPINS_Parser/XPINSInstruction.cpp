@@ -12,6 +12,7 @@
 
 const int kPMajor=0;
 const int kPMinor=12;
+
 using namespace XPINSInstructions;
 namespace XPINSInstructionsHelper {
 	
@@ -160,7 +161,7 @@ namespace XPINSInstructionsHelper {
 				case '%':
 					if(type==NUMBER){
 						if(assign&&script[i+1]=='=')*assign=true;
-						return MODULUS;
+						return REMAINDER;
 					}break;
 				case ':':
 					if(type==NUMBER||type==VECTOR) return EVALUATE;
@@ -517,11 +518,13 @@ namespace XPINSInstructionsHelper {
 				++i;
 				arg.modNumber=readInt(scriptText, i, 'F');
 				arg.number=readInt(scriptText, i, '(');
+				++i;
 				arg.arguments.resize(0);
-				while (scriptText[i]!=')'&& scriptText[++i]!=')') {
+				while (scriptText[i]!=')') {
 					arg.arguments.resize(arg.arguments.size()+1);
 					arg.arguments[arg.arguments.size()-1]=parseArgument(scriptText, i, ',');
 				}
+				++i;
 				break;
 			case 'X':
 				arg.type=BIF;
@@ -552,11 +555,13 @@ namespace XPINSInstructionsHelper {
 						break;
 				}
 				arg.number=readInt(scriptText, i, '(');
+				++i;
 				arg.arguments.resize(0);
-				while (scriptText[i]!=')'&& scriptText[++i]!=')') {
+				while (scriptText[i]!=')') {
 					arg.arguments.resize(arg.arguments.size()+1);
 					arg.arguments[arg.arguments.size()-1]=parseArgument(scriptText, i, ',');
 				}
+				++i;
 				break;
 			case '?':{
 				arg.type=EXP;
@@ -647,49 +652,47 @@ namespace XPINSInstructionsHelper {
 					switch (scriptText[i++]) {
 						case 'I':{
 							instruction.type=IF;
-							while (scriptText[i++]!='[');
-							instruction.right=parseArgument(scriptText, i, ']');
-							while (scriptText[i]!='{')++i;
+							while (scriptText[i++]!=' ');
+							instruction.right=parseArgument(scriptText, i, '{');
 							int temp=i;
 							i=skipBlock(scriptText, i);
 							instruction.block=parseInstructionsForScript(scriptText, temp, i);
 						}break;
 						case 'E':{
+							if (scriptText[i]=='N')break;
 							instruction.type=ELSE;
-							while (scriptText[i]!='{'&&scriptText[i]!='[')++i;
-							if (scriptText[i]=='[') instruction.right=parseArgument(scriptText, i, ']');
+							bool elif=scriptText[i+1]=='I';
+							while (scriptText[i]!='{'&&scriptText[i]!=' ')++i;
+							if (elif) instruction.right=parseArgument(scriptText, i, '{');
 							else {
 								instruction.right.literalValue=new bool(true);
 								instruction.right.type=CONST;
 								instruction.right.dataType=BOOLEAN;
 							}
-							while (scriptText[i]!='{')++i;
 							int temp=i;
 							i=skipBlock(scriptText, i);
 							instruction.block=parseInstructionsForScript(scriptText, temp, i);
 						}break;
 						case 'W':{
 							instruction.type=WHILE;
-							while (scriptText[i++]!='[');
-							instruction.right=parseArgument(scriptText, i, ']');
-							while (scriptText[i]!='{')++i;
+							while (scriptText[i++]!=' ');
+							instruction.right=parseArgument(scriptText, i, '{');
 							int temp=i;
 							i=skipBlock(scriptText, i);
 							instruction.block=parseInstructionsForScript(scriptText, temp, i);
 						}break;
 						case 'L':{
 							instruction.type=LOOP;
-							while (scriptText[i++]!='[');
-							instruction.right=parseArgument(scriptText, i, ']');
-							while (scriptText[i]!='{')++i;
+							while (scriptText[i++]!=' ');
+							instruction.right=parseArgument(scriptText, i, '{');
 							int temp=i;
 							i=skipBlock(scriptText, i);
 							instruction.block=parseInstructionsForScript(scriptText, temp, i);
 						}break;
 						case 'R':
 							instruction.type=RETURN;
-							while (scriptText[i++]!='[');
-							instruction.right=parseArgument(scriptText, i, ']');
+							while (scriptText[i++]!=' ');
+							instruction.right=parseArgument(scriptText, i, '\n');
 							break;
 						case 'B':
 							instruction.type=BREAK;

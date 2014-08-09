@@ -98,7 +98,7 @@ An expression always starts and ends with a '?'. At the beginning of the express
 	/  : Division (N):(N),(N)
 	/  : Vector-Scalar Division (V):(V),(V),(N)
 	/  : Matrix-Matrix Division (M):(M),(N)
-	%  : Modulus (I):(I),(I)
+	%  : Remainder (N):(N),(N)
 	^  : Power (N):(N),(N)
 	^  : Polynomial Power (P):(P),(N)
 	&  : Polynomial Composition (P):(P),(P)

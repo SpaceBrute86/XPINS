@@ -36,7 +36,6 @@
 -(XPNVector*)multiplyWithMatrix:(XPNMatrix*)matrix;
 -(XPNVector*)projectoinOntoVector:(XPNVector*)vector;
 -(double)angleFromVector:(XPNVector*)vector;
-
 @end
 
 @interface XPNMatrix : NSObject <NSCopying>{

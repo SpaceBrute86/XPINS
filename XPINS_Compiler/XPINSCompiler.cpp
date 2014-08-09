@@ -8,11 +8,13 @@
 
 #include "XPINSCompiler.h"
 #include <vector>
+#include "XPINSBIFMap.h"
 
 using namespace std;
 
 const int kMajor=0;
-const int kMinor=6;
+const int kMinor=7;
+
 
 namespace XPINSCompileUtil
 {
@@ -25,11 +27,10 @@ bool XPINSCompiler::compileScript(string &input)//Compile Script
 	string scriptText=input;
 	if(!checkVersion(scriptText))return false;
 	if(!removeComments(scriptText))return false;
-	if(!checkConstantSyntax(scriptText))return false;
+	if (!convertDotSyntax(scriptText))return false;
 	if(!replaceConstants(scriptText))return false;
+	if(!checkConstantSyntax(scriptText))return false;
 	if(!renameFunctions(scriptText))return false;
-	//cout<<scriptText;
-	if(!renameBuiltIns(scriptText))return false;
 	if(!renameVars(scriptText))return false;
 	if(!cleanUp(scriptText))return false;
 	input=scriptText;
@@ -90,11 +91,117 @@ bool XPINSCompiler::removeComments(string &text)
 	text=output;
 	return true;
 }
+bool XPINSCompiler::convertDotSyntax(string& input){
+	string output="";
+	int i=0;
+	while(!XPINSCompileUtil::stringsMatch(i, input, "@CODE"))output+=input[i++];//Skip @PARSER
+	for(;i<input.length();++i)
+	{
+		output+=input[i];
+		if(input[i]=='\"')//Copy Strings
+		{
+			while (++i<input.length()) {
+				output+=input[i];
+				if(input[i]=='\\'&&(input[i+1]=='\\'||input[i+1]=='\"'))
+				{
+					output+=input[++i];
+				}
+				else if(input[i]=='\"')break;
+			}
+		}
+		if(input[i+1]=='.')//Skip completed Dot operations
+		{
+			i+=2;
+			while (++i<input.length()) {
+				if(input[i]=='('||input[i]==','||input[i]==')'||input[i]=='\n'||input[i]=='&'||input[i]=='|'||input[i]=='!'||input[i]=='<'||input[i]=='>'||input[i]=='='||input[i]=='+'||input[i]=='-'||input[i]=='*'||input[i]=='/'||input[i]=='^'||input[i]==':'||input[i]=='%'||input[i]==']')break;
+			}
+			if (input[i]!='(') {
+				output+=')';
+				--i;
+			} else if (input[i+1]!=')') output+=',';
+		}
+		//If it is a character that could be followed by an input
+		else if((input[i]=='('||input[i]=='='||input[i]==','||input[i]=='['||(input[i]=='{'&&input[i-1]=='~')||
+		   input[i]=='<'||input[i]==' '||input[i]=='\n'||input[i]=='|'||input[i]=='&'||input[i]=='>'||input[i]=='!'||(input[i]=='+'&&input[i+1]!='+')||(input[i]=='-'&&input[i+1]!='-')||input[i]=='*'||input[i]=='/'||input[i]=='^'||input[i]==':'||input[i]=='%')&& input[i+1]!='='&&input[i+1]!=')'&& input[i+1]!='\n')
+		{
+			int j=i+1;
+			bool isDotSyntax=false;
+			for (; j<input.length(); ++j) {
+				if (input[j]==','||input[j]==')'||input[j]=='\n'||input[j]=='&'||input[j]=='|'||input[j]=='!'||input[j]=='<'||input[j]=='>'||input[j]=='='||input[j]=='+'||input[j]=='-'||input[j]=='*'||input[j]=='/'||input[j]=='^'||input[j]==':'||input[j]=='%'||input[j]==']')break;
+				else if (input[j]=='.'){
+					isDotSyntax=true;
+					break;
+				}
+				else if(input[j]=='\"')//Skip Strings
+				{
+					while (++j<input.length()) {
+						if(input[j]=='\\'&&(input[j+1]=='\\'||input[j+1]=='\"'))++j;
+						else if(input[j]=='\"')break;
+					}
+				}
+				else if(input[j]=='(')//Skip Parentheses
+				{
+					int parenCount=1;
+					while (parenCount>0) {
+						++j;
+						if(input[j]=='\"')//Skip Strings
+						{
+							while (++j<input.length()) {
+								if(input[j]=='\\'&&(input[j+1]=='\\'||input[j+1]=='\"'))++j;
+								else if(input[j]=='\"')break;
+							}
+						}
+						else if(input[j]=='(') ++parenCount;
+						else if(input[j]==')')--parenCount;
+								
+						}
+				}
+			}
+			if (isDotSyntax) {
+				vector<string> funcNames=vector<string>(1);
+				while (++j<input.length()) {
+					if (input[j]=='.') {
+						funcNames.resize(funcNames.size()+1);
+						++j;
+					}
+					else if (input[j]=='('){
+						int parenCount=1;
+						while (parenCount>0) {
+							++j;
+							if(input[j]=='\"')//Skip Strings
+							{
+								while (++j<input.length()) {
+									if(input[j]=='\\'&&(input[j+1]=='\\'||input[j+1]=='\"'))++j;
+									else if(input[j]=='\"')break;
+								}
+							}
+							else if(input[j]=='(') ++parenCount;
+							else if(input[j]==')')--parenCount;
+						}
+						if(input[++j]=='.'){
+							funcNames.resize(funcNames.size()+1);
+							++j;
+						}
+						else break;
+					}
+					else if (input[j]==','||input[j]==')'||input[j]=='\n'||input[j]=='&'||input[j]=='|'||input[j]=='!'||input[j]=='<'||input[j]=='>'||input[j]=='='||input[j]=='+'||input[j]=='-'||input[j]=='*'||input[j]=='/'||input[j]=='^'||input[j]==':'||input[j]=='%'||input[j]==']')break;
+					funcNames[funcNames.size()-1]+=input[j];
+				}
+				for (int x=funcNames.size()-1; x>=0; --x) {
+					output+=funcNames[x]+'(';
+				}
+			}
+		}
+	}
+	input=output;
+	return true;
+
+}
 bool XPINSCompiler::checkConstantSyntax(string& input)
 {
 	string output="";
 	int i=0;
-	while(!XPINSCompileUtil::stringsMatch(i, input, "@CONST"))output+=input[i++];//Skip @PARSER
+	while(!XPINSCompileUtil::stringsMatch(i, input, "@CODE"))output+=input[i++];//Skip @PARSER
 	for(;i<input.length();++i)
 	{
 		output+=input[i];
@@ -111,38 +218,203 @@ bool XPINSCompiler::checkConstantSyntax(string& input)
 		}
 		//If it is a character that could be followed by an input
 		if(input[i]=='('||input[i]=='='||input[i]==','||input[i]=='['||(input[i]=='{'&&input[i-1]=='~')||
-		   input[i]=='<'||input[i]==' '||//typical operations and Constants
+		   input[i]=='<'||input[i]==' '||input[i]=='\n'||//typical operations and Constants
 		   input[i]=='|'||input[i]=='&'||input[i]=='>'||input[i]=='!'||input[i]=='+'||input[i]=='-'||
 		   input[i]=='*'||input[i]=='/'||input[i]=='^'||input[i]==':'||input[i]=='%')//Expression Specific
 		{
 			while (input[i+1]==' ')++i;
 			//Check for following:
-			if(input[i+1]!='$'&&input[i+1]!='#'&&input[i+1]!='?'&&input[i+1]!='X'&&input[i+1]!='~'&&input[i+1]!='@'&&//Already given Key character
+			if(input[i+1]!='?'&&input[i+1]!='@'&&//Already given Key character
 			   input[i+1]!='='&&input[i+1]!='+'&&(input[i+1]!='-'||input[i]!='-')&&input[i+1]!=')'&&//Multi-char Expression Operators
 			   input[i+1]!='\n')//end of line
 			{
-				output+='~';
+				bool isConstant=false;
+				if (input[i]!='\n' && input [i] !=']')switch (input[i+1]) {
+					case 'P':
+					case 'S':
+					case 'Q':
+						if (input[i+2]!='<')break;
+					case 'F':
+					case 'T':
+						if (!(input[i+2]==',' || input [i+2] == ')'|| input [i+2] == '\n'||input [i+2] == ' '||input [i+2] == '{'|| input [i+2] == '&'|| input [i+2] == '|'|| input [i+2] == '!')|| input[i+2] == '<') break;
+					case '0':
+					case '1':
+					case '2':
+					case '3':
+					case '4':
+					case '5':
+					case '6':
+					case '7':
+					case '8':
+					case '9':
+					case '-':
+					case '.':
+					case '<':
+					case '[':
+					case '(':
+					case '\"':
+					case '{':
+						isConstant=true;
+				}
+				if (isConstant) output+='~';
+				else if((input[i+1]>='A'&&input[i+1]<='Z')||(input[i+1]>='a'&&input[i+1]<='z')||input[i+1]=='_'){
+					bool isVar=false;
+					for (int j=i+1; j<input.length(); ++j) {
+						if (input[j]=='(')break;
+						if (input[j]==','||input[j]==')'||input[j]=='&'||input[j]=='|'||input[j]=='!'||input[j]=='<'||input[j]=='>'||input[j]=='='||input[j]=='+'||input[j]=='-'||input[j]=='*'||input[j]=='/'||input[j]=='^'||input[j]==':'||input[j]=='%'||input[j]==']') {
+							isVar=true;
+							break;
+						}
+					}
+					if (isVar) output+="$_";
+					else {
+						string name="";
+						for (; input[i+1]!='('; ++i)name+=input[i+1];
+						if(name.compare("MARKOV_REACHABLE")==0)output+= "XB"+XPINSCompileUtil::strRepresentationOfInt(X_MARKOV_REACHABLE);
+						//Number Functions
+						else if(name.compare("SIN")==0)output+= "XN"+XPINSCompileUtil::strRepresentationOfInt(X_SIN);
+						else if(name.compare("COS")==0)output+= "XN"+XPINSCompileUtil::strRepresentationOfInt(X_COS);
+						else if(name.compare("TAN")==0)output+= "XN"+XPINSCompileUtil::strRepresentationOfInt(X_TAN);
+						else if(name.compare("CSC")==0)output+= "XN"+XPINSCompileUtil::strRepresentationOfInt(X_CSC);
+						else if(name.compare("SEC")==0)output+= "XN"+XPINSCompileUtil::strRepresentationOfInt(X_SEC);
+						else if(name.compare("COT")==0)output+= "XN"+XPINSCompileUtil::strRepresentationOfInt(X_COT);
+						else if(name.compare("ASIN")==0)output+= "XN"+XPINSCompileUtil::strRepresentationOfInt(X_ASIN);
+						else if(name.compare("ACOS")==0)output+= "XN"+XPINSCompileUtil::strRepresentationOfInt(X_ACOS);
+						else if(name.compare("ATAN")==0)output+= "XN"+XPINSCompileUtil::strRepresentationOfInt(X_ATAN);
+						else if(name.compare("ACSC")==0)output+= "XN"+XPINSCompileUtil::strRepresentationOfInt(X_ACSC);
+						else if(name.compare("ASEC")==0)output+= "XN"+XPINSCompileUtil::strRepresentationOfInt(X_ASEC);
+						else if(name.compare("ACOT")==0)output+= "XN"+XPINSCompileUtil::strRepresentationOfInt(X_ACOT);
+						else if(name.compare("ATAN2")==0)output+= "XN"+XPINSCompileUtil::strRepresentationOfInt(X_ATAN2);
+						else if(name.compare("ADDPOLAR")==0)output+= "XN"+XPINSCompileUtil::strRepresentationOfInt(X_ADDPOLAR);
+						else if(name.compare("SQRT")==0)output+= "XN"+XPINSCompileUtil::strRepresentationOfInt(X_SQRT);
+						else if(name.compare("LN")==0)output+= "XN"+XPINSCompileUtil::strRepresentationOfInt(X_LN);
+						else if(name.compare("LOG")==0)output+= "XN"+XPINSCompileUtil::strRepresentationOfInt(X_LOG);
+						else if(name.compare("ABS")==0)output+= "XN"+XPINSCompileUtil::strRepresentationOfInt(X_ABS);
+						else if(name.compare("FLOOR")==0)output+= "XN"+XPINSCompileUtil::strRepresentationOfInt(X_FLOOR);
+						else if(name.compare("DIST")==0)output+= "XN"+XPINSCompileUtil::strRepresentationOfInt(X_DIST);
+						else if(name.compare("X")==0)output+= "XN"+XPINSCompileUtil::strRepresentationOfInt(X_X);
+						else if(name.compare("Y")==0)output+= "XN"+XPINSCompileUtil::strRepresentationOfInt(X_Y);
+						else if(name.compare("Z")==0)output+= "XN"+XPINSCompileUtil::strRepresentationOfInt(X_Z);
+						else if(name.compare("MAGNITUDE")==0)output+= "XN"+XPINSCompileUtil::strRepresentationOfInt(X_MAGNITUDE);
+						else if(name.compare("R")==0)output+= "XN"+XPINSCompileUtil::strRepresentationOfInt(X_R);
+						else if(name.compare("THETA")==0)output+= "XN"+XPINSCompileUtil::strRepresentationOfInt(X_THETA);
+						else if(name.compare("PHI")==0)output+= "XN"+XPINSCompileUtil::strRepresentationOfInt(X_PHI);
+						else if(name.compare("ANGLE_BETWEEN_VECTORS")==0)output+= "XN"+XPINSCompileUtil::strRepresentationOfInt(X_ANGLE_BETWEEN_VECTORS);
+						else if(name.compare("DETERMINANT")==0)output+= "XN"+XPINSCompileUtil::strRepresentationOfInt(X_DETERMINANT);
+						else if(name.compare("RAND")==0)output+= "XN"+XPINSCompileUtil::strRepresentationOfInt(X_RAND);
+						else if(name.compare("RV_BERNOUILLI")==0)output+= "XN"+XPINSCompileUtil::strRepresentationOfInt(X_RV_BERNOULLI);
+						else if(name.compare("RV_NORMAL")==0)output+= "XN"+XPINSCompileUtil::strRepresentationOfInt(X_RV_NORMAL);
+						else if(name.compare("RV_EXP")==0)output+= "XN"+XPINSCompileUtil::strRepresentationOfInt(X_RV_EXP);
+						else if(name.compare("RV_POISSON")==0)output+= "XN"+XPINSCompileUtil::strRepresentationOfInt(X_RV_POISSON);
+						else if(name.compare("COIN_FLIP")==0)output+= "XN"+XPINSCompileUtil::strRepresentationOfInt(X_COIN_FLIP);
+						else if(name.compare("DICE_ROLL")==0)output+= "XN"+XPINSCompileUtil::strRepresentationOfInt(X_DICE_ROLL);
+						else if(name.compare("MARKOV_SIM")==0)output+= "XN"+XPINSCompileUtil::strRepresentationOfInt(X_MARKOV_SIM);
+						else if(name.compare("MARKOV_PROB")==0)output+= "XN"+XPINSCompileUtil::strRepresentationOfInt(X_MARKOV_PROB);
+						else if(name.compare("MARKOV_STEADYSTATE")==0)output+= "XN"+XPINSCompileUtil::strRepresentationOfInt(X_MARKOV_STEADYSTATE);
+						else if(name.compare("MARKOV_ABSORB_PROB")==0)output+= "XN"+XPINSCompileUtil::strRepresentationOfInt(X_MARKOV_ABSORB_PROB);
+						else if(name.compare("MARKOV_ABSORB_TIME")==0)output+= "XN"+XPINSCompileUtil::strRepresentationOfInt(X_MARKOV_ABSORB_TIME);
+						else if(name.compare("MARKOV_ABSORB_SIM")==0)output+= "XN"+XPINSCompileUtil::strRepresentationOfInt(X_MARKOV_ABSORB_SIM);
+						//Vector Functions
+						else if(name.compare("PROJECT_ONTO_VECTOR")==0)output+= "XV"+XPINSCompileUtil::strRepresentationOfInt(X_PROJECT_ONTO_VECTOR);
+						else if(name.compare("UNIT_VECTOR")==0)output+= "XV"+XPINSCompileUtil::strRepresentationOfInt(X_UNIT_VECTOR);
+						else if(name.compare("V")==0)output+= "XV"+XPINSCompileUtil::strRepresentationOfInt(X_V);
+						else if(name.compare("ROTATE_VECTOR")==0)output+= "XV"+XPINSCompileUtil::strRepresentationOfInt(X_ROTATE_VECTOR);
+						//Quaternion Functions
+						else if(name.compare("CONJUGATE")==0)output+= "XQ"+XPINSCompileUtil::strRepresentationOfInt(X_CONJUGATE);
+						else if(name.compare("INVERSE")==0)output+= "XQ"+XPINSCompileUtil::strRepresentationOfInt(X_INVERSE);
+						else if(name.compare("UNIT_QUATERNION")==0)output+= "XQ"+XPINSCompileUtil::strRepresentationOfInt(X_UNIT_QUATERNION);
+						//Matrix Functions
+						else if(name.compare("ZERO_MATRIX")==0)output+= "XM"+XPINSCompileUtil::strRepresentationOfInt(X_ZERO_MATRIX);
+						else if(name.compare("IDENTITY_MATRIX")==0)output+="XM"+XPINSCompileUtil::strRepresentationOfInt(X_IDENTITY_MATRIX);
+						else if(name.compare("ROTATION_MATRIX")==0)output+= "XM"+XPINSCompileUtil::strRepresentationOfInt(X_ROTATION_MATRIX);
+						else if(name.compare("EULER_ANGLE_MATRIX")==0)output+= "XM"+XPINSCompileUtil::strRepresentationOfInt(X_EULER_ANGLE_MATRIX);
+						else if(name.compare("QUATERNION_MATRIX")==0)output+= "XM"+XPINSCompileUtil::strRepresentationOfInt(X_QUATERNION_MATRIX);
+						else if(name.compare("INVERT")==0)output+= "XM"+XPINSCompileUtil::strRepresentationOfInt(X_INVERT);
+						else if(name.compare("TRANSPOSE")==0)output+= "XM"+XPINSCompileUtil::strRepresentationOfInt(X_TRANSPOSE);
+						else if(name.compare("APPEND")==0)output+= "XM"+XPINSCompileUtil::strRepresentationOfInt(X_APPEND);
+						else if(name.compare("ROW_ECHELON")==0)output+= "XM"+XPINSCompileUtil::strRepresentationOfInt(X_ROW_ECHELON);
+						else if(name.compare("REDUCED_ROW_ECHELON")==0)output+= "XM"+XPINSCompileUtil::strRepresentationOfInt(X_REDUCED_ROW_ECHELON);
+						//Polynomial Functions
+						else if(name.compare("DERIVE")==0)output+= "XP"+XPINSCompileUtil::strRepresentationOfInt(X_DERIVE);
+						else if(name.compare("INTEGRATE")==0)output+= "XP"+XPINSCompileUtil::strRepresentationOfInt(X_INTEGRATE);
+						else if(name.compare("DIVERGENCE")==0)output+= "XP"+XPINSCompileUtil::strRepresentationOfInt(X_DIVERGENCE);
+						else if(name.compare("LINE_INTEGRAL")==0)output+= "XP"+XPINSCompileUtil::strRepresentationOfInt(X_LINE_INTEGRAL);
+						else if(name.compare("SURFACE_INTEGRAL")==0)output+= "XP"+XPINSCompileUtil::strRepresentationOfInt(X_SURFACE_INTEGRAL);
+						else if(name.compare("VOLUME_INTEGRAL")==0)output+= "XP"+XPINSCompileUtil::strRepresentationOfInt(X_VOLUME_INTEGRAL);
+						//Vector Field Functions
+						else if(name.compare("COMPONENT_DERIVE")==0)output+= "XF"+XPINSCompileUtil::strRepresentationOfInt(X_COMPONENT_DERIVE);
+						else if(name.compare("COMPONENT_INTEGRATE")==0)output+= "XF"+XPINSCompileUtil::strRepresentationOfInt(X_COMPONENT_INTEGRATE);
+						else if(name.compare("GRADIENT_VECTOR")==0)output+= "XF"+XPINSCompileUtil::strRepresentationOfInt(X_GRADIENT_VECTOR);
+						else if(name.compare("CURL")==0)output+= "XF"+XPINSCompileUtil::strRepresentationOfInt(X_CURL);
+						//Void Functoins
+						else if(name.compare("PRINT")==0)output+= "X_"+XPINSCompileUtil::strRepresentationOfInt(X_PRINT);
+						else output+="#"+name;
+					}
+				}
+				
 			}
 		}
 	}
 	input=output;
 	return true;
 }
+string renameConstant(string input, string constName, string constVal){
+	string output="";
+	int i=0;
+	while (!XPINSCompileUtil::stringsMatch(i, input, "@CODE")) output+=input[i++];
+	while(i<input.length())
+	{
+		//CHECK FOR @END
+		if(XPINSCompileUtil::stringsMatch(i, input, "@END"))
+		{
+			output+="@END";
+			break;
+		}
+		if(input[i]=='\"')//Skip String Constants
+		{
+			output+='\"';
+			while (++i<input.length()) {
+				if(input[i]=='\\'&&(input[i+1]=='\\'||input[i+1]=='\"'))
+				{
+					output+=input[i];
+					output+=input[++i];
+				}
+				else if(input[i]=='\"')break;
+				else output+=input[i];
+			}
+		}
+		//Find start of Constant
+		if(XPINSCompileUtil::stringsMatch(i, input, constName) && input[i+constName.length()]!='('
+		   &&(input[i-1]=='('||input[i-1]=='='||input[i-1]==','||input[i-1]=='['||input[i-1]=='{'||
+			input[i-1]=='<'||input[i-1]==' '||input[i-1]=='\n'||//typical operations and Constants
+			input[i-1]=='|'||input[i-1]=='&'||input[i-1]=='>'||input[i-1]=='!'||input[i-1]=='+'||input[i-1]=='-'||
+			input[i-1]=='*'||input[i-1]=='/'||input[i-1]=='^'||input[i-1]==':'||input[i-1]=='%'))
+		{
+			output+=constVal;//Replace Constant
+			i+=constName.length();
+		}
+		else
+		{
+			output+=input[i++];
+		}
+	}
+	return output;
+}
+
 bool XPINSCompiler::replaceConstants(string &text)
 {
 	string input=text;
 	//Initialize first intermediate
-	string intermediate1="";
-	string intermediate2="";
+	string output="";
 	int j=0;
-	while (!XPINSCompileUtil::stringsMatch(j, input, "@CONST"))intermediate1+=input[j++];
+	while (!XPINSCompileUtil::stringsMatch(j, input, "@CONST"))output+=input[j++];
 	int i=j;
 	while (!XPINSCompileUtil::stringsMatch(++j, input, "@FUNC"));//Skip to @Func Block
-	for(;j<input.length();j++)intermediate1+=input[j];
+	for(;j<input.length();j++)output+=input[j];
 	//Replace Constants
 	while (true)
 	{
-		string constName="~";
+		string constName="";
 		while (input[i]!='\n'||input[i+1]=='\n')++i;
 		if(XPINSCompileUtil::stringsMatch(i, input, "\n@END"))break;
 		//Process constant declaration
@@ -152,45 +424,21 @@ bool XPINSCompiler::replaceConstants(string &text)
 		{
 			constVal+=input[i];
 		}
-		//Replace constant in script
-		intermediate2="";
-		j=0;
-		while (!XPINSCompileUtil::stringsMatch(j, intermediate1, "@CODE")) intermediate2+=intermediate1[j++];
-		while(j<intermediate1.length())
-		{
-			//CHECK FOR @END
-			if(XPINSCompileUtil::stringsMatch(j, intermediate1, "@END"))
-			{
-				intermediate2+="@END";
-				break;
-			}
-			if(intermediate1[j]=='\"'&&intermediate1[j-1]=='~')//Skip String Constants
-			{
-				intermediate2+='\"';
-				while (++j<intermediate1.length()) {
-					if(intermediate1[j]=='\\'&&(intermediate1[j+1]=='\\'||intermediate1[j+1]=='\"'))
-					{
-						intermediate2+=intermediate1[j];
-						intermediate2+=intermediate1[++j];
-					}
-					else if(intermediate1[j]=='\"')break;
-					else intermediate2+=intermediate1[j];
-				}
-			}
-			//Find start of Constant
-			if(XPINSCompileUtil::stringsMatch(j, intermediate1, constName))
-			{
-				intermediate2+=constVal;//Replace Constant
-				j+=constName.length();
-			}
-			else
-			{
-				intermediate2+=intermediate1[j++];
-			}
-		}
-		intermediate1=""+intermediate2;
+		output=renameConstant(output, constName, constVal);
 	}
-	text=intermediate1;
+	//Replace built in constants
+	output=renameConstant(output, "TRUE", "T");
+	output=renameConstant(output, "true", "T");
+	output=renameConstant(output, "YES", "T");
+	output=renameConstant(output, "FALSE", "F");
+	output=renameConstant(output, "false", "F");
+	output=renameConstant(output, "NO", "F");
+	output=renameConstant(output, "PI", "3.141592653589793");
+	output=renameConstant(output, "pi", "3.141592653589793");
+	output=renameConstant(output, "E", "2.718281828459045");
+	output=renameConstant(output, "e", "2.718281828459045");
+
+	text=output;
 	return true;
 }
 //Does the heavy lifting for Function Renaming Function
@@ -325,111 +573,15 @@ bool XPINSCompiler::renameFunctions(string &text){
 	text=intermediate1;
 	return true;
 }
-bool XPINSCompiler::renameBuiltIns(string &text)
-{
-	string input=text;
-	string output="";
-	for(int i=0;i<input.length();++i)
-	{
-		output+=input[i];
-		if(input[i]=='X'&&input[i+1]=='_')//found built-in
-		{
-			i+=2;
-			string name="";
-			while (input[i]!='(') name+=input[i++];
-			//Rename Function
-			//Bool Functions
-			if(name.compare("MARKOV_REACHABLE")==0)return "B1";
-			//Number Functions
-			else if(name.compare("SIN")==0)output+= "N1";
-			else if(name.compare("COS")==0)output+= "N2";
-			else if(name.compare("TAN")==0)output+= "N3";
-			else if(name.compare("ASIN")==0)output+= "N4";
-			else if(name.compare("ACOS")==0)output+= "N5";
-			else if(name.compare("ATAN")==0)output+= "N6";
-			else if(name.compare("SQRT")==0)output+= "N7";
-			else if(name.compare("LN")==0)output+= "N8";
-			else if(name.compare("LOG")==0)output+= "N9";
-			else if(name.compare("ABS")==0)output+= "N10";
-			else if(name.compare("FLOOR")==0)output+= "N11";
-			else if(name.compare("ADDPOLAR")==0)output+= "N12";
-			else if(name.compare("DIST")==0)output+= "N13";
-			else if(name.compare("VX")==0)output+= "N14";
-			else if(name.compare("VY")==0)output+= "N15";
-			else if(name.compare("VZ")==0)output+= "N16";
-			else if(name.compare("VR")==0)output+= "N17";
-			else if(name.compare("VTHETA")==0)output+= "N18";
-			else if(name.compare("VMAG")==0)output+= "N19";
-			else if(name.compare("VPHI")==0)output+= "N20";
-			else if(name.compare("VECTOR_ANGLE")==0)output+= "N21";
-			else if(name.compare("MATRIX_GET")==0)output+= "N22";
-			else if(name.compare("DETERMINANT")==0)output+= "N23";
-			else if(name.compare("RAND")==0)output+= "N24";
-			else if(name.compare("RV_BERNOUILLI")==0)output+= "N25";
-			else if(name.compare("RV_NORMAL")==0)output+= "N26";
-			else if(name.compare("RV_EXP")==0)output+= "N27";
-			else if(name.compare("RV_POISSON")==0)output+= "N28";
-			else if(name.compare("COIN_FLIP")==0)output+= "N29";
-			else if(name.compare("DICE_ROLL")==0)output+= "N30";
-			else if(name.compare("MARKOV_SIM")==0)output+= "N31";
-			else if(name.compare("MARKOV_PROB")==0)output+= "N32";
-			else if(name.compare("MARKOV_STEADYSTATE")==0)output+= "N33";
-			else if(name.compare("MARKOV_ABSORB_PROB")==0)output+= "N34";
-			else if(name.compare("MARKOV_ABSORB_TIME")==0)output+= "N35";
-			else if(name.compare("MARKOV_ABSORB_SIM")==0)output+= "N36";
-			else if(name.compare("QR")==0)output+= "N37";
-			else if(name.compare("QMAG")==0)output+= "N38";
-			//Vector Functions
-			else if(name.compare("VPROJECT")==0)output+= "V1";
-			else if(name.compare("UNIT_VECTOR")==0)output+= "V2";
-			else if(name.compare("QV")==0)output+= "V3";
-			else if(name.compare("QUATERNION_ROTATE")==0)output+= "V4";
-			//Quaternion Functions
-			else if(name.compare("QUATERNION_CONJUGATE")==0)output+= "Q1";
-			else if(name.compare("QUATERNION_INVERSE")==0)output+= "Q2";
-			else if(name.compare("UNIT_QUATERNION")==0)output+= "Q3";
-			//Matrix Functions
-			else if(name.compare("ZERO_MATRIX")==0)output+= "M1";
-			else if(name.compare("IDENTITY_MATRIX")==0)output+= "M2";
-			else if(name.compare("ROTATION_MATRIX")==0)output+= "M3";
-			else if(name.compare("EULER_ANGLE_MATRIX")==0)output+= "M4";
-			else if(name.compare("QUATERNION_MATRIX")==0)output+= "M5";
-			else if(name.compare("INVERT")==0)output+= "M6";
-			else if(name.compare("TRANSPOSE")==0)output+= "M7";
-			else if(name.compare("APPEND")==0)output+= "M8";
-			else if(name.compare("ROW_ECHELON")==0)output+= "M9";
-			else if(name.compare("REDUCED_ROW_ECHELON")==0)output+= "M10";
-			//Polynomial Functions
-			else if(name.compare("DERIVE")==0)output+= "P1";
-			else if(name.compare("INTEGRATE")==0)output+= "P2";
-			else if(name.compare("DIVERGENCE")==0)output+= "P3";
-			else if(name.compare("SCALAR_LINE_INTEGRAL")==0)output+= "P4";
-			else if(name.compare("VECTOR__LINE_INTEGRAL")==0)output+= "P5";
-			else if(name.compare("SCALAR_SURFACE_INTEGRAL")==0)output+= "P6";
-			else if(name.compare("VECTOR_SURFACE_INTEGRAL")==0)output+= "P7";
-			else if(name.compare("VOLUME_INTEGRAL")==0)output+= "P8";
-			//Vector Field Functions
-			else if(name.compare("VECTOR_DERIVE")==0)output+= "F1";
-			else if(name.compare("VECTOR_INTEGRATE")==0)output+= "F2";
-			else if(name.compare("GRADIENT_VECTOR")==0)output+= "F3";
-			else if(name.compare("CURL")==0)output+= "F4";
-			//Void Functoins
-			else if(name.compare("PRINT")==0)output+= "_1";
-			else if(name.compare("MATRIX_SET")==0)output+= "_2";
-			else return false;
-			output+='(';
-		}
-	}
-	text=output;
-	return true;
-}
 bool XPINSCompiler::renameVars(string &text){
 	string input=text;
 	string intermediate="";
 	//Rename Types
-	for(int i=0;i<input.length();++i)
+	int i=0;
+	while (!XPINSCompileUtil::stringsMatch(i, input, "@CODE")) intermediate+=input[i++];
+	for(;i<input.length();++i)
 	{
-		if((input[i]=='B'||input[i]=='N'||input[i]=='V'||input[i]=='Q'||input[i]=='M'||input[i]=='P'||input[i]=='F'||input[i]=='S'||input[i]=='*')&&input[i-1]=='\n')//Found Variable Declaration
+		if((input[i]=='B'||input[i]=='N'||input[i]=='V'||input[i]=='Q'||input[i]=='M'||input[i]=='P'||input[i]=='F'||input[i]=='S'||input[i]=='*'||input[i]=='A')&&input[i-1]=='@')//Found Variable Declaration
 		{
 			intermediate+=input[i];
 			while (input[++i]!=' ');
@@ -437,7 +589,7 @@ bool XPINSCompiler::renameVars(string &text){
 		intermediate+=input[i];
 	}
 	input=intermediate;
-	int i=0;
+	i=0;
 	//Locate Code block
 	while(i<input.length()&&!XPINSCompileUtil::stringsMatch(i, input, "@CODE"))++i;
 	if(i>=input.length())
@@ -461,7 +613,7 @@ bool XPINSCompiler::renameVars(string &text){
 	char varType='O';
 	while(i<input.length()&&!XPINSCompileUtil::stringsMatch(i, input, "@END"))
 	{
-		while (i<input.length()&&input[i++]!='\n');//Get to next line
+		while (i<input.length()&&input[i++]!='@');//Get to next line
 		if(input[i]=='B'||input[i]=='N'||input[i]=='V'||input[i]=='Q'||input[i]=='M'||input[i]=='S'||input[i]=='P'||input[i]=='F'||input[i]=='*'||input[i]=='A')//If we have a new variable type
 		{
 			//determine new variable name
@@ -583,8 +735,12 @@ bool XPINSCompiler::renameVars(string &text){
 	intermediate1=intermediate2;
 	//Remove Variable Types
 	intermediate2="";
-	for(int i=0;i<intermediate1.length();++i){
-		if((intermediate1[i]=='B'||intermediate1[i]=='N'||intermediate1[i]=='V'||intermediate1[i]=='Q'||intermediate1[i]=='M'||intermediate1[i]=='P'||intermediate1[i]=='F'||intermediate1[i]=='S'||intermediate1[i]=='*'||intermediate1[i]=='A')&&intermediate1[i-1]=='\n')
+	i=0;
+	while (!XPINSCompileUtil::stringsMatch(i,intermediate1,"@CODE")) {
+		intermediate2+=intermediate1[i++];
+	}
+	for(;i<intermediate1.length();++i){
+		if((intermediate1[i+1]=='B'||intermediate1[i+1]=='N'||intermediate1[i+1]=='V'||intermediate1[i+1]=='Q'||intermediate1[i+1]=='M'||intermediate1[i+1]=='P'||intermediate1[i+1]=='F'||intermediate1[i+1]=='S'||intermediate1[i+1]=='*'||intermediate1[i+1]=='A')&&intermediate1[i]=='@')
 		{
 			while (intermediate1[++i]!='$');
 		}

@@ -4,470 +4,564 @@ See the file license.txt for copying permission
 THIS DOCUMENT CONTAINS A LIST OF FUNCTIONS BUILT INTO XPINS
 
 STRING FUNCITONS
-X_PRINT(STR $A)
+PRINT(STR)
 	Available in XPINS Parser: 0.9.0
 	Description: Displays a string through std::cout
 	Arguments: the string you want to display
 	Return: NONE
+	Dot syntax reccommended: YES, with parentheses
 
 TRIGONOMETRY
 
-X_SIN(NUM $A)
+SIN(NUM)
 	Available in XPINS Parser: 0.2.0
-	Description: Takes the sine of a given angle
-	Arguments: The NUM representing the angle
-	Return: NUM, returns the sine of the angle
+	Description: Takes the sine of a given value
+	Arguments: The value to take the sine of
+	Return: NUM, returns the sine of the value
+	Dot syntax reccommended: NO
 
-X_COS(NUM $A)
+COS(NUM)
 	Available in XPINS Parser: 0.2.0
-	Description: Takes the cosine of a given angle
-	Arguments: The NUM representing the angle
-	Return: NUM, returns the cosine of the angle
-	
-X_TAN(NUM $A)
-	Available in XPINS Parser: 0.2.0
-	Description: Takes the tangent of a given angle
-	Arguments: The NUM representing the angle
-	Return: NUM, returns the tangent of the angle
+	Description: Takes the cosine of a given value
+	Arguments: The value to take the cosine of
+	Return: NUM, returns the cosine of the value
+	Dot syntax reccommended: NO
 
-X_ATAN(NUM $A, NUM $B)
+TAN(NUM)
+	Available in XPINS Parser: 0.2.0
+	Description: Takes the tangent of a given value
+	Arguments: The value to take the tangent of
+	Return: NUM, returns the tangent of the value
+	Dot syntax reccommended: NO
+
+CSC(NUM)
+	Available in XPINS Parser: 0.12.0
+	Description: Takes the cosecant of a given value
+	Arguments: The value to take the cosecant of
+	Return: NUM, returns the cosecant of the value
+	Dot syntax reccommended: NO
+
+SEC(NUM)
+	Available in XPINS Parser: 0.12.0
+	Description: Takes the secant of a given value
+	Arguments: The value to take the secant of
+	Return: NUM, returns the secant of the value
+	Dot syntax reccommended: NO
+
+COT(NUM)
+	Available in XPINS Parser: 0.12.0
+	Description: Takes the cotangent of a given value
+	Arguments: The value to take the cotangent of
+	Return: NUM, returns the cotangent of the value
+	Dot syntax reccommended: NO
+
+ASIN(NUM)
+	Available in XPINS Parser: 0.10.0
+	Description: Takes the inverse sine of a given value
+	Arguments: The value to take the inverse sine of
+	Return: NUM, returns the inverse sine of the value
+	Dot syntax reccommended: NO
+
+ACOS(NUM)
+	Available in XPINS Parser: 0.10.0
+	Description: Takes the inverse cosine of a given value
+	Arguments: The value to take the cosine of
+	Return: NUM, returns the inverse cosine of the value
+	Dot syntax reccommended: NO
+
+ATAN(NUM)
+	Available in XPINS Parser: 0.12.0
+	Description: Takes the tangent of a given value
+	Arguments: The value to take the tangent of
+	Return: NUM, returns the tangent of the value
+	Dot syntax reccommended: NO
+
+ACSC(NUM)
+	Available in XPINS Parser: 0.12.0
+	Description: Takes the cosecant of a given value
+	Arguments: The value to take the cosecant of
+	Return: NUM, returns the cosecant of the value
+	Dot syntax reccommended: NO
+
+ASEC(NUM)
+	Available in XPINS Parser: 0.12.0
+	Description: Takes the secant of a given value
+	Arguments: The value to take the secant of
+	Return: NUM, returns the secant of the value
+	Dot syntax reccommended: NO
+
+ACOT(NUM)
+	Available in XPINS Parser: 0.12.0
+	Description: Takes the cotangent of a given value
+	Arguments: The value to take the cotangent of
+	Return: NUM, returns the cotangent of the value
+	Dot syntax reccommended: NO
+
+ATAN2(NUM Y, NUM X)
 	Available in XPINS Parser: 0.2.0
 	Description: Gets the base angle given the two legs of a right triangle
-	Arguments: The NUMs representing Y and X, repsectiely
+	Arguments: the Y and X coordinates, respectively
 	Return: NUM, returns the angle
+	Dot syntax reccommended: NO
 
-X_ADDPOLAR(NUM $A, NUM $B)
+ADDPOLAR(NUM, NUM)
 	Available in XPINS Parser: 0.2.0
-	Description: Adds two numbers such that the sum is in the range of [0,2PI)
-	Arguments: The NUMs to be added
-	Return: NUM, returns the modified sum of A and B
+	Description: Adds two numbers such and reduces the result such that the result is in [0,2PI)
+	Arguments: The numbers to be added
+	Return: NUM, returns the modified sum of the two numbers
+	Dot syntax reccommended: NO
 					
 
 MISCILLANEOUS SCALAR MATH OPERATIONS
 
-X_SQRT(NUM $A)
+SQRT(NUM)
 	Available in XPINS Parser: 0.10.0
-	Description: Finds Square Root of A
-	Arguments: The NUM to take the square root of.
-	Return: NUM, returns the square root value of A.
+	Description: Finds Square Root of a value
+	Arguments: The value to take the square root of.
+	Return: NUM, returns the square root of the value
+	Dot syntax reccommended: NO
 
-X_ABS(NUM $A)
+ABS(NUM)
 	Available in XPINS Parser: 0.10.0
 	Description: Finds Absolute value of A
-	Arguments: The NUM to take the absolute of.
+	Arguments: The value to take the absolute value of.
 	Return: NUM, returns the absolute value of A.
+	Dot syntax reccommended: NO
 
-X_FLOOR(NUM $A)
+FLOOR(NUM)
 	Available in XPINS Parser: 0.10.0
 	Description: Floors a number to make it an integer
-	Arguments: A is the number you would like to floor
-	Return: NUM, returns the result of the floorign
+	Arguments: the number you would like to floor
+	Return: NUM, returns the result of the flooring
+	Dot syntax reccommended: NO
 
-X_LN(NUM $A)
+LN(NUM)
 	Available in XPINS Parser: 0.10.0
 	Description: Evaluates natural log of A
-	Arguments: The NUM to take the natural logarithm of.
+	Arguments: The value to take the natural logarithm of.
 	Return: NUM, returns the result of the logarithm
+	Dot syntax reccommended: NO
 
-X_LOG(NUM $A, NUM $B)
+LOG(NUM A, NUM B)
 	Available in XPINS Parser: 0.10.0
-	Description: Evaluates log base B of A
-	Arguments: A is the value and B is the Base.
+	Description: Evaluates a logarithm of any base
+	Arguments: The value to take the logarithm of and the base of the logarithm, respectively
 	Return: NUM, returns the result of the logarithm
+	Dot syntax reccommended: NO
 
-X_DIST(NUM $A, NUM $B, NUM $C)
+DIST(NUM, NUM, NUM)
 	Available in XPINS Parser: 0.2.0
-	Description: Finds distance between two poNUMs given the components
+	Description: Finds distance between two points given the displacement components
 	Arguments: The X, Y, and Z deltas
-	Return: NUM, returns sqrt(x^2+y^2+z^2);
+	Return: sqrt(x^2+y^2+z^2)
+	Dot syntax reccommended: NO
 
 
 READING VECTOR COMPONENTS
 
-X_VX(VEC $A)
+X(VEC)
 	Available in XPINS Parser: 0.2.0
 	Description: Gets the X component for a Vector
 	Arguments: The vector for which the X component is desired
 	Return: NUM, returns the X component of the vector
+	Dot syntax reccommended: YES, no parentheses
 
-X_VY(VEC $A)
+Y(VEC)
 	Available in XPINS Parser: 0.2.0
 	Description: Gets the Y component for a Vector
 	Arguments: The vector for which the Y component is desired
 	Return: NUM, returns the Y component of the vector
+	Dot syntax reccommended: YES, no parentheses
 
-X_VZ(VEC $A)
+Z(VEC)
 	Available in XPINS Parser: 0.8.0
 	Description: Gets the Z component for a Vector
 	Arguments: The vector for which the Z component is desired
 	Return: NUM, returns the Z component of the vector
+	Dot syntax reccommended: YES, no parentheses
 
-X_VMAG(VEC $A)
+MAGNITUDE(VEC)
 	Available in XPINS Parser: 0.2.0
 	Description: Gets the Magnitude (RHO) of a Vector
 	Arguments: The vector for which the Magnitude is desired
 	Return: NUM, returns the Magnitude of the vector
-	
-X_VR(VEC $A)
+	Dot syntax reccommended: YES, no parentheses
+
+R(VEC)
 	Available in XPINS Parser: 0.8.0
 	Description: Gets the Cylindrical R component of a Vector
 	Arguments: The vector for which the Cylindrical R component is desired
 	Return: NUM, returns the Cylindrical R component of the vector
+	Dot syntax reccommended: YES, no parentheses
 
-
-X_VTHETA(VEC $A)
+THETA(VEC)
 	Available in XPINS Parser: 0.8.0
 	Description: Gets the THETA component of Vector
 	Arguments: The vector for which the THETA component is desired
 	Return: NUM, returns the THETA component of the vector
+	Dot syntax reccommended: YES, no parentheses
 
-X_VPHI(VEC $A)
+PHI(VEC)
 	Available in XPINS Parser: 0.8.0
 	Description: Gets the PHI component for a Vector
 	Arguments: The vector for which the PHI component is desired
 	Return: NUM, returns the PHI component of the vector
-
+	Dot syntax reccommended: YES, no parentheses
 
 VECTOR OPERATIONS
 
-X_VPROJECT(VEC $A, VEC $B)
+PROJECT_ONTO_VECTOR(VEC, VEC)
 	Available in XPINS Parser: 0.12.0
 	Description: Finds the projection of a vector onto another Vector
 	Arguments: The vector that is being projected and the vector being projected onto, respectively
-	Return: VEC, returns the projection of A onto B.
+	Return: VEC, returns the projection of one vector onto another vector.
+	Dot syntax reccommended: YES
 	
-X_UNIT_VECTOR(VEC $A)
+UNIT_VECTOR(VEC)
 	Available in XPINS Parser: 0.12.0
 	Description: Finds the unit vector for a given vector
 	Arguments: The vector for which the unit vector is desired.
-	Return: VEC, returns the Unit Vector in the direcion of A
+	Return: VEC, returns the Unit Vector in the direcion of the given vector
+	Dot syntax reccommended: YES, no parentheses
 
-X_VECTOR_ANGLE(VEC $A, VEC$B)
+ANGLE_BETWEEN_VECTORS(VEC, VEC)
 	Available in XPINS Parser: 0.12.0
 	Description: Finds the angle between two vectors
 	Arguments: The vectors for which you want to find the angle between
 	Return: NUM, returns the Angle between the Vectors
-	
+	Dot syntax reccommended: NO
 	
 QUATERNION COMPONENTS
 
-X_QR(QUAT $A)
+R(QUAT)
 	Available in XPINS Parser: 0.12.0
 	Description: Gets the Scalar component for a Quaternion
 	Arguments: The Quaternion for which the scalar component is desired
 	Return: NUM, returns the scalar component of the quaternion
+	Dot syntax reccommended: YES, no parentheses
 
-X_QV(QUAT $A)
+V(QUAT)
 	Available in XPINS Parser: 0.12.0
 	Description: Gets the vector component for a Quaternion
 	Arguments: The Quaternion for which the vector component is desired
 	Return: NUM, returns the vector component of the quaternion
+	Dot syntax reccommended: YES, no parentheses
 
-X_VMAG(VEC $A)
+MAGNITUDE(QUAT)
 	Available in XPINS Parser: 0.12.0
 	Description: Gets the Magnitude of a Quatrernion
 	Arguments: The quaternion for which the Magnitude is desired
 	Return: NUM, returns the Magnitude of the quaternion
+	Dot syntax reccommended: YES, no parentheses
 	
 
 QUATERNION OPERATIONS
 
-X_QUATERNION_CONJUGATE(QUAT $A)
+CONJUGATE(QUAT)
 	Available in XPINS Parser: 0.12.0
 	Description: Finds the conjugate of a quaternion
 	Arguments: The Quaternion for which the conjugate is desired
 	Return: QUAT, returns the conjugate of A
-	
-X_QUATERNION_INVERSE(QUAT $A)
+	Dot syntax reccommended: YES, no parentheses
+
+INVERSE(QUAT)
 	Available in XPINS Parser: 0.12.0
 	Description: Finds the inverse of a quaternion
 	Arguments: The Quaternion for which the inverse is desired
 	Return: QUAT, returns the inverse of A
+	Dot syntax reccommended: YES, no parentheses
 
-X_UNIT_QUATERNION(VEC $A)
+
+UNIT_QUATERNION(QUAT)
 	Available in XPINS Parser: 0.12.0
 	Description: Finds the unit quaternion for a given quaternion
 	Arguments: The quaternion for whihc the unit quaternion is desired.
 	Return: QUAT, returns the Unit quaternion in the direcion of A
+	Dot syntax reccommended: YES, no parentheses
 
 
-X_QUATERNION_ROTATE(QUAT $A, VEC$B)
+ROTATE_VECTOR(VEC,QUAT)
 	Available in XPINS Parser: 0.2.0
 	Description: Rotates a vector according to a quaternion
-	Arguments: The quaternion and the vector
+	Arguments: The vector and the quaternion
 	Return: VEC, returns the rotated vector
+	Dot syntax reccommended: YES
+
 	
 
 MATRIX CREATION
 
-X_ZERO_MATRIX(NUM $A, NUM $B)
+ZERO_MATRIX(NUM A, NUM B)
 	Available in XPINS Parser: 0.9.0
 	Description: Create a Zero Matrix
 	Arguments: The number of rows and columns, respecitvely
 	Return: MAT, returns a zero matrix of size AxB.
+	Dot syntax reccommended: NO
 	
-X_IDENTITY_MATRIX(NUM $A)
+IDENTITY_MATRIX(NUM A)
 	Available in XPINS Parser: 0.9.0
 	Description: Create an Identity Matrix of size A
 	Arguments: The number of rows and columns.
 	Return: MAT, returns a Identity matrix of size AxA.
-	
-X_ROTATION_MATRIX(NUM $A, VEC $B)
+	Dot syntax reccommended: NO
+
+ROTATION_MATRIX(NUM A, VEC B)
 	Available in XPINS Parser: 0.9.0
 	Description: Create an Rotation Matrix of A radians around B
 	Arguments: A is the angle the Matrix will rotate a vector, and B is the vector that it should be rotated around
 	Return: MAT, returns a Rotation matrix A radains around B.
+	Dot syntax reccommended: NO
 	
-X_EULER_ANGLE_MATRIX(NUM $A, NUM $B, NUM$C)
+EULER_ANGLE_MATRIX(NUM A, NUM B, NUMC)
 	Available in XPINS Parser: 0.9.0
 	Description: Create an Rotation Matrix using Euler Angles (roll around X, then pitch around Y, then yaw around z)
 	Arguments: A is Roll, B is Pitch, and C is Yaw
 	Return: MAT, returns a Rotation matrix from Euler Angles A, B, and C
+	Dot syntax reccommended: NO
 	
-X_QUATERNION_MATRIX(QUAT $A)
+QUATERNION_MATRIX(QUAT A)
 	Available in XPINS Parser: 0.9.0
 	Description: Create an Rotation Matrix from a Quaternion
 	Arguments: A is the Quaternion used to create the Matrix 
-	Return: MAT, returns a Rotation matrix based on A.
-	
-	
-MATRIX ACCESS
-
-X_MATRIX_GET(MAT $A, NUM $B, NUM$C)
-	Available in XPINS Parser: 0.9.0
-	Description: Gets a value from a Matrix
-	Arguments: A is the matrix, B is the row, and C is the column
-	Return: NUM, Value from A at B,C
-	
-X_MATRIX_SET(MAT $A, NUM $B, NUM $C, NUM $D)
-	Available in XPINS Parser: 0.9.0
-	Description: Sets a value in a Matrix
-	Arguments: A is the matrix, B is the new value, C is the row, and D is the column
-	Return: NONE
+	Return: MAT, returns a Rotation matrix based on A
+	Dot syntax reccommended: YES, no parentheses
 	
 	 
 MATRIX OPERATIONS
 
-X_DETERMINANT(MAT $A)
+DETERMINANT(MAT)
 	Available in XPINS Parser: 0.9.0
 	Description: Finds the determinant of a Matrix
 	Arguments: The Matrix for which the determinant is desired
 	Return: NUM, the Determinant of the Matrix
+	Dot syntax reccommended: YES, no parentheses
 	
-X_ROW_ECHELON(MAT $A)
+ROW_ECHELON(MAT)
 	Available in XPINS Parser: 0.12.0
 	Description: Finds the row echelon form of a Matrix
 	Arguments: The Matrix for which the row echelon form is desired
 	Return: MAT, the row echelon from of the Matrix
+	Dot syntax reccommended: YES, no parentheses
 	
-X_REDUCED_ROW_ECHELON(MAT $A)
+REDUCED_ROW_ECHELON(MAT)
 	Available in XPINS Parser: 0.12.0
 	Description: Finds the reduced row echelon form of a Matrix
 	Arguments: The Matrix for which the reduced row echelon form is desired
 	Return: MAT, the reduced row echelon from of the Matrix
+	Dot syntax reccommended: YES, no parentheses
 
-X_INVERT(MAT $A)
+INVERT(MAT)
 	Available in XPINS Parser: 0.9.0
 	Description: Finds the inverse of a Matrix
 	Arguments: The Matrix for which the inverse is desired
 	Return: MAT, the inverse of the Matrix
+	Dot syntax reccommended: YES, with parentheses
 
-	
-X_TRANSPOSE(MAT $A)
+TRANSPOSE(MAT)
 	Description: Finds the transposition of a Matrix
 	Arguments: The Matrix for which the transposition is desired
 	Return: MAT, the transposition of the Matrix
+	Dot syntax reccommended: YES, with parentheses
 	
-X_TRANSPOSE(MAT $A, MAT $B)
+APPEND(MAT, MAT)
 	Description: Appends one matrix to another
-	Arguments: A is left Matrix, B is right matrix
+	Arguments: the left and right parts of the matrices, respectively. Must have same height
 	Return: MAT, [A|B]
+	Dot syntax reccommended: YES
 
 
 
 PROBABILITY: RANDOM VALUES
 
-X_RV_BERNOULLI(NUM $A)
+RV_BERNOULLI(NUM)
 	Available in XPINS Parser: 0.9.0
 	Description: Generates a True or False from an Bernoulli Random Variable
-	Arguments: A is the probability that the number is one.
-	Return: BOOL, T if the random variable is 1 and F if it is zero
+	Arguments: The probability that the number is one.
+	Return: BOOL, TRUE if the random variable is 1 and FALSE if it is zero
+	Dot syntax reccommended: NO
 
-X_RAND(NUM $A, NUM$B)
+RAND(NUM lower, NUM upper)
 	Available in XPINS Parser: 0.2.0
 	Description: Generates a random number from a Uniform Random Variable
-	Arguments: A is the lower bound and B is the upper bound
+	Arguments: The lower and upper bounds, respectively.
 	Return: NUM, returns a random number between A and B
+	Dot syntax reccommended: NO
 
-
-X_RV_NORMAL(NUM $A,NUM $B)
+RV_NORMAL(NUM mean,NUM stdDev)
 	Available in XPINS Parser: 0.10.0
 	Description: Generates a random number from a Normal Random Variable
-	Arguments: A is the Mean, and B is the Standard Deviation
+	Arguments: The Mean and the Standard Deviation, respectively
 	Return: NUM, the Random Number
-	
-X_RV_EXP(NUM $A)
+	Dot syntax reccommended: NO
+
+RV_EXP(NUM)
 	Available in XPINS Parser: 0.9.0
 	Description: Generates a random number from an Exponantial Random Variable
-	Arguments: A is the Parameter
+	Arguments: The Parameter for the Exponential distribution
 	Return: NUM, the Random Number
+	Dot syntax reccommended: NO
 	
-X_RV_POISSON(NUM $A)
+RV_POISSON(NUM)
 	Available in XPINS Parser: 0.9.0
 	Description: Generates a random number from an Poisson Random Variable
-	Arguments: A is the Parameter
+	Arguments: The Parameter for the Poisson distribution
 	Return: NUM, the Random Number
+	Dot syntax reccommended: NO
 	
 
 PROBABILITY: EXPERIMENTS:
 
-X_COIN_FLIP(NUM $A, NUM $B)
+COIN_FLIP(NUM p, NUM n)
 	Available in XPINS Parser: 0.11.0
-	Description: Simulates flipping B coins of bias A
-	Arguments: A is the probability of heads for a given flip. B is the number of flips.
+	Description: Simulates flipping of n coins of bias p
+	Arguments: p is the probability of heads for a given flip. n is the number of flips.
 	Return: NUM, total number of heads
+	Dot syntax reccommended: NO
 
-X_DICE_ROLL(NUM $A, NUM $B)
+DICE_ROLL(NUM n, NUM r)
 	Available in XPINS Parser: 0.11.0
-	Description: Rolls B A-sided fair dice
-	Arguments: A is the number of sides, B is the number of rolls.
-	Return: NUM, returns a random number between A and B
-
+	Description: Rolls r n-sided dice
+	Arguments: n is the number of sides, r is the number of rolls.
+	Return: NUM, total values from the dice rolls
+	Dot syntax reccommended: NO
 
 PROBABILITY: MARKOV CHAINS:
 
-X_MARKOV_SIM(MAT $A, NUM $B, NUM $C)
+MARKOV_SIM(MAT chain, NUM steps, NUM start)
 	Available in XPINS Parser: 0.11.0
-	Description: Simulates Markov Chain A for B steps starting in state C
-	Arguments: A is the transition probability Matrix (column in row out), B is the number of steps, C is the starting state
+	Description: Simulates multiple transitions in a Markov Chain
+	Arguments: The transition probability Matrix (column in row out), The number of steps, and the starting state
 	Return: NUM, a random stage weighted on probability of being in that state after B steps
+	Dot syntax reccommended: YES
 
-X_MARKOV_PROB(MAT $A, NUM $B, NUM $C, NUM $D)
+MARKOV_PROB(MAT chain, NUM n, NUM start, NUM end)
 	Available in XPINS Parser: 0.11.0
-	Description: Calculates B-Step transition Probability
-	Arguments: A is the transition probability Matrix, B is the number of steps, C is the starting state, D is the end State
-	Return: NUM, probability fo being in state D after B steps.
+	Description: Calculates n-Step transition Probability
+	Arguments: the transition probability Matrix,  the number of steps, the starting state, and the desired end State
+	Return: NUM, probability fo being in the desired end state after n steps.
+	Dot syntax reccommended: YES
 	
-X_MARKOV_STEADYSTATE(MAT $A, NUM $B)
+MARKOV_STEADYSTATE(MAT chain, NUM x)
 	Available in XPINS Parser: 0.11.0
 	Description: Calculates Steady-State Probability
-	Arguments: A is the transition probability Matrix, B is the state
-	Return: NUM, probability fo being in state B after a long time.
+	Arguments: the transition probability Matrix and the end state
+	Return: NUM, probability fo being in state x after a long time.
+	Dot syntax reccommended: YES
 
-X_MARKOV_REACHABLE(MAT $A, NUM $B, NUM $C)
+MARKOV_REACHABLE(MAT chain, NUM end, NUM start)
 	Available in XPINS Parser: 0.11.0
-	Description: Can state B be reached from state C
-	Arguments: A is the transition probability Matrix, B is the final state, C is the initial stae
-	Return: BOOL, TRUE if and only if state B can be arrived at given initial state C
+	Description: Determines if an end state is reachable from a given start state
+	Arguments: the transition probability Matrix, the desired end state, and the initial state
+	Return: BOOL, TRUE if and only if the end state can be arrived at given the initial state
+	Dot syntax reccommended: YES
 
-X_MARKOV_ABSORB_PROB(MAT $A, NUM $B, NUM $C)
+MARKOV_ABSORB_PROB(MAT chain, NUM end, NUM start)
 	Available in XPINS Parser: 0.11.0
-	Description: Calculates Steady-State Probability given initial state C
-	Arguments: A is the transition probability Matrix, B is the absorbing state, C is the initial stae
-	Return: NUM, probability fo being in state B after a long time.
+	Description: Calculates Steady-State Probability given an initial state
+	Arguments:  the transition probability Matrix,the absorbing state, and the initial state
+	Return: NUM, probability fo being in the end state after a long time.
+	Dot syntax reccommended: YES
 
-X_MARKOV_ABSORB_TIME(MAT $A, NUM $B, NUM $C)
+MARKOV_ABSORB_TIME(MAT chain, NUM end, NUM start)
 	Available in XPINS Parser: 0.11.0
-	Description: Calculates Expected Absorbtion time for State B
-	Arguments: A is the transition probability Matrix, B is the absorbing state, C is the initial stae
-	Return: NUM, Expected time to reach state B from state C.
+	Description: Calculates Expected Absorbtion time for a given state
+	Arguments: the transition probability Matrix, the absorbing state, and the initial state
+	Return: NUM, Expected time to reach the end state from the given start state.
+	Dot syntax reccommended: YES
 	
-X_MARKOV_ABSORB_SIM(MAT $A, NUM $B, NUM $C)
+MARKOV_ABSORB_SIM(MAT chain, NUM end, NUM start)
 	Available in XPINS Parser: 0.11.0
-	Description: Simulates Absorbtion time for State B
-	Arguments: A is the transition probability Matrix, B is the absorbing state, C is the initial stae
-	Return: NUM, A possible time to reach state B from state C.
+	Description: Simulates Absorbtion time for a given state
+	Arguments: the transition probability Matrix, the absorbing state, and the initial state
+	Return: NUM, a possible time to reach the end state from the given start state.
+	Dot syntax reccommended: YES
 
 
 CALCULUS:
 
-X_DERIVE(POLY $A,NUM $B)
+DERIVE(POLY,NUM)
 	Available in XPINS Parser: 0.11.0
-	Description: Takes the derivative of A with respect to the variable at index B;
-	Arguments: A is the Polynomial, B is the index of the Variable
+	Description: Takes the derivative of a polynomial with respect to a particular variable;
+	Arguments: Polynomial to derive and the index of the Variable
 	Return: POLY, the Derivative
+	Dot syntax reccommended: YES
 	
-X_INTEGRATE(POLY $A, NUM $B)
+INTEGRATE(POLY, NUM)
 	Available in XPINS Parser: 0.11.0
-	Description: Finds the Integral of A with respect to the variable at index B;
-	Arguments: A is the Polynomial, B is the index of the Variable
-	Return: POLY, the Indefinite Integaral
-	
-X_SCALAR_LINE_INTEGRAL(POLY $A, FIELD $B, POLY $C, POLY $D)
-	Available in XPINS Parser: 0.12.0
-	Description: Takes the Line integral of a Polynomial
-	Arguments: A is the Polynomial (in terms of X,Y,Z, and T), B is the curve (in terms of U and T),
-				C and D are respectively the starting and stopping U bounds (in terms of T)
-	Return: POLY, the Divergence of A
+	Description: Computes the indefinite integral of a polynomial with respect to a particular variable;
+	Arguments: Polynomial to integrate and the index of the Variable
+	Return: POLY, the Integral
+	Dot syntax reccommended: YES
 
-X_SCALAR_SURFACE_INTEGRAL(FIELD $A, FIELD $B, POLY $C, POLY $D, POLY $E, POLY $F)
+LINE_INTEGRAL(POLY, FIELD, POLY, POLY)
 	Available in XPINS Parser: 0.12.0
 	Description: Takes the Line integral of a Polynomial
-	Arguments: A is the Polynomial (in terms of X,Y,Z, and T), B is the surface (in terms of U,V and T),
-				C and D are respectively the starting and stopping U bounds (in terms of T),
-				E and F are respectively the starting and stopping V bounds (in terms of U and T)
-	Return: POLY, the Surface
-	
-X_VOLUME_INTEGRAL(FIELD $A, FIELD $B, POLY $C, POLY $D, POLY $E, POLY $F, POLY $G, POLY $H)
-	Available in XPINS Parser: 0.12.0
-	Description: Takes the Line integral of a Polynomial
-	Arguments: A is the Polynomial (in terms of X,Y,Z, and T), B is the map vector (in terms of U,V,W and T),
-				C and D are respectively the starting and stopping U bounds (in terms of T),
-				E and F are respectively the starting and stopping V bounds (in terms of U and T)
-				G and H are respectively the starting and stopping W bounds (in terms of U,V, andT)
-	Return: POLY, the Surface
+	Arguments: the Polynomial (in terms of X,Y,Z, and T), the curve (in terms of U and T), and starting and stopping U bounds (in terms of T)
+	Return: POLY, the result of the line integral
+	Dot syntax reccommended: YES
 
-X_VECTOR_DERIVE(FIELD $A,NUM $B)
+SURFACE_INTEGRAL(POLY, FIELD, POLY, POLY, POLY, POLY)
+	Available in XPINS Parser: 0.12.0
+	Description: Takes the Surface integral of a Polynomial
+	Arguments: The Polynomial (in terms of X,Y,Z, and T), the surface (in terms of U,V and T), the starting and stopping U bounds (in terms of T), and the starting and stopping V bounds (in terms of U and T)
+	Return: POLY, the result of the Surface integral
+	Dot syntax reccommended: YES
+
+VOLUME_INTEGRAL(POLY, FIELD, POLY, POLY, POLY, POLY, POLY, POLY)
+	Available in XPINS Parser: 0.12.0
+	Description: Takes the Volume integral of a Polynomial
+	Arguments: The Polynomial (in terms of X,Y,Z, and T), B is the map vector (in terms of U,V,W and T),the starting and stopping U bounds (in terms of T),the starting and stopping V bounds (in terms of U and T), and the starting and stopping W bounds (in terms of U,V, and T)
+	Return: POLY, the result of the volume integral
+	Dot syntax reccommended: YES
+
+COMPONENT_DERIVE(FIELD A,NUM B)
 	Available in XPINS Parser: 0.11.0
 	Description: Takes the derivative of A with respect to the variable at index B;
 	Arguments: A is the Vector Field, B is the index of the Variable
 	Return: FIELD, the Derivative
+	Dot syntax reccommended: YES
 	
-X_VECTOR_INTEGRATE(FIELD $A, NUM $B)
+COMPONENT_INTEGRATE(FIELD A, NUM B)
 	Available in XPINS Parser: 0.11.0
 	Description: Finds the Integral of A with respect to the variable at index B;
 	Arguments: A is the Vector Field, B is the index of the Variable
 	Return: FIELD, the Indefinite Integaral
+	Dot syntax reccommended: YES
 	
 
 VECTOR CALCULUS:
 
-X_GRADIENT_VECTOR(POLY $A)
+GRADIENT_VECTOR(POLY)
 	Available in XPINS Parser: 0.12.0
-	Description: Takes the Gradient of A
-	Arguments: A is a Polynomial
-	Return: FIELD, the Gradient Vector Field of A
+	Description: Takes the Gradient of a polynomial
+	Arguments: The Polynomial to find the gradient vector for
+	Return: FIELD, the Gradient Vector Field of the given polynomial
+	Dot syntax reccommended: YES, no parentheses
 
-X_DIVERGENCE(FIELD $A)
-	Available in XPINS Parser: 0.12.0
-	Description: Takes the Divergence of A
-	Arguments: A is a Vector Field
-	Return: POLY, the Divergence of A
-
-
-X_DIVERGENCE(FIELD $A)
+DIVERGENCE(FIELD)
 	Available in XPINS Parser: 0.12.0
 	Description: Takes the Divergence of A
-	Arguments: A is a Vector Field
-	Return: POLY, the Divergence of A
+	Arguments: The vector field to find the divergence for
+	Return: POLY, the Divergence of the given vector field
+	Dot syntax reccommended: YES, no parentheses
 
-X_CURL(FIELD $A)
+CURL(FIELD)
 	Available in XPINS Parser: 0.12.0
-	Description: Takes the Curle of A
-	Arguments: A is a Vector Field
-	Return: FIELD, the Curle of A
+	Description: Takes the Curl of a vector field
+	Arguments: The Vector Field to find the curl for
+	Return: FIELD, the Curl of the given vector field
+	Dot syntax reccommended: YES, no parentheses
 
-X_VECTOR_LINE_INTEGRAL(FIELD $A, FIELD $B, POLY $C, POLY $D)
+LINE_INTEGRAL(FIELD, FIELD, POLY, POLY)
 	Available in XPINS Parser: 0.12.0
 	Description: Takes the Line integral of a Vector Field
-	Arguments: A is the field (in terms of X,Y,Z, and T), B is the curve (in terms of U and T),
-				C and D are respectively the starting and stopping U bounds (in terms of T)
-	Return: POLY, the Divergence of A
-	
-X_VECTOR_SURFACE_INTEGRAL(FIELD $A, FIELD $B, POLY $C, POLY $D, POLY $E, POLY $F)
+	Arguments: the Vector Field (in terms of X,Y,Z, and T), the curve (in terms of U and T), and starting and stopping U bounds (in terms of T)
+	Return: POLY, the result of the line integral
+	Dot syntax reccommended: YES
+
+SURFACE_INTEGRAL(FIELD, FIELD, POLY, POLY, POLY, POLY)
 	Available in XPINS Parser: 0.12.0
 	Description: Takes the Surface integral of a Vector Field
-	Arguments: A is the field (in terms of X,Y,Z, and T), B is the surface (in terms of U,V and T),
-				C and D are respectively the starting and stopping U bounds (in terms of T),
-				E and F are respectively the starting and stopping V bounds (in terms of U and T)
-	Return: POLY, the Surface Integral
+	Arguments: The Vector Field (in terms of X,Y,Z, and T), the surface (in terms of U,V and T), the starting and stopping U bounds (in terms of T), and the starting and stopping V bounds (in terms of U and T)
+	Return: POLY, the result of the Surface integral
+	Dot syntax reccommended: YES

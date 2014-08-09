@@ -50,8 +50,6 @@ namespace XPINSParser
 	public:
 	// Data
 		XPINSInstructions::InstructionSet instructions; //Script Instructions
-	/*	string instructions;				//Script Text
-		int index;							//Current Index in Script Text*/
 		string clusterURL;					//URL of script Cluster URL
 		XPINSVarSpace* data;				//Script Variables
 		vector<XPINSBindings*> bindings;	//Bindings objects

@@ -10,8 +10,6 @@ using namespace std;
 using namespace XPINSParser;
 using namespace XPINSScriptableMath;
 
-const int kPMajor=0;
-const int kPMinor=12;
 
 void* runScript(XPINSScriptSpace& script);
 enum exitReason {
@@ -20,8 +18,9 @@ enum exitReason {
 	SCRIPTRETURN,
 };
 exitReason ParseCode(XPINSScriptSpace& script, vector<Instruction> instructions);
+int dumpCount=0;
 
-size_t garbageCapcity=0x400/sizeof(double); //Default is about 1 KB
+size_t garbageCapcity=0x100000/sizeof(double); //Default is about 1MB
 vector<XPINSVarSpace*>allVarSpaces;
 
 #pragma mark Variable Space, Script Space, and Array Management
@@ -207,7 +206,7 @@ void*  XPINSParser::ParseArg(XPINSScriptSpace& script, Argument arg,DataType& ty
 		case STRING:
 			return ParseStrArg(script, arg);
 		case OBJECT:
-			return ParsePointerArg(script, arg);
+			return ParsePointerArg(script, arg,&type);
 		case ARRAY:
 		{
 			XPINSArray* arr=ParseArrayArg(script, arg,true);
@@ -884,6 +883,7 @@ exitReason ParseCode(XPINSScriptSpace& script, vector<Instruction> instructions)
 		clearArr(&script.data->Trash);
 		if(script.data->Garbage.values.size()>garbageCapcity)
 		{
+			cout<<"DUMP "<<++dumpCount<<"\n";
 			EmptyGarbage(*script.data);
 		}
 	}
