@@ -11,6 +11,29 @@ PRINT(STR)
 	Return: NONE
 	Dot syntax reccommended: YES, with parentheses
 
+PRINTF(STR,...)
+Available in XPINS Parser: 0.12.0
+Description: Displays a formatted string
+Arguments: the format string and the arguments for the format string
+Return: NONE
+Dot syntax reccommended: NO
+
+
+ARRAY FUNCTIONS
+SIZE(ARR)
+	Available in XPINS Parser: 0.12.0
+	Description: gets the size of an array
+	Arguments: the array you want the size for
+	Return: NUM, the size of the array
+	Dot syntax reccommended: YES, no parentheses
+
+RESIZE(ARR,NUM)
+	Available in XPINS Parser: 0.12.0
+	Description: change the size of an array
+	Arguments: the array and its new size
+	Return: NONE, the size of the array
+	Dot syntax reccommended: YES
+
 TRIGONOMETRY
 
 SIN(NUM)
@@ -474,6 +497,22 @@ MARKOV_ABSORB_SIM(MAT chain, NUM end, NUM start)
 	Description: Simulates Absorbtion time for a given state
 	Arguments: the transition probability Matrix, the absorbing state, and the initial state
 	Return: NUM, a possible time to reach the end state from the given start state.
+	Dot syntax reccommended: YES
+
+POLYNOMIAL OPERATIONS:
+
+EVALUATE(POLY,NUM...)
+	Available in XPINS Parser: 0.12.0
+	Description: Evaluates the polynomial with specific variable values
+	Arguments: the Polynomial and the variable values.
+	Return: NUM, the result of the evaluation
+	Dot syntax reccommended: YES
+
+VECTOR_EVALUATE(FIELD,NUM...)
+	Available in XPINS Parser: 0.12.0
+	Description: Evaluates the Vector Field with specific variable values
+	Arguments: the Vector Field and the variable values.
+	Return: VEC, the result of the evaluation
 	Dot syntax reccommended: YES
 
 

@@ -238,8 +238,8 @@ namespace XPINSScriptableMath
 		static VectorField Add(VectorField a, VectorField b);	//Add VectorFields
 		static VectorField Scale(VectorField a, double b);		//Scale a VectorField by double
 		static VectorField PScale(VectorField a, Polynomial b);	//Scale a VectorField by polynomial
-		static Polynomial Dot(VectorField a, VectorField b);	//Dot product of VectorFields
-		static VectorField Cross(VectorField a, VectorField b);	//Cross product of VectorFields
+		static Polynomial DotProduct(VectorField a, VectorField b);	//Dot product of VectorFields
+		static VectorField CrossProduct(VectorField a, VectorField b);	//Cross product of VectorFields
 		static VectorField MatMult(Matrix a, VectorField b);	//Multiply VectorField and Matrix
 		// Composition and evaluation
 		static VectorField Compose(VectorField a, Polynomial b, int var);	//Composition
@@ -262,13 +262,15 @@ namespace XPINSScriptableMath
 		// Operator Overloads
 		VectorField	operator + (const VectorField &v)const	{	return Add(*this,v);		}//Add
 		void		operator +=(const VectorField &v)		{	*this=*this+v;				}
-		VectorField	operator * (const Polynomial &f)const	{	return PScale(*this,f);		}//Multiply
+		VectorField	operator * (const Polynomial &f)const	{	return PScale(*this,f);		}//Scalar Multiply
 		void		operator *=(const Polynomial &f)		{	*this=*this*f;				}
-		VectorField	operator * (const double &f)const		{	return Scale(*this,f);		}//Multiply
+		VectorField	operator * (const double &f)const		{	return Scale(*this,f);		}//Scalar Multiply
 		void		operator *=(const double &f)			{	*this=*this*f;				}
 		VectorField	operator - (const VectorField &v)const	{	return Add(*this,v*(-1));	}//Subtract
 		void		operator -=(const VectorField &v)		{	*this=*this-v;				}
-		Polynomial	operator * (const VectorField &v)const	{	return Dot(*this,v);		}//Dot Product
+		VectorField	operator / (const double &f)const		{	return Scale(*this,1/f);	}//Divide
+		void	operator /=(const double &f)				{	*this=*this/f;				}
+		Polynomial	operator * (const VectorField &v)const	{	return DotProduct(*this,v);		}//Dot Product
 		
 		// Values
 		Polynomial P,Q,R; //Vector is <P,Q,R>

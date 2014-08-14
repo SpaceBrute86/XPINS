@@ -6,15 +6,20 @@
 @END
 @CODE
 @NUM X=0
+@NUM ZERO=0
 @LOOP 5E6
 {
-	 X=RV_NORMAL(0,5)
+	 X=RV_NORMAL(ZERO,5)
 }
 "CHECKPOINT 1\n".PRINT()
 @LOOP 5E6
 {
-?N(++X)?
+?N(X+=2)?
 }
 "CHECKPOINT 2\n".PRINT()
-
+@LOOP 5E6
+{
+?N(++X)?
+}
+"CHECKPOINT 3\n".PRINT()
 @END

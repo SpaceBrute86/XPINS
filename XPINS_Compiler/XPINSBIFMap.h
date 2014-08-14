@@ -11,6 +11,8 @@
 
 //VOID
 #define X_PRINT						1
+#define X_PRINTF					2
+#define X_RESIZE					3
 
 //BOOL
 #define X_MARKOV_REACHABLE 			1
@@ -58,12 +60,15 @@
 #define X_MARKOV_ABSORB_PROB		40
 #define X_MARKOV_ABSORB_TIME		41
 #define X_MARKOV_ABSORB_SIM			42
+#define X_SIZE						43
+#define X_EVALUATE					44
 
 //VEC
 #define X_PROJECT_ONTO_VECTOR		1
 #define X_UNIT_VECTOR				2
 #define X_V							3
 #define X_ROTATE_VECTOR				4
+#define X_VECTOR_EVALUATE			5
 
 //QUAT
 #define X_CONJUGATE					1

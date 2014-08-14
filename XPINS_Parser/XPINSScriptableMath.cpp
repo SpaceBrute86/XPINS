@@ -1227,11 +1227,11 @@ VectorField VectorField::PScale(VectorField a, Polynomial b)
 	Polynomial r=a.R*b;
 	return VectorField(p,q,r);
 }
-Polynomial VectorField::Dot(VectorField a, VectorField b)
+Polynomial VectorField::DotProduct(VectorField a, VectorField b)
 {
 	return a.P*b.P+a.Q*b.Q+a.R*b.R;
 }
-VectorField VectorField::Cross(VectorField a, VectorField b)
+VectorField VectorField::CrossProduct(VectorField a, VectorField b)
 {
 	Polynomial p=a.Q*b.R-a.R*b.Q;
 	Polynomial q=a.R*b.P-a.P*b.R;
@@ -1344,7 +1344,7 @@ Polynomial VectorField::LineIntegral(Polynomial f,VectorField curve,  Bound Boun
 Polynomial VectorField::LineIntegral(VectorField v,VectorField curve,Bound Bounds)
 {
 	VectorField dr=Derivative(curve, 4);
-	Polynomial poly=Dot(v, dr);
+	Polynomial poly=DotProduct(v, dr);
 	poly=poly.Composition(poly, curve.P, 0);
 	poly=poly.Composition(poly, curve.Q, 1);
 	poly=poly.Composition(poly, curve.R, 2);
@@ -1357,7 +1357,7 @@ Polynomial VectorField::SurfaceIntegral(Polynomial f,VectorField surface, Bound 
 	//Find Normal Vector
 	VectorField drdu=Derivative(surface, 4);
 	VectorField drdv=Derivative(surface, 5);
-	VectorField normal=Cross(drdu, drdv);
+	VectorField normal=CrossProduct(drdu, drdv);
 	//Get Scalar Field in terms of U and V
 	Polynomial p=f.Copy();
 	p=Polynomial::Composition(p, surface.P, 0);
@@ -1376,13 +1376,13 @@ Polynomial VectorField::SurfaceIntegral(VectorField v,VectorField surface, Bound
 	//Find Normal Vector
 	VectorField drdu=Derivative(surface, 4);
 	VectorField drdv=Derivative(surface, 5);
-	VectorField normal=Cross(drdu, drdv);
+	VectorField normal=CrossProduct(drdu, drdv);
 	//Get Vector Field in terms of U and V
 	VectorField field=v.Copy();
 	field=Compose(field, surface.P, 0);
 	field=Compose(field, surface.Q, 1);
 	field=Compose(field, surface.R, 2);
-	Polynomial poly=Dot(field, normal);
+	Polynomial poly=DotProduct(field, normal);
 	//Integrate
 	Polynomial integral=Polynomial::Integrate(poly, 5);
 	poly=Polynomial::Composition(integral, vBound.stop,5)-Polynomial::Composition(integral, vBound.start,5);
@@ -1396,7 +1396,7 @@ Polynomial VectorField::VolumeIntegral(Polynomial f, VectorField map, Bound uBou
 	VectorField drdu=VectorField::Derivative(map, 4);
 	VectorField drdv=VectorField::Derivative(map, 5);
 	VectorField drdw=VectorField::Derivative(map, 6);
-	Polynomial jacobian=Dot(drdu, Cross(drdv, drdw));
+	Polynomial jacobian=DotProduct(drdu, CrossProduct(drdv, drdw));
 	//Get Scalar Field in terms of U and V
 	Polynomial p=f.Copy();
 	p=Polynomial::Composition(p, map.P, 0);

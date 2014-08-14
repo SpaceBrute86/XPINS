@@ -163,12 +163,6 @@ namespace XPINSInstructionsHelper {
 						if(assign&&script[i+1]=='=')*assign=true;
 						return REMAINDER;
 					}break;
-				case ':':
-					if(type==NUMBER||type==VECTOR) return EVALUATE;
-					if(type==POLYNOMIAL||type==FIELD){
-						if(assign&&script[i+1]=='=')*assign=true;
-						return EVALUATE;
-					}break;
 			}
 		}
 		return INVALID;
@@ -470,11 +464,12 @@ namespace XPINSInstructionsHelper {
 					}break;
 					case ARRAY:{
 						int temp=i;
+						int size=1;
 						for (;scriptText[temp]!='}'; ++temp)//Find Array Count
-							if(scriptText[temp]==',')++arg.number;
-						arg.arguments.resize(arg.number);
-						for (int item=0;item<arg.number;++item) {
-							arg.arguments[item]=parseArgument(scriptText, i, item==arg.number-1?'}':',');
+							if(scriptText[temp]==',')++size;
+						arg.arguments.resize(size);
+						for (int item=0;item<size;++item) {
+							arg.arguments[item]=parseArgument(scriptText, i, item==size-1?'}':',');
 						}
 					}break;
 					default:
@@ -600,7 +595,7 @@ namespace XPINSInstructionsHelper {
 				} else if(op==POSTINCREMENT||op==POSTDECREMENT){
 					arg.arguments.resize(1);
 					arg.arguments[0]=parseArgument(scriptText, i, opChar);
-				} else if(op==EVALUATE||op==COMPOSITION){
+				} else if(op==COMPOSITION){
 					arg.arguments.resize(1);
 					arg.arguments[0]=parseArgument(scriptText, i, opChar);
 					while (scriptText[i]!=')') {

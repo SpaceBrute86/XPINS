@@ -1,0 +1,159 @@
+Copyright (c) 2013 Robert Markwick
+See the file license.txt for copying permission
+
+This document explains how to bind and run XPINS scripts.
+
+BINDING FUNCTIONS:
+To allow XPINS to interact with your code, you must subclass XPINSBindings. Further, Each module must have its own subclass. For your convenience XPINSLocalBindings has been provided as a template, but if you plan to run different scripts in the same program it is strongly reccommended that each script have its own binding class (unless the function blocks are identical). When you implement your bindings object be sure to include any header files necessary, whether it is for parameter passing or for function implementation. Make sure that XPINSBindings.h is included in the header file for your subclass.
+
+Through your subclass of XPINSBindings you can also pass values to your script. For example, if you are using XPINS to script your game AI, you might have a pointer to a particular character as one of the members of your subclass.
+When you are ready to execute a script, remember to give these references to your Bindings object. The only way you will be able to access these values is through your bindings object.
+Once you have declared the data members for your bindings object, you must declare the scriptable functions. It is up to you as to what you should name them, but it is reccomended that you give them the same name you gave them when they were declared your @FUNC or @MODULE block. It is also reccomended that these functions are private functions.
+
+If you want to write a function that takes a VEC, QUAT, MAT, POLY, or FIELD variable as a parameter, it will be passed as an object of type XPINSScriptableMath::Vector, XPINSScriptableMath::Quaternion, XPINSScriptableMath::Matrix, XPINSScriptableMath::Polynomial, XPINSScriptableMath::VectorField, respectively. BOOL will be passed as bool. NUM will be passed as double. STR will be passed as string. OBJ will be passed as void*. ARR will be passed as XPINSArray.
+NOTE: Using XPINSArrays in functions is discouraged. Avoid using functions that involve arrays when possible, and when doing so look over the source code for the Parser to see how XPINSArrays work under the hood
+
+By default XPINS will not memory manage OBJ values that you create. You must free the object later to avoid a leak. If you want XPINS to memory manage this for you (i.e. delete it when the script is done executing), add the following line of code (My var is the pointer to the object):
+script.toDelete.push_back(myVar);
+
+In order know when to call your scripted functions, you must override BindFunction. In XPINSLocalBindings it looks like this:
+void* XPINSLocalBindings::BindFunction(int fNum,XPINSScriptSpace& script,vector<Argument>args){
+	switch(fNum){
+		...
+	}
+}
+Notice the switch statement.  For each function you declare, you need a case statement. It should look like this:
+case __:{...}break;
+the __ should be the assigned number for your function. To determine this number, look in the @FUNC or @MODULE block, and count the number of functions you declared before it and add one. If your block looks like this:
+@MODULE ModuleName
+VOID myVoidFunc()
+NUM myNumberFunc()
+MAT myMatrixFunc()
+@END
+myVoidFunc will be 1, myNumberFunc will be 2, and myMatrixFunc will be 3.
+Function 0 is reserved and may be used by a future version of XPINS.
+You will replace the '...' with the code to find your arguments and call your functions.
+
+FINDING ARGUMENTS:
+Once you have determined which function was called you need to figure out what values were passed to it. Good News: The parser does all of the heavy lifting. Here is what your code looks like:
+___ arg__=*Parse___Arg(script,args[_]);
+Only four blanks. The first blank is the type of the argument. This should be one of the following, depending on what your function takes for the argument: bool, double, XPINSScriptableMath::Vector, XPINSScriptableMath::Quaternion, XPINSScriptableMath::Matrix, XPINSScriptableMath::Polynomial, XPINSScriptableMath::VectorField, or void*, or XPINSArray
+The second blank should be the number of the argument, so the variable is called arg0, arg1, arg2, etc. (Zero indexing is recommended)
+The third blank should match the type: Bool, Num, Vec, Quat, Mat, Poly, Field, Str, Object, or Array.
+The last blank is the index of the argument (this must be zero indexed)
+So for a VEC argument that is the 2nd but not last argument in a function and does not need to be modified, the code would look like this:
+XPINSScriptableMath::Vector arg1=*ParseVecArg(script,arg[1]);
+
+For functions that don't take arguments, simply call your function and return its value (if applicable).
+
+PASSING BY REFERENCE:
+If you want to have a function where the variables are passed by reference, use one of the following code snippets instead of what is listed above:
+//SNIPPET 1:(use if your function uses a pointer)
+___* arg__=Parse___Arg(script,args[_]);
+//call your function with the pointer variable
+
+//SNIPPET 2: (use if your function uses pass by reference)
+___* argP__=Parse___Arg(script,args[_]);
+___ arg__=*argP__;
+//call your function with the non-pointer variable
+*argP__=arg__
+
+
+Finally, the most important part: calling your functions. This is only two lines of code (per function), and it goes right after the code for Finding the arguments:
+___ val=____(___);
+//Reassign any Pass-By-Reference arguments
+return new ___(val);
+-the first blank is the type that you're function returns
+-the second blank is name of the function as it is used in C++
+-the third blank should be the arguments for the function (arg0,arg1,arg2,...)
+-the final blank should be the same as the first blank
+So if I have function Foo that takes two arguments and returns a bool:
+bool val=Foo(arg1,arg2);
+return new bool(val);
+
+CALLING METHODS ON OBJECTS:
+Binding object methods requires a slightly different procedure:
+If we want to call method foo that takes a num as a parameter:
+//IN XPINS: MyObj.foo(number)
+void* arg0=ParseObjectArg(script,args[0]);
+MyClass* obj=(MyClass*)arg0;
+double arg1=ParseNumArg(script,args[1]);
+obj->foo(arg1);
+NOTE: XPINS Dot Syntax is Strongly reccommended for calling methods on objects.
+
+
+NOTE: For help with Function Binding, look at the Built In Function implementaitons in XPINSBuiltIn.cpp. Built in Functions are processed in almost the same way that your functions are.
+
+
+COMPILING SCRIPTS
+The first thing you need to do to run a script is compile the Script so that the parser can interpret the variables and functions correctly.
+
+The following Script:
+@COMPILER[0.7]
+@PARSER[0.12]
+@CONST
+TEN=10;
+@END
+@FUNC
+NUM FOO(NUM,BOOL);
+OBJ AI_PLAYER_FUNC();
+@END
+@CODE
+@NUM MYVAR2=FOO(0.2,T);
+@WHILE ?B(MYVAR2<90)?
+{
+?N(MYVAR2+TEN)?
+}
+@OBJ AIPLAYER=AI_PLAYER_FUNC();
+AIPLAYER.SET_FIRE_ANGLE($MYVAR2);
+@END
+
+Would look like this once compiled:
+@PARSER[0.12]
+@VAR B0 N1 V0 Q0 M0 P0 F0 S0 O1 A0
+@CODE
+$N0=#NM0F1(~0.2,~T);
+@WHILE ?B($N0<~90)?
+{
+$N0=?N($N0+~10)?
+}
+$P0=#PM0F2();
+#M0F3($P0,$N0);
+@END
+
+There are two options for compiling:
+-Build and Run the compiler on one of your machines. You will need to distribute the compiled script (usually with your program, sometimes via your server).
+-Distribute your uncompiled script and compile it at runtime.
+The first option is usually a better option, especially if your program is running on a system with constrained resources (e.g. smartphones).
+However, the second option has a few important use cases. For example, if you want to make the scripts user-modifiable, you need to compile them at runtime. Editing compiled scripts by hand is strongly discouraged and could cause your program to crash.
+Also, if your program is open source, please consider distributing the script in its uncompiled from.
+
+
+To compile on your machine: Compile the compiler and run it on your machine. Making sure that the script file has the extension .XPINS, enter in the full path for your script. The compiler will write the compiled script to a file with the extension .XPINSX. If it doesn't write a file but displays a compiled script, copy that into a .XPINSX file. Ship the .XPINSX file with your program, and load it into a string object at runtime.
+To compile at runtime: Include XPINSCompiler.h in whatever file you wish to use XPINS with (make sure to adjust your build settings so that the compiler and parser are compiled as part of your program) Ship the uncompiled XPINS file with your program, and Load it in at runtime to a string object. then add the following code:
+if(!XPINSCompiler::compileScript(&myScript)){
+//script did not compile, work without script or exit.
+}
+The compiler will write to the same object that you passed to it instead of creating a new string object
+
+RUNNING SCRIPTS
+To run the script, inlcude XPINSParser.h and the header file for your bindings subclass, and add the following code:
+string myScript="...";//Make sure you have your compiled script loaded into memory
+//Set up bindings object
+vector<XPINSBindings*> bindings=vector<XPINSBindings*>();
+bindings.resize(1);//size of bindings vector= 1+Number Of Modules
+bindings[0]=new XPINSLocalBindings();//Replace with class for @FUNC bindings object
+bindings[1]=new XPINSLocalBindings();//Replace with class for 1st @MODULE bindings object
+bindings[2]=new XPINSLocalBindings();//Replace with class for 2nd @MODULE bindings object
+//repeat for remaining modules
+XPINSParser::ParseScript(myScript, bindings);
+
+
+
+
+
+
+
+
+
+
