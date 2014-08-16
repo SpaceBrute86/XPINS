@@ -61,7 +61,8 @@ namespace XPINSParser
 
 // Argument Parsing
 	void* ParseArg(XPINSScriptSpace& script, Argument arg,  DataType& type, bool ignoreLastArrayIndex=false);						//Any type
-	
+	void* ParseRawArg(XPINSScriptSpace& script, Argument arg,  DataType type);
+
 	
 	// Parsing Scripts
 	void ParseScript(string,vector<XPINSBindings*>);

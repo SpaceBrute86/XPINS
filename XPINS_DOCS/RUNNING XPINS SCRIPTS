@@ -11,13 +11,11 @@ When you are ready to execute a script, remember to give these references to you
 Once you have declared the data members for your bindings object, you must declare the scriptable functions. It is up to you as to what you should name them, but it is reccomended that you give them the same name you gave them when they were declared your @FUNC or @MODULE block. It is also reccomended that these functions are private functions.
 
 If you want to write a function that takes a VEC, QUAT, MAT, POLY, or FIELD variable as a parameter, it will be passed as an object of type XPINSScriptableMath::Vector, XPINSScriptableMath::Quaternion, XPINSScriptableMath::Matrix, XPINSScriptableMath::Polynomial, XPINSScriptableMath::VectorField, respectively. BOOL will be passed as bool. NUM will be passed as double. STR will be passed as string. OBJ will be passed as void*. ARR will be passed as XPINSArray.
-NOTE: Using XPINSArrays in functions is discouraged. Avoid using functions that involve arrays when possible, and when doing so look over the source code for the Parser to see how XPINSArrays work under the hood
-
 By default XPINS will not memory manage OBJ values that you create. You must free the object later to avoid a leak. If you want XPINS to memory manage this for you (i.e. delete it when the script is done executing), add the following line of code (My var is the pointer to the object):
 script.toDelete.push_back(myVar);
 
 In order know when to call your scripted functions, you must override BindFunction. In XPINSLocalBindings it looks like this:
-void* XPINSLocalBindings::BindFunction(int fNum,XPINSScriptSpace& script,vector<Argument>args){
+void* XPINSLocalBindings::BindFunction(int fNum,XPINSArray args){
 	switch(fNum){
 		...
 	}
@@ -35,33 +33,32 @@ Function 0 is reserved and may be used by a future version of XPINS.
 You will replace the '...' with the code to find your arguments and call your functions.
 
 FINDING ARGUMENTS:
-Once you have determined which function was called you need to figure out what values were passed to it. Good News: The parser does all of the heavy lifting. Here is what your code looks like:
-___ arg__=*Parse___Arg(script,args[_]);
-Only four blanks. The first blank is the type of the argument. This should be one of the following, depending on what your function takes for the argument: bool, double, XPINSScriptableMath::Vector, XPINSScriptableMath::Quaternion, XPINSScriptableMath::Matrix, XPINSScriptableMath::Polynomial, XPINSScriptableMath::VectorField, or void*, or XPINSArray
-The second blank should be the number of the argument, so the variable is called arg0, arg1, arg2, etc. (Zero indexing is recommended)
-The third blank should match the type: Bool, Num, Vec, Quat, Mat, Poly, Field, Str, Object, or Array.
+Once you have determined which function was called you need to figure out what values were passed to it. The parser does most of the work for you. Here is what your code looks like:
+___ arg__=*args.___AtIndex(__);
+The first blank is the type of the argument. This should be one of the following, depending on what your function takes for the argument: bool, double, XPINSScriptableMath::Vector, XPINSScriptableMath::Quaternion, XPINSScriptableMath::Matrix, XPINSScriptableMath::Polynomial, XPINSScriptableMath::VectorField, string, void*, or XPINSArray
+The second blank should be the number of the argument, such that the variable is called arg0, arg1, arg2, etc. (Zero indexing is recommended)
+The third blank should match the type: bool, num, vec, quat, mat, poly, field, str, object, or array.
 The last blank is the index of the argument (this must be zero indexed)
 So for a VEC argument that is the 2nd but not last argument in a function and does not need to be modified, the code would look like this:
-XPINSScriptableMath::Vector arg1=*ParseVecArg(script,arg[1]);
+XPINSScriptableMath::Vector arg1=*args.vecAtIndex(1);
 
 For functions that don't take arguments, simply call your function and return its value (if applicable).
 
 PASSING BY REFERENCE:
-If you want to have a function where the variables are passed by reference, use one of the following code snippets instead of what is listed above:
-//SNIPPET 1:(use if your function uses a pointer)
-___* arg__=Parse___Arg(script,args[_]);
-//call your function with the pointer variable
+If you want to have a function where the arguments are passed by reference, use the following code snippets instead of what is listed above:
+___* arg__=args.___AtIndex(__);
 
-//SNIPPET 2: (use if your function uses pass by reference)
-___* argP__=Parse___Arg(script,args[_]);
-___ arg__=*argP__;
-//call your function with the non-pointer variable
-*argP__=arg__
 
+OVERLOADING:
+While XPINS doesn't support overloading on its own, it is possible to implement a function that takes different types of arguments. There are two ways to determine which form of the overloaded function is called (this will depend on the function, some of these techniques work only in certain scenarios):
+Determine the number of Arguments passed:
+size_t numArgs=args.size();
+Determine the data types for a particular argument (see XPINSInstruction.h)
+XPINSInstructions::DataType type=args.typeAtIndex(__)
+Using this information, you can determine what values were passed and call the proper function.
 
 Finally, the most important part: calling your functions. This is only two lines of code (per function), and it goes right after the code for Finding the arguments:
 ___ val=____(___);
-//Reassign any Pass-By-Reference arguments
 return new ___(val);
 -the first blank is the type that you're function returns
 -the second blank is name of the function as it is used in C++
@@ -71,16 +68,18 @@ So if I have function Foo that takes two arguments and returns a bool:
 bool val=Foo(arg1,arg2);
 return new bool(val);
 
+NOTE: XPINS will handle the deallocation of the return value unless it is an OBJECT.
+
 CALLING METHODS ON OBJECTS:
 Binding object methods requires a slightly different procedure:
-If we want to call method foo that takes a num as a parameter:
+For example, If we want to call method foo that takes a num as a parameter:
 //IN XPINS: MyObj.foo(number)
 void* arg0=ParseObjectArg(script,args[0]);
 MyClass* obj=(MyClass*)arg0;
 double arg1=ParseNumArg(script,args[1]);
 obj->foo(arg1);
-NOTE: XPINS Dot Syntax is Strongly reccommended for calling methods on objects.
 
+NOTE: XPINS Dot Syntax is Strongly reccommended for calling methods on objects.
 
 NOTE: For help with Function Binding, look at the Built In Function implementaitons in XPINSBuiltIn.cpp. Built in Functions are processed in almost the same way that your functions are.
 
@@ -95,7 +94,7 @@ The following Script:
 TEN=10;
 @END
 @FUNC
-NUM FOO(NUM,BOOL);
+NUM FOO(NUM);
 OBJ AI_PLAYER_FUNC();
 @END
 @CODE

@@ -12,6 +12,7 @@
 using namespace std;
 namespace XPINSInstructions {
 	enum DataType {
+		VOID,
 		BOOLEAN,
 		NUMBER,
 		VECTOR,
@@ -21,8 +22,7 @@ namespace XPINSInstructions {
 		FIELD,
 		STRING,
 		OBJECT,
-		ARRAY,
-		VOID
+		ARRAY
 	};
 	enum ArgType {
 		VAR,
@@ -56,6 +56,7 @@ namespace XPINSInstructions {
 		ArgType type;
 		int modNumber;
 		int number;
+		bool isElemental;
 		vector<Argument> arguments;
 		vector<Argument> subscripts;
 		void* literalValue;

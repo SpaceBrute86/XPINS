@@ -8,6 +8,7 @@
 
 #include "XPINSCompiler.h"
 #include <vector>
+#include <list>
 #include "XPINSBIFMap.h"
 
 using namespace std;
@@ -126,7 +127,7 @@ bool XPINSCompiler::convertDotSyntax(string& input){
 				else if(input[i]=='\"')break;
 			}
 		}
-		if(input[i+1]=='.'&&(input[i+2]<'0'||input[i+2]>'9'))//Skip completed Dot operations
+		if((input[i+1]=='.'||(input[i+1]=='-'&&input[i+2]=='>'))&&(input[i+2]<'0'||input[i+2]>'9'))//Skip completed Dot operations
 		{
 			i+=2;
 			while (++i<input.length()) {
@@ -143,8 +144,14 @@ bool XPINSCompiler::convertDotSyntax(string& input){
 		{
 			int j=i+1;
 			bool isDotSyntax=false;
+			bool isElementalSyntax=false;
 			for (; j<input.length(); ++j) {
-				if (input[j]==','||input[j]==')'||input[j]=='\n'||input[j]=='&'||input[j]=='|'||input[j]=='!'||input[j]=='<'||input[j]=='>'||input[j]=='='||input[j]=='+'||input[j]=='-'||input[j]=='*'||input[j]=='/'||input[j]=='^'||input[j]==':'||input[j]=='%'||input[j]==']')break;
+				if (input[j]==','||input[j]==')'||input[j]=='\n'||input[j]=='&'||input[j]=='|'||input[j]=='!'||input[j]=='<'||input[j]=='>'||input[j]=='='||input[j]=='+'||(input[j]=='-'&&input[j+1]!='>')||input[j]=='*'||input[j]=='/'||input[j]=='^'||input[j]==':'||input[j]=='%'||input[j]==']')break;
+				else if ((input[j]=='-'&&input[j+1]=='>')&&(input[j+2]<'0'||input[j+2]>'9')){
+					isDotSyntax=true;
+					isElementalSyntax=true;
+					break;
+				}
 				else if (input[j]=='.'&&(input[j+1]<'0'||input[j+1]>'9')){
 					isDotSyntax=true;
 					break;
@@ -192,11 +199,25 @@ bool XPINSCompiler::convertDotSyntax(string& input){
 				}
 			}
 			if (isDotSyntax) {
-				vector<string> funcNames=vector<string>(1);
+				
+			//	vector<bool> elemental=vector<bool>(1,isElementalSyntax);
+			//	vector<string> funcNames=vector<string>(1);
+				list<string> funcNames=list<string>(0);
+				list<bool> elemental=list<bool>(1,isElementalSyntax);
+				string currentFuncName="";
+				if(isElementalSyntax)++j;
 				while (++j<input.length()) {
 					if (input[j]=='.') {
-						funcNames.resize(funcNames.size()+1);
+						funcNames.push_back(currentFuncName);
+						elemental.push_back(false);
+						currentFuncName="";
 						++j;
+					}
+					else if (input[j]=='-'&&input[j+1]=='>') {
+						funcNames.push_back(currentFuncName);
+						elemental.push_back(true);
+						currentFuncName="";
+						j+=2;
 					}
 					else if (input[j]=='('){
 						int parenCount=1;
@@ -213,16 +234,28 @@ bool XPINSCompiler::convertDotSyntax(string& input){
 							else if(input[j]==')')--parenCount;
 						}
 						if(input[++j]=='.'){
-							funcNames.resize(funcNames.size()+1);
+							funcNames.push_back(currentFuncName);
+							elemental.push_back(false);
+							currentFuncName="";
 							++j;
+						}
+						else if (input[j]=='-'&&input[j+1]=='>') {
+							funcNames.push_back(currentFuncName);
+							elemental.push_back(true);
+							currentFuncName="";
+							j+=2;
 						}
 						else break;
 					}
 					else if (input[j]==','||input[j]==')'||input[j]=='\n'||input[j]=='&'||input[j]=='|'||input[j]=='!'||input[j]=='<'||input[j]=='>'||input[j]=='='||input[j]=='+'||input[j]=='-'||input[j]=='*'||input[j]=='/'||input[j]=='^'||input[j]==':'||input[j]=='%'||input[j]==']')break;
-					funcNames[funcNames.size()-1]+=input[j];
+					currentFuncName+=input[j];
 				}
-				for (int x=funcNames.size()-1; x>=0; --x) {
-					output+=funcNames[x]+'(';
+				funcNames.push_back(currentFuncName);
+				while (funcNames.size()>0) {
+					output+=funcNames.front();
+					output+=elemental.front()?".(":"(";
+					funcNames.pop_front();
+					elemental.pop_front();
 				}
 			}
 		}
@@ -303,7 +336,7 @@ bool XPINSCompiler::checkConstantSyntax(string& input)
 					if (isVar) output+="$_";
 					else {
 						string name="";
-						for (; input[i+1]!='('; ++i)name+=input[i+1];
+						for (; input[i+1]!='('; ++i) if(input[i+1]!='.')name+=input[i+1];
 						if(name.compare("MARKOV_REACHABLE")==0)output+= "XB"+XPINSCompileUtil::strRepresentationOfInt(X_MARKOV_REACHABLE);
 						//Number Functions
 						else if(name.compare("SIN")==0)output+= "XN"+XPINSCompileUtil::strRepresentationOfInt(X_SIN);
@@ -388,6 +421,7 @@ bool XPINSCompiler::checkConstantSyntax(string& input)
 						else if(name.compare("PRINTF")==0)output+= "X_"+XPINSCompileUtil::strRepresentationOfInt(X_PRINTF);
 						else if(name.compare("RESIZE")==0)output+= "X_"+XPINSCompileUtil::strRepresentationOfInt(X_RESIZE);
 						else output+="#"+name;
+						if (input[i]=='.') output+='.';
 					}
 				}
 				
@@ -423,7 +457,7 @@ string renameConstant(string input, string constName, string constVal){
 			}
 		}
 		//Find start of Constant
-		if(XPINSCompileUtil::stringsMatch(i, input, constName) && input[i+constName.length()]!='('
+		if(XPINSCompileUtil::stringsMatch(i, input, constName) && input[i+constName.length()]!='('&&(input[i+constName.length()]!='.'||input[i+constName.length()+1]!='(')
 		   &&(input[i-1]=='('||input[i-1]=='='||input[i-1]==','||input[i-1]=='['||input[i-1]=='{'||
 			input[i-1]=='<'||input[i-1]==' '||input[i-1]=='\n'||//typical operations and Constants
 			input[i-1]=='|'||input[i-1]=='&'||input[i-1]=='>'||input[i-1]=='!'||input[i-1]=='+'||input[i-1]=='-'||
@@ -564,7 +598,7 @@ string renameFuncBlock(string input, string intermediate1, int modNum, int block
 				intermediate2+='#';
 				j++;
 				//Check for match
-				if(XPINSCompileUtil::stringsMatch(j, intermediate1, functionName+'('))
+				if(XPINSCompileUtil::stringsMatch(j, intermediate1, functionName+'(')||XPINSCompileUtil::stringsMatch(j, intermediate1, functionName+".("))
 				{
 					if(functionType!=' ')intermediate2+=functionType;//add function types to user functions.
 					intermediate2+='M';
@@ -572,6 +606,7 @@ string renameFuncBlock(string input, string intermediate1, int modNum, int block
 					intermediate2+='F';
 					intermediate2+=XPINSCompileUtil::strRepresentationOfInt(x);//Funciton Number
 					while(intermediate1[j]!='(')++j;//Find '('
+					if (intermediate1[j-1]=='.') intermediate2+='.';
 				}
 			}
 		}

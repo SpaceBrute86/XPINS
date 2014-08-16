@@ -513,6 +513,7 @@ namespace XPINSInstructionsHelper {
 				++i;
 				arg.modNumber=readInt(scriptText, i, 'F');
 				arg.number=readInt(scriptText, i, '(');
+				arg.isElemental = scriptText[i-1]=='.';
 				++i;
 				arg.arguments.resize(0);
 				while (scriptText[i]!=')') {
@@ -550,6 +551,7 @@ namespace XPINSInstructionsHelper {
 						break;
 				}
 				arg.number=readInt(scriptText, i, '(');
+				arg.isElemental = scriptText[i-1]=='.';
 				++i;
 				arg.arguments.resize(0);
 				while (scriptText[i]!=')') {
