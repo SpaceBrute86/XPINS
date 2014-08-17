@@ -6,13 +6,14 @@
 //
 //
 
-#ifndef XPINS_Header_h
-#define XPINS_Header_h
+#ifndef XPINS_BIFMAP
+#define XPINS_BIFMAP
 
 //VOID
 #define X_PRINT						1
 #define X_PRINTF					2
 #define X_RESIZE					3
+
 
 //BOOL
 #define X_MARKOV_REACHABLE 			1

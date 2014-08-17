@@ -46,11 +46,8 @@ namespace XPINSParser
 		XPINSVarSpace* data;				//Script Variables
 		vector<XPINSBindings*> bindings;	//Bindings objects
 		list<void*>toDelete;				//Objects to delte at end of Script
-	//	XPINSArray* scriptParams;			//Parameters to be passed from script to script
-	//	void* returnVal;					//Return Value from script
 	// Functions
 		XPINSScriptSpace(string script,vector<XPINSBindings*> bindings);		//Create Script Space
-		XPINSScriptSpace(string cluster,string name,vector<XPINSBindings*> bindings);
 	};
 //Memory Management Functions
 	void SetGarbageCapcaity(size_t capacity);				//Set Garbage Capacity

@@ -1,0 +1,97 @@
+/*
+PURPOSE: This script tests a variety of features in XPINS to make sure that XPINS itself is not broken
+*/
+@XPINS 0.12
+
+@CONST
+	HelloWorld="HELLO WORLD!\n"
+@END
+@FUNC
+	VOID PRINTNUM(NUM)
+	VOID println()
+@END
+/*COMMENT*/
+@CODE
+	//String Test
+	@STR string=HelloWorld
+	string.PRINT()
+/*COMMENT*/
+	//IF, ELIF, ELSE Test
+	@if FALSE
+	{
+		PRINTNUM(1)
+	}
+	@elif FALSE
+	{
+		PRINTNUM(2)
+	}
+	@else
+	{
+		PRINTNUM(3)
+	}
+	println()
+	//Multiplication Table Test (loops, expressions, etc.)
+	@NUM I=1
+	@while ?B(I<=1E1)?
+	{
+		@num J=1
+		@while ?B(J<=10)?
+		{
+			printnum(?N(I*J)?)
+			?N(J++)?
+		}
+		?N(++I)?
+		println()
+	}
+	@NUM ZVariable=0
+	@NUM YVariable=0
+	print("\n\n\n")
+	// Matrix/Vector Test
+	@MAT trans=?M([0,1,0|1,0,0|0,0,0]+[0,0,0|0,0,0|0,0,1])?.invert()
+	PRINTNUM(trans.determinant)
+	println()
+	PRINTNUM(trans[0][0])
+	PRINTNUM(trans[0][1])
+	PRINTNUM(trans[0][2])
+	println()
+	PRINTNUM(trans[1][0])
+	PRINTNUM(trans[1][1])
+	PRINTNUM(trans[1][2])
+	println()
+	PRINTNUM(trans[2][0])
+	PRINTNUM(trans[2][1])
+	PRINTNUM(trans[2][2])
+	println()
+	@VEC VECTOR=<1,2,0>
+	?V(TRANS*=VECTOR)?
+	PRINTNUM(VECTOR.X)
+	println()
+	PRINTNUM(VECTOR.Y)
+	println()
+	println()
+	//Probability Test
+	PRINTNUM(RV_POISSON(3))
+	println()
+	PRINTNUM(RAND(1,4))
+	println()
+	println()
+	//Polynomial Test
+	PRINTNUM(?P((1_X+1)^2)?.EVALUATE(3))
+println()
+println()
+	//Array Test
+	@ARR array={ 0 }
+	array[0].PRINTNUM()
+	array[0]=1
+	PRINTNUM(array[0])
+	array.RESIZE(2)
+	PRINTNUM(array.SIZE)
+	array[1]=3
+	PRINTNUM(array[1])
+	?N(++array[1])?
+	array=array->SQRT()
+PRINTLN()
+array->PRINTNUM()
+PRINTLN()
+PRINTF("%.2m",[1,4,9,16,25]->SQRT())
+@END

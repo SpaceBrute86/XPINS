@@ -82,23 +82,24 @@ namespace XPINSCompileStringTools
 		}
 		return stringConst;
 	}
-	void skipBlock(string script,int &i,char blockType)
+	void skipBlock(string script,int &i,string blockStart)
 	{
-		while(i<script.length()&&script[i]!=blockType)++i;
-		char endChar = '}';
-		if (blockType=='(')endChar=')';
-		else if (blockType=='[')endChar=']';
+		while(i<script.length()&&!stringsMatch(i, script, blockStart))++i;
+		string blockEnd = "}";
+		if (blockStart=="(")blockEnd=")";
+		else if (blockStart=="[")blockEnd="]";
+		else if (blockStart=="/*")blockEnd="*/";
 		int count=1;
-		while (count>0) {
-			++i;
-			if(script[i]=='\"')copyStringConst(script, i);
-			else if(script[i]==blockType) ++count;
-			else if(script[i]==endChar)--count;
+		while (count>0)
+		{
+			if(script[++i]=='\"')copyStringConst(script, i);
+			else if(stringsMatch(i, script, blockStart)) ++count;
+			else if(stringsMatch(i, script, blockEnd))--count;
 		}
+		i+=blockEnd.length()-1;
 	}
 }
 
-#pragma mak Compiler Steps
 namespace XPINSPrecompiler
 {
 	bool checkVersion(string script)
@@ -108,77 +109,70 @@ namespace XPINSPrecompiler
 			if(XPINSCompileStringTools::stringsMatch(i, script, "@XPINS"))
 			{
 				while(i<script.length()&&script[i]!=' ')++i;
-				if(i==script.length())  return false;
 				//Check Version
 				int MAJOR=XPINSCompileStringTools::readInt(script, i, '.');
 				int MINOR=XPINSCompileStringTools::readInt(script, i, '\n');
 				return MAJOR==kMajor&&MINOR<=kMinor;
 			}
-			else if(script[i]=='@')break;
 		}
 		return false;
 	}
-	void removeComments(string &text)
+	void removeComments(string &script)
 	{
-		string input=text;
-		string output="";
+		string input=script;
+		script="";
 		int i=0;
 		while(!XPINSCompileStringTools::stringsMatch(i, input, "@XPINS"))++i;
 		while (input[i++]!='\n');
-		for(;i<input.length();++i){
-			if(input[i]=='\"')output+=XPINSCompileStringTools::copyStringConst(input, i);
-			else if(input[i]=='/'&&(input[i+1]=='/'||input[i+1]=='*'))//Comment
-			{
-				++i;
-				if(input[i]=='*')//multi line comments
-				{
-					int commentCount=1;
-					while (commentCount>0) {
-						++i;
-						if (XPINSCompileStringTools::stringsMatch(i, input, "/*")){++commentCount;++i;}
-						else if (XPINSCompileStringTools::stringsMatch(i, input, "*/")){--commentCount;++i;}
-					}
-				}
-				else // single line comments
-				{
-					while (input[i+1]!='\n'||i+1==input.length())++i;
-				}
-			}
-			else if(input[i]>='a'&&input[i]<='z') output+=input[i]-('a'-'A');
-			else if(input[i]!=';'&&input[i]!='\t') output+=input[i];//No semicolons or tabs in compiled script
-			if(input[i]==';'&&input[i+1]!='\n')output+='\n';//Replace semicolons with newlines
-		}
-		text=output;
-	}
-	void cleanup(string &text)
-	{
-		string input=text;
-		string output="";
-		for(int i=0;i<input.length();++i){
-			if(input[i]!='\n'||input[i+1]!='\n')output+=input[i];//Condense newlines
-		}
-		text=output;
-	}
-}
-namespace XPINSSyntaxProcesser {
-	void convertDotSyntax(string& input){
-		string output="";
-		int i=0;
-		while(!XPINSCompileStringTools::stringsMatch(i, input, "@CODE"))output+=input[i++];//Skip @PARSER
 		for(;i<input.length();++i)
 		{
-			output+=input[i];
-			if(input[i]=='\"'){++i;output+=XPINSCompileStringTools::copyStringConst(input, i);}
+			if(input[i]=='\"')script+=XPINSCompileStringTools::copyStringConst(input, i);
+			else if(input[i]=='/'&&(input[i+1]=='/'||input[i+1]=='*'))//Comment
+			{
+				if(input[i+1]=='*')	XPINSCompileStringTools::skipBlock(input, i, "/*");//multi line comments
+				else while (input[i+1]!='\n'||i+1==input.length())++i; // single line comments
+			}
+			else if(input[i]==';'&&input[i+1]!='\n')script+='\n';//Replace semicolons with newlines
+			else if(input[i]>='a'&&input[i]<='z') script+=input[i]-('a'-'A');
+			else if(input[i]!=';'&&input[i]!='\t') script+=input[i];//No semicolons or tabs in compiled script
+		}
+	}
+	void cleanup(string &script)
+	{
+		string input=script;
+		script="";
+		for(int i=0;i<input.length();++i)
+		{
+			if(input[i]!='\n'||input[i+1]!='\n')script+=input[i];//Condense newlines
+		}
+	}
+}
+
+namespace XPINSSyntaxProcesser
+{
+	void convertDotSyntax(string& script)
+	{
+		string input=script;
+		script="";
+		int i=0;
+		while(!XPINSCompileStringTools::stringsMatch(i, input, "@CODE"))script+=input[i++];
+		for(;i<input.length();++i)
+		{
+			script+=input[i];
+			if(input[i]=='\"')script+=XPINSCompileStringTools::copyStringConst(input, ++i);
 			if((input[i+1]=='.'||(input[i+1]=='-'&&input[i+2]=='>'))&&(input[i+2]<'0'||input[i+2]>'9'))//Skip completed Dot operations
 			{
 				i+=2;
-				while (++i<input.length()) {
+				while (++i<input.length())
+				{
 					if(input[i]=='('||input[i]==','||input[i]==')'||input[i]=='\n'||input[i]=='&'||input[i]=='|'||input[i]=='!'||input[i]=='<'||input[i]=='>'||input[i]=='='||input[i]=='+'||input[i]=='-'||input[i]=='*'||input[i]=='/'||input[i]=='^'||input[i]==':'||input[i]=='%'||input[i]==']')break;
 				}
-				if (input[i]!='(') {
-					output+=')';
+				if (input[i]!='(')
+				{
+					script+=')';
 					--i;
-				} else if (input[i+1]!=')') output+=',';
+				}
+				else if (input[i+1]!=')') script+=',';
 			}
 			//If it is a character that could be followed by an input
 			else if((input[i]=='('||input[i]=='='||input[i]==','||input[i]=='['||(input[i]=='{'&&input[i-1]=='~')||
@@ -188,47 +182,55 @@ namespace XPINSSyntaxProcesser {
 				bool isDotSyntax=false;
 				bool isElementalSyntax=false;
 				for (; j<input.length(); ++j) {
-					if (input[j]==','||input[j]==')'||input[j]=='\n'||input[j]=='&'||input[j]=='|'||input[j]=='!'||input[j]=='<'||input[j]=='>'||input[j]=='='||input[j]=='+'||(input[j]=='-'&&input[j+1]!='>')||input[j]=='*'||input[j]=='/'||input[j]=='^'||input[j]==':'||input[j]=='%'||input[j]==']')break;
-					else if ((input[j]=='-'&&input[j+1]=='>')&&(input[j+2]<'0'||input[j+2]>'9')){
+					if ((input[j]=='-'&&input[j+1]=='>')&&(input[j+2]<'0'||input[j+2]>'9'))
+					{
 						isDotSyntax=true;
 						isElementalSyntax=true;
 						break;
 					}
-					else if (input[j]=='.'&&(input[j+1]<'0'||input[j+1]>'9')){
+					else if (input[j]=='.'&&(input[j+1]<'0'||input[j+1]>'9'))
+					{
 						isDotSyntax=true;
 						break;
 					}
+					else if (input[j]==','||input[j]==')'||input[j]=='\n'||input[j]=='&'||input[j]=='|'||input[j]=='!'||input[j]=='<'||input[j]=='>'||input[j]=='='||input[j]=='+'||input[j]=='-'||input[j]=='*'||input[j]=='/'||input[j]=='^'||input[j]==':'||input[j]=='%'||input[j]==']')break;
 					else if(input[j]=='\"')XPINSCompileStringTools::copyStringConst(input, j);
-					else if(input[j]=='(')XPINSCompileStringTools::skipBlock(input, j, '(');
-					else if(input[j]=='[')XPINSCompileStringTools::skipBlock(input, j, '[');
+					else if(input[j]=='(')XPINSCompileStringTools::skipBlock(input, j, "(");
+					else if(input[j]=='[')XPINSCompileStringTools::skipBlock(input, j, "[");
 				}
 				if (isDotSyntax) {
 					list<string> funcNames=list<string>(0);
 					list<bool> elemental=list<bool>(1,isElementalSyntax);
 					string currentFuncName="";
 					if(isElementalSyntax)++j;
-					while (++j<input.length()) {
-						if (input[j]=='.') {
+					while (++j<input.length())
+					{
+						if (input[j]=='.')
+						{
 							funcNames.push_back(currentFuncName);
 							elemental.push_back(false);
 							currentFuncName="";
 							++j;
 						}
-						else if (input[j]=='-'&&input[j+1]=='>') {
+						else if (input[j]=='-'&&input[j+1]=='>')
+						{
 							funcNames.push_back(currentFuncName);
 							elemental.push_back(true);
 							currentFuncName="";
 							j+=2;
 						}
-						else if (input[j]=='('){
-							XPINSCompileStringTools::skipBlock(input, j, '(');
-							if(input[++j]=='.'){
+						else if (input[j]=='(')
+						{
+							XPINSCompileStringTools::skipBlock(input, j, "(");
+							if(input[++j]=='.')
+							{
 								funcNames.push_back(currentFuncName);
 								elemental.push_back(false);
 								currentFuncName="";
 								++j;
 							}
-							else if (input[j]=='-'&&input[j+1]=='>') {
+							else if (input[j]=='-'&&input[j+1]=='>')
+							{
 								funcNames.push_back(currentFuncName);
 								elemental.push_back(true);
 								currentFuncName="";
@@ -240,16 +242,16 @@ namespace XPINSSyntaxProcesser {
 						currentFuncName+=input[j];
 					}
 					funcNames.push_back(currentFuncName);
-					while (funcNames.size()>0) {
-						output+=funcNames.front();
-						output+=elemental.front()?".(":"(";
+					while (funcNames.size()>0)
+					{
+						script+=funcNames.front();
+						script+=elemental.front()?".(":"(";
 						funcNames.pop_front();
 						elemental.pop_front();
 					}
 				}
 			}
 		}
-		input=output;
 	}
 	void classifyComponents(string& input)
 	{
@@ -273,45 +275,50 @@ namespace XPINSSyntaxProcesser {
 				   input[i+1]!='\n')//end of line
 				{
 					bool isConstant=false;
-					if (input[i]!='\n' && input [i] !=']')switch (input[i+1]) {
-						case 'P':
-						case 'S':
-						case 'Q':
-							if (input[i+2]!='<')break;
-						case 'F':
-						case 'T':
-							if (!(input[i+2]==',' || input [i+2] == ')'|| input [i+2] == '\n'||input [i+2] == ' '||input [i+2] == '{'|| input [i+2] == '&'|| input [i+2] == '|'|| input [i+2] == '!')|| input[i+2] == '<') break;
-						case '0':
-						case '1':
-						case '2':
-						case '3':
-						case '4':
-						case '5':
-						case '6':
-						case '7':
-						case '8':
-						case '9':
-						case '-':
-						case '.':
-						case '<':
-						case '[':
-						case '(':
-						case '\"':
-						case '{':
-							isConstant=true;
-					}
+					if (input[i]!='\n' && input [i] !=']')
+						switch (input[i+1]) {
+							case 'P':
+							case 'S':
+							case 'Q':
+								if (input[i+2]!='<')break;
+							case 'F':
+							case 'T':
+								if (!(input[i+2]==',' || input [i+2] == ')'|| input [i+2] == '\n'||input [i+2] == ' '||input [i+2] == '{'|| input [i+2] == '&'|| input [i+2] == '|'|| input [i+2] == '!')|| input[i+2] == '<') break;
+							case '0':
+							case '1':
+							case '2':
+							case '3':
+							case '4':
+							case '5':
+							case '6':
+							case '7':
+							case '8':
+							case '9':
+							case '-':
+							case '.':
+							case '<':
+							case '[':
+							case '(':
+							case '\"':
+							case '{':
+								isConstant=true;
+						}
 					if (isConstant) output+='~';
-					else if((input[i+1]>='A'&&input[i+1]<='Z')||(input[i+1]>='a'&&input[i+1]<='z')||input[i+1]=='_'){
+					else if((input[i+1]>='A'&&input[i+1]<='Z')||(input[i+1]>='a'&&input[i+1]<='z')||input[i+1]=='_')
+					{
 						bool isVar=false;
-						for (int j=i+1; j<input.length(); ++j) {
+						for (int j=i+1; j<input.length(); ++j)
+						{
 							if (input[j]=='(')break;
-							if (input[j]==','||input[j]==')'||input[j]=='&'||input[j]=='|'||input[j]=='!'||input[j]=='<'||input[j]=='>'||input[j]=='='||input[j]=='+'||input[j]=='-'||input[j]=='*'||input[j]=='/'||input[j]=='^'||input[j]==':'||input[j]=='%'||input[j]==']') {
+							if (input[j]==','||input[j]==')'||input[j]=='&'||input[j]=='|'||input[j]=='!'||input[j]=='<'||input[j]=='>'||input[j]=='='||input[j]=='+'||input[j]=='-'||input[j]=='*'||input[j]=='/'||input[j]=='^'||input[j]==':'||input[j]=='%'||input[j]==']')
+							{
 								isVar=true;
 								break;
 							}
 						}
 						if (isVar) output+="$_";
-						else {
+						else
+						{
 							string name="";
 							for (; input[i+1]!='('; ++i) if(input[i+1]!='.')name+=input[i+1];
 							if(name.compare("MARKOV_REACHABLE")==0)output+= "XB"+XPINSCompileStringTools::strRepresentationOfInt(X_MARKOV_REACHABLE);
@@ -407,285 +414,227 @@ namespace XPINSSyntaxProcesser {
 		}
 		input=output;
 	}
-
+	
 }
 
 namespace XPINSComponentRenaming {
-
-string replaceComponent(string input, string constName, string constVal){
-	string output="";
-	int i=0;
-	//while (!XPINSCompileStringTools::stringsMatch(i, input, "@CODE")) output+=input[i++];
-	while(i<input.length())
-	{
-	/*	//CHECK FOR @END
-		if(XPINSCompileStringTools::stringsMatch(i, input, "@END"))
+	
+	string replaceComponent(string input, string constName, string constVal){
+		string output="";
+		int i=0;
+		while(i<input.length())
 		{
-			
-			output+="@END";
-			break;
-		}*/
-		//Find start of Constant
-		if(XPINSCompileStringTools::stringsMatch(i, input, constName) && input[i+constName.length()]!='('&&(input[i+constName.length()]!='.'||input[i+constName.length()+1]!='(')
-		   &&(input[i-1]=='('||input[i-1]=='='||input[i-1]==','||input[i-1]=='['||input[i-1]=='{'||
-			input[i-1]=='<'||input[i-1]==' '||input[i-1]=='\n'||//typical operations and Constants
-			input[i-1]=='|'||input[i-1]=='&'||input[i-1]=='>'||input[i-1]=='!'||input[i-1]=='+'||input[i-1]=='-'||
-			  input[i-1]=='*'||input[i-1]=='/'||input[i-1]=='^'||input[i-1]==':'||input[i-1]=='%') &&(input[i+constName.length()-1]=='('||((input[i+constName.length()]<'A'||input[i+constName.length()]>'Z')&&(input[i+constName.length()]<'0'||input[i+constName.length()]>'9')))&&(input[i+constName.length()]!='_'))
-		{
-			output+=constVal;//Replace Constant
-			i+=constName.length();
-		}
-		else
-		{
-			output+=input[i++];
-		}
-	}
-	return output;
-}
-
-void replaceConstants(string &text)
-{
-	string input=text;
-	//Initialize first intermediate
-	string output="";
-	int j=0;
-	while (!XPINSCompileStringTools::stringsMatch(j, input, "@CONST"))++j;
-	int i=j;
-	while (!XPINSCompileStringTools::stringsMatch(++j, input, "@FUNC"));//Skip to @Func Block
-	while (!XPINSCompileStringTools::stringsMatch(j, input, "@CODE"))output+=input[j++];//Copy to @CODE
-	string codeBlock="";
-	j+=6;
-	while (!XPINSCompileStringTools::stringsMatch(++j, input, "@END"))codeBlock+=input[j];
-	//Replace Constants
-	while (true)
-	{
-		string constName="";
-		while (input[i]!='\n'||input[i+1]=='\n')++i;
-		if(XPINSCompileStringTools::stringsMatch(i, input, "\n@END"))break;
-		//Process constant declaration
-		while (input[++i]!='=')constName+=input[i];
-		string constVal="";
-		while (input[++i]!='\n')//Get Constant Value
-		{
-			constVal+=input[i];
-		}
-		codeBlock=replaceComponent(codeBlock, constName, constVal);
-	}
-	//Replace built in constants
-	codeBlock=replaceComponent(codeBlock, "TRUE", "T");
-	codeBlock=replaceComponent(codeBlock, "YES", "T");
-	codeBlock=replaceComponent(codeBlock, "FALSE", "F");
-	codeBlock=replaceComponent(codeBlock, "NO", "F");
-	codeBlock=replaceComponent(codeBlock, "PI", "3.141592653589793");
-	codeBlock=replaceComponent(codeBlock, "E", "2.718281828459045");
-	text=output+"@CODE\n"+codeBlock+"@END";
-}
-//Does the heavy lifting for Function Renaming Function
-//Input script (for reading block), intermediate (for renaming), module number (for assigning new name), and where to start reading the input
-string renameFuncBlock(string input, string intermediate, int modNum, int blockStart)
-{
-	int i=blockStart;
-	int j=0;
-	int x=1;
-	while(!XPINSCompileStringTools::stringsMatch(i, input, "\n@END"))
-	{
-		while(i<input.length()&&input[i++]!='\n');//Get to next line in Function Block
-		if(XPINSCompileStringTools::stringsMatch(i, input, "@END")||i>=input.length())break;
-		//Read Function Type
-		char functionType=input[i++];
-		if(functionType=='V'&&input[i]!='E')functionType='_';
-		while (++i<input.length()&&input[i]!=' ');
-		while (++i<input.length()&&input[i]==' ');
-		//read function name
-		string functionName="";
-		for(j=i;j<input.length()&&input[j]!='('&&input[j]!='\n';j++)
-		{
-			functionName+=input[j];
-		}
-		//Replace function name
-		string newName="#";
-		newName+=functionType;
-		newName+="M"+XPINSCompileStringTools::strRepresentationOfInt(modNum);
-		newName+="F"+XPINSCompileStringTools::strRepresentationOfInt(x);
-		intermediate=replaceComponent(intermediate, "#"+functionName+"(", newName+"(");
-		intermediate=replaceComponent(intermediate, "#"+functionName+".(", newName+".(");
-		++x;
-		while (i<input.length()&&input[++i]!='\n');
-	}
-	return intermediate;
-}
-void renameFunctions(string &text){
-	string input=text;
-	//Initialize first intermediate
-	string intermediate1="";
-	int j=0;
-	while (!XPINSCompileStringTools::stringsMatch(j, input, "@FUNC"))intermediate1+=input[j++];
-	while (!XPINSCompileStringTools::stringsMatch(++j, input, "@CODE"));
-	j+=6;
-	for(;j<input.length();j++)intermediate1+=input[j];
-	//Process Local Function block
-	int i=0;
-	while(!XPINSCompileStringTools::stringsMatch(i, input, "@FUNC"))++i;
-	i+=5;
-	intermediate1=renameFuncBlock(input, intermediate1,0, i);
-	while(!XPINSCompileStringTools::stringsMatch(++i, input, "@END"));
-	//Process Module blocks
-	for (int modNum=1;;++modNum)
-	{
-		while(!XPINSCompileStringTools::stringsMatch(i, input, "@MODULE")&&
-			  !XPINSCompileStringTools::stringsMatch(i, input, "@CODE"))++i;
-		if (XPINSCompileStringTools::stringsMatch(i, input, "@CODE")) break;//Finished Module Processing
-		i+=7;
-		intermediate1=renameFuncBlock(input, intermediate1,modNum, i);
-		while(!XPINSCompileStringTools::stringsMatch(++i, input, "@END"));
-	}
-	text=intermediate1;
-}
-vector<int> renameVars(string &text){
-	string input=text;
-	string intermediate="";
-	//Rename Types
-	int i=0;
-	for(;i<input.length();++i)
-	{
-		if(XPINSCompileStringTools::stringsMatch(i, input, "\n@END"))break;
-		if(input[i]=='\"'){intermediate+=XPINSCompileStringTools::copyStringConst(input, i);++i;}
-		if((input[i]=='B'||input[i]=='N'||input[i]=='V'||input[i]=='Q'||input[i]=='M'||input[i]=='P'||input[i]=='F'||input[i]=='S'||input[i]=='O'||input[i]=='A')&&input[i-1]=='@')//Found Variable Declaration
-		{
-			intermediate+=input[i];
-			while (input[++i]!=' ');
-		}
-		intermediate+=input[i];
-	}
-	input=intermediate;
-	//Initialize intermediates
-	string intermediate1=""+input;
-	string intermediate2="";
-	int j=0;
-	i=0;
-	//Do the actual work
-	int xb=0;
-	int xn=0;
-	int xv=0;
-	int xq=0;
-	int xm=0;
-	int xs=0;
-	int xp=0;
-	int xf=0;
-	int xa=0;
-	int xo=0;
-	char varType='O';
-	while(i<input.length())
-	{
-		while (i<input.length()&&input[i++]!='@');//Get to next line
-		if(input[i]=='B'||input[i]=='N'||input[i]=='V'||input[i]=='Q'||input[i]=='M'||input[i]=='S'||input[i]=='P'||input[i]=='F'||input[i]=='O'||input[i]=='A')//If we have a new variable type
-		{
-			//determine new variable name
-			varType=input[i];
-			int varNum=0;
-			while (input[i++]!='$');
-			if (input[i]=='_') {
-				switch (varType)
-				{
-					case 'B':	varNum=xb++; break; //BOOL
-					case 'N':	varNum=xn++; break; //NUM
-					case 'V':	varNum=xv++; break; //VEC
-					case 'Q':	varNum=xq++; break; //QUAT
-					case 'M':	varNum=xm++; break; //MAT
-					case 'S':	varNum=xs++; break; //STR
-					case 'P':	varNum=xp++; break; //POLY
-					case 'F':	varNum=xf++; break; //FIELD
-					case 'A':	varNum=xa++; break; //ARR
-					default:	varNum=++xo; varType='O'; //Default to object
-				}
-				//read Var name
-				string varName;
-				while(i<input.length()&&input[i]!='='&&input[i]!=' ')
-				{
-					varName+=input[i++];
-				}
-				//Replace Var name
-				string newName="$";
-				newName+=varType+XPINSCompileStringTools::strRepresentationOfInt(varNum);
-				intermediate1=replaceComponent(intermediate1, "$"+varName, newName);
-				/*intermediate2="";
-				j=0;
-				while(j<intermediate1.length()&&!XPINSCompileStringTools::stringsMatch(j, intermediate1, "@END"))
-				{
-					//If we find a variable declaration, skip to variable
-					if(intermediate1[j-1]=='\n'&&(intermediate1[j]=='B'||intermediate1[j]=='N'||intermediate1[j]=='V'||intermediate1[j]=='M'||intermediate1[j]=='S'||intermediate1[j]=='*'||intermediate1[j]=='A')&&XPINSCompileStringTools::stringsMatch(j+3, intermediate1, varName))
-					{
-						j+=2;
-					}
-					if(intermediate1[j-1]=='~'&&intermediate1[j]=='\"')//Skip strings
-					{
-						intermediate2+='\"';
-						while (++j<intermediate1.length()) {
-							intermediate2+=intermediate1[j];
-							if(intermediate1[j]=='\\'&&(intermediate1[j+1]=='\\'||intermediate1[j+1]=='\"'))
-							{
-								intermediate2+=intermediate1[++j];
-							}
-							else if(intermediate1[j]=='\"')break;
-						}
-					}
-					//Find start of Var
-					else if(intermediate1[j]=='$')
-					{
-						intermediate2+='$';
-						//Check for match
-						if(XPINSCompileStringTools::stringsMatch(j+1, intermediate1, varName)&&
-						   (intermediate1[j+1+varName.length()]=='='||intermediate1[j+1+varName.length()]==','||
-							intermediate1[j+1+varName.length()]=='+'||intermediate1[j+1+varName.length()]=='-'||
-							intermediate1[j+1+varName.length()]=='*'||intermediate1[j+1+varName.length()]=='/'||
-							intermediate1[j+1+varName.length()]=='%'||intermediate1[j+1+varName.length()]=='^'||
-							intermediate1[j+1+varName.length()]=='&'||intermediate1[j+1+varName.length()]=='|'||
-							intermediate1[j+1+varName.length()]=='!'||intermediate1[j+1+varName.length()]=='<'||
-							intermediate1[j+1+varName.length()]=='>'||intermediate1[j+1+varName.length()]==']'||
-							intermediate1[j+1+varName.length()]=='['||intermediate1[j+1+varName.length()]==')'||
-							intermediate1[j+1+varName.length()]==':'))
-						{
-							intermediate2+=varType;
-							intermediate2+=XPINSCompileStringTools::strRepresentationOfInt(varNum);
-							j+=varName.length();
-						}
-					}
-					else
-					{
-						intermediate2+=intermediate1[j];
-					}
-					++j;
-				}
-				intermediate1=intermediate2;
-				 */
+			//Find start of Constant
+			if(XPINSCompileStringTools::stringsMatch(i, input, constName) && input[i+constName.length()]!='('&&(input[i+constName.length()]!='.'||input[i+constName.length()+1]!='(')
+			   &&(input[i-1]=='('||input[i-1]=='='||input[i-1]==','||input[i-1]=='['||input[i-1]=='{'||
+				  input[i-1]=='<'||input[i-1]==' '||input[i-1]=='\n'||//typical operations and Constants
+				  input[i-1]=='|'||input[i-1]=='&'||input[i-1]=='>'||input[i-1]=='!'||input[i-1]=='+'||input[i-1]=='-'||
+				  input[i-1]=='*'||input[i-1]=='/'||input[i-1]=='^'||input[i-1]==':'||input[i-1]=='%') &&(input[i+constName.length()-1]=='('||((input[i+constName.length()]<'A'||input[i+constName.length()]>'Z')&&(input[i+constName.length()]<'0'||input[i+constName.length()]>'9')))&&(input[i+constName.length()]!='_'))
+			{
+				output+=constVal;//Replace Constant
+				i+=constName.length();
+			}
+			else
+			{
+				output+=input[i++];
 			}
 		}
-		++i;
+		return output;
 	}
-	//Remove Variable Types
-	intermediate2="";
-	for(i=0;i<intermediate1.length();++i){
-		if((intermediate1[i+1]=='B'||intermediate1[i+1]=='N'||intermediate1[i+1]=='V'||intermediate1[i+1]=='Q'||intermediate1[i+1]=='M'||intermediate1[i+1]=='P'||intermediate1[i+1]=='F'||intermediate1[i+1]=='S'||intermediate1[i+1]=='*'||intermediate1[i+1]=='A')&&intermediate1[i]=='@')
+	
+	void replaceConstants(string &text)
+	{
+		string input=text;
+		//Initialize first intermediate
+		string output="";
+		int j=0;
+		while (!XPINSCompileStringTools::stringsMatch(j, input, "@CONST"))++j;
+		int i=j;
+		while (!XPINSCompileStringTools::stringsMatch(++j, input, "@FUNC"));//Skip to @Func Block
+		while (!XPINSCompileStringTools::stringsMatch(j, input, "@CODE"))output+=input[j++];//Copy to @CODE
+		string codeBlock="";
+		j+=6;
+		while (!XPINSCompileStringTools::stringsMatch(++j, input, "@END"))codeBlock+=input[j];
+		//Replace Constants
+		while (true)
 		{
-			while (intermediate1[++i]!='$');
+			string constName="";
+			while (input[i]!='\n'||input[i+1]=='\n')++i;
+			if(XPINSCompileStringTools::stringsMatch(i, input, "\n@END"))break;
+			//Process constant declaration
+			while (input[++i]!='=')constName+=input[i];
+			string constVal="";
+			while (input[++i]!='\n')//Get Constant Value
+			{
+				constVal+=input[i];
+			}
+			codeBlock=replaceComponent(codeBlock, constName, constVal);
 		}
-		intermediate2+=intermediate1[i];
+		//Replace built in constants
+		codeBlock=replaceComponent(codeBlock, "TRUE", "T");
+		codeBlock=replaceComponent(codeBlock, "YES", "T");
+		codeBlock=replaceComponent(codeBlock, "FALSE", "F");
+		codeBlock=replaceComponent(codeBlock, "NO", "F");
+		codeBlock=replaceComponent(codeBlock, "PI", "3.141592653589793");
+		codeBlock=replaceComponent(codeBlock, "E", "2.718281828459045");
+		text=output+"@CODE\n"+codeBlock+"@END";
 	}
-	text=intermediate2;
-	//Calculate Variable sizes
-	vector<int> varSizes=vector<int>(10);
-	varSizes[0]=xb;
-	varSizes[1]=xn;
-	varSizes[2]=xv;
-	varSizes[3]=xq;
-	varSizes[4]=xm;
-	varSizes[5]=xp;
-	varSizes[6]=xf;
-	varSizes[7]=xs;
-	varSizes[8]=xo;
-	varSizes[9]=xa;
-	return varSizes;
-}
+	//Does the heavy lifting for Function Renaming Function
+	//Input script (for reading block), intermediate (for renaming), module number (for assigning new name), and where to start reading the input
+	string renameFuncBlock(string input, string intermediate, int modNum, int blockStart)
+	{
+		int i=blockStart;
+		int j=0;
+		int x=1;
+		while(!XPINSCompileStringTools::stringsMatch(i, input, "\n@END"))
+		{
+			while(i<input.length()&&input[i++]!='\n');//Get to next line in Function Block
+			if(XPINSCompileStringTools::stringsMatch(i, input, "@END")||i>=input.length())break;
+			//Read Function Type
+			char functionType=input[i++];
+			if(functionType=='V'&&input[i]!='E')functionType='_';
+			while (++i<input.length()&&input[i]!=' ');
+			while (++i<input.length()&&input[i]==' ');
+			//read function name
+			string functionName="";
+			for(j=i;j<input.length()&&input[j]!='('&&input[j]!='\n';j++)
+			{
+				functionName+=input[j];
+			}
+			//Replace function name
+			string newName="#";
+			newName+=functionType;
+			newName+="M"+XPINSCompileStringTools::strRepresentationOfInt(modNum);
+			newName+="F"+XPINSCompileStringTools::strRepresentationOfInt(x);
+			intermediate=replaceComponent(intermediate, "#"+functionName+"(", newName+"(");
+			intermediate=replaceComponent(intermediate, "#"+functionName+".(", newName+".(");
+			++x;
+			while (i<input.length()&&input[++i]!='\n');
+		}
+		return intermediate;
+	}
+	void renameFunctions(string &text){
+		string input=text;
+		//Initialize first intermediate
+		string intermediate1="";
+		int j=0;
+		while (!XPINSCompileStringTools::stringsMatch(j, input, "@FUNC"))intermediate1+=input[j++];
+		while (!XPINSCompileStringTools::stringsMatch(++j, input, "@CODE"));
+		j+=6;
+		for(;j<input.length();j++)intermediate1+=input[j];
+		//Process Local Function block
+		int i=0;
+		while(!XPINSCompileStringTools::stringsMatch(i, input, "@FUNC"))++i;
+		i+=5;
+		intermediate1=renameFuncBlock(input, intermediate1,0, i);
+		while(!XPINSCompileStringTools::stringsMatch(++i, input, "@END"));
+		//Process Module blocks
+		for (int modNum=1;;++modNum)
+		{
+			while(!XPINSCompileStringTools::stringsMatch(i, input, "@MODULE")&&
+				  !XPINSCompileStringTools::stringsMatch(i, input, "@CODE"))++i;
+			if (XPINSCompileStringTools::stringsMatch(i, input, "@CODE")) break;//Finished Module Processing
+			i+=7;
+			intermediate1=renameFuncBlock(input, intermediate1,modNum, i);
+			while(!XPINSCompileStringTools::stringsMatch(++i, input, "@END"));
+		}
+		text=intermediate1;
+	}
+	vector<int> renameVars(string &text){
+		string input=text;
+		string intermediate="";
+		//Rename Types
+		int i=0;
+		for(;i<input.length();++i)
+		{
+			if(XPINSCompileStringTools::stringsMatch(i, input, "\n@END"))break;
+			if(input[i]=='\"'){intermediate+=XPINSCompileStringTools::copyStringConst(input, i);++i;}
+			if((input[i]=='B'||input[i]=='N'||input[i]=='V'||input[i]=='Q'||input[i]=='M'||input[i]=='P'||input[i]=='F'||input[i]=='S'||input[i]=='O'||input[i]=='A')&&input[i-1]=='@')//Found Variable Declaration
+			{
+				intermediate+=input[i];
+				while (input[++i]!=' ');
+			}
+			intermediate+=input[i];
+		}
+		input=intermediate;
+		//Initialize intermediates
+		string intermediate1=""+input;
+		string intermediate2="";
+		int j=0;
+		i=0;
+		//Do the actual work
+		int xb=0;
+		int xn=0;
+		int xv=0;
+		int xq=0;
+		int xm=0;
+		int xs=0;
+		int xp=0;
+		int xf=0;
+		int xa=0;
+		int xo=0;
+		char varType='O';
+		while(i<input.length())
+		{
+			while (i<input.length()&&input[i++]!='@');//Get to next line
+			if(input[i]=='B'||input[i]=='N'||input[i]=='V'||input[i]=='Q'||input[i]=='M'||input[i]=='S'||input[i]=='P'||input[i]=='F'||input[i]=='O'||input[i]=='A')//If we have a new variable type
+			{
+				//determine new variable name
+				varType=input[i];
+				int varNum=0;
+				while (input[i++]!='$');
+				if (input[i]=='_') {
+					switch (varType)
+					{
+						case 'B':	varNum=xb++; break; //BOOL
+						case 'N':	varNum=xn++; break; //NUM
+						case 'V':	varNum=xv++; break; //VEC
+						case 'Q':	varNum=xq++; break; //QUAT
+						case 'M':	varNum=xm++; break; //MAT
+						case 'S':	varNum=xs++; break; //STR
+						case 'P':	varNum=xp++; break; //POLY
+						case 'F':	varNum=xf++; break; //FIELD
+						case 'A':	varNum=xa++; break; //ARR
+						default:	varNum=++xo; varType='O'; //Default to object
+					}
+					//read Var name
+					string varName;
+					while(i<input.length()&&input[i]!='='&&input[i]!=' ')
+					{
+						varName+=input[i++];
+					}
+					//Replace Var name
+					string newName="$";
+					newName+=varType+XPINSCompileStringTools::strRepresentationOfInt(varNum);
+					intermediate1=replaceComponent(intermediate1, "$"+varName, newName);
+				}
+			}
+			++i;
+		}
+		//Remove Variable Types
+		intermediate2="";
+		for(i=0;i<intermediate1.length();++i){
+			if((intermediate1[i+1]=='B'||intermediate1[i+1]=='N'||intermediate1[i+1]=='V'||intermediate1[i+1]=='Q'||intermediate1[i+1]=='M'||intermediate1[i+1]=='P'||intermediate1[i+1]=='F'||intermediate1[i+1]=='S'||intermediate1[i+1]=='*'||intermediate1[i+1]=='A')&&intermediate1[i]=='@')
+			{
+				while (intermediate1[++i]!='$');
+			}
+			intermediate2+=intermediate1[i];
+		}
+		text=intermediate2;
+		//Calculate Variable sizes
+		vector<int> varSizes=vector<int>(10);
+		varSizes[0]=xb;
+		varSizes[1]=xn;
+		varSizes[2]=xv;
+		varSizes[3]=xq;
+		varSizes[4]=xm;
+		varSizes[5]=xp;
+		varSizes[6]=xf;
+		varSizes[7]=xs;
+		varSizes[8]=xo;
+		varSizes[9]=xa;
+		return varSizes;
+	}
 }
 
 namespace XPINSInstructionAssembler{
@@ -1207,7 +1156,7 @@ namespace XPINSInstructionAssembler{
 							while (scriptText[i++]!=' ');
 							instruction.right=parseArgument(scriptText, i, '{');
 							int temp=i;
-							XPINSCompileStringTools::skipBlock(scriptText, i,'{');
+							XPINSCompileStringTools::skipBlock(scriptText, i,"{");
 							instruction.block=parseInstructionsForScript(scriptText, temp, i);
 						}break;
 						case 'E':{
@@ -1222,7 +1171,7 @@ namespace XPINSInstructionAssembler{
 								instruction.right.dataType=BOOLEAN;
 							}
 							int temp=i;
-							XPINSCompileStringTools::skipBlock(scriptText, i,'{');
+							XPINSCompileStringTools::skipBlock(scriptText, i,"{");
 							instruction.block=parseInstructionsForScript(scriptText, temp, i);
 						}break;
 						case 'W':{
@@ -1230,7 +1179,7 @@ namespace XPINSInstructionAssembler{
 							while (scriptText[i++]!=' ');
 							instruction.right=parseArgument(scriptText, i, '{');
 							int temp=i;
-							XPINSCompileStringTools::skipBlock(scriptText, i,'{');
+							XPINSCompileStringTools::skipBlock(scriptText, i,"{");
 							instruction.block=parseInstructionsForScript(scriptText, temp, i);
 						}break;
 						case 'L':{
@@ -1238,7 +1187,7 @@ namespace XPINSInstructionAssembler{
 							while (scriptText[i++]!=' ');
 							instruction.right=parseArgument(scriptText, i, '{');
 							int temp=i;
-							XPINSCompileStringTools::skipBlock(scriptText, i,'{');
+							XPINSCompileStringTools::skipBlock(scriptText, i,"{");
 							instruction.block=parseInstructionsForScript(scriptText, temp, i);
 						}break;
 						case 'R':
@@ -1276,8 +1225,8 @@ XPINSInstructions::InstructionSet XPINSCompiler::compileScript(string script)//C
 	XPINSSyntaxProcesser::classifyComponents(script);
 	XPINSComponentRenaming::renameFunctions(script);
 	instructions.varSizes=XPINSComponentRenaming::renameVars(script);
-	cout<<script<<"\n\n";
 	XPINSPrecompiler::cleanup(script);
+	cout<<script<<"\n\n";
 	//Parse Instructions
 	instructions.instructions=XPINSInstructionAssembler::parseInstructionsForScript(script, 0, script.length());
 	return instructions;

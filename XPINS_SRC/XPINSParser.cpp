@@ -11,31 +11,17 @@ using namespace std;
 using namespace XPINSParser;
 using namespace XPINSScriptableMath;
 
-
-void* runScript(XPINSScriptSpace& script);
-enum exitReason {
-	ENDOFBLOCK,
-	LOOPBREAK,
-	SCRIPTRETURN,
-};
-exitReason ParseCode(XPINSScriptSpace& script, vector<Instruction> instructions);
-int dumpCount=0;
+bool ParseCode(XPINSScriptSpace& script, vector<Instruction> instructions);
 void* ParseSubScripts(XPINSScriptSpace& script, void* inputVal,DataType& type, vector<Argument>subscripts, int startIndex=0,bool ignoreLastArrayIndex=false);					//Any type
 void* ParseVariableArg(XPINSVarSpace* vars,DataType type,int argNum);
 void* ParseConstArg(DataType type,int modNum,int argNum,void*literalValue,XPINSArray arguments);
 void* ParseExpArg(DataType type,opCode operation, bool assign,XPINSArray arguments);
 void* ParseBIFArg(DataType type,int number,XPINSArray arguments);
 
-size_t garbageCapcity=0x100000/sizeof(double); //Default is about 1 MB
-vector<XPINSVarSpace*>allVarSpaces;
-
 #pragma mark Variable Space, Script Space, and Array Management
-
-void SetGarbageCapcaity(size_t capacity)
-{
-	garbageCapcity=capacity;
-}
-
+size_t XPINSGarbageCapcity=0x100000/sizeof(double); //Default is about 1 MB
+vector<XPINSVarSpace*>allXPINSVarSpaces;
+void SetGarbageCapcaity(size_t capacity) {	XPINSGarbageCapcity=capacity;	}
 XPINSVarSpace::~XPINSVarSpace(){
 	delete[] bVars;
 	delete[] nVars;
@@ -50,18 +36,6 @@ XPINSVarSpace::~XPINSVarSpace(){
 }
 XPINSScriptSpace::XPINSScriptSpace(string script,vector<XPINSBindings*> bind)
 {
-	instructions=XPINSCompiler::compileScript(script);
-	bindings=bind;
-}
-XPINSScriptSpace::XPINSScriptSpace(string cluster,string name,vector<XPINSBindings*> bind)
-{
-	clusterURL=cluster;
-	ifstream inFile;
-	inFile.open(clusterURL+name+".XPINSX");
-	string script="";
-	char ch;
-	while (inFile.get(ch))script+=ch;
-	inFile.close();
 	instructions=XPINSCompiler::compileScript(script);
 	bindings=bind;
 }
@@ -392,9 +366,9 @@ void XPINSParser::EmptyGarbage(XPINSParser::XPINSVarSpace &vars)
 }
 void XPINSParser::EmptyAllGarbage()
 {
-	for (int i=0; i<allVarSpaces.size(); ++i)
+	for (int i=0; i<allXPINSVarSpaces.size(); ++i)
 	{
-		EmptyGarbage(*allVarSpaces[i]);
+		EmptyGarbage(*allXPINSVarSpaces[i]);
 	}
 }
 void XPINSParser::ParseScript(string scriptText,vector<XPINSBindings*> bindings)
@@ -402,63 +376,20 @@ void XPINSParser::ParseScript(string scriptText,vector<XPINSBindings*> bindings)
 	if(mathMod==NULL)mathMod=new XPINSMathModule();//Check Math Module
 	XPINSScriptSpace script=XPINSScriptSpace(scriptText,bindings);
 	allocVars(script);//Set up scriptVars Space
-	allVarSpaces.resize(allVarSpaces.size()+1,script.data);
+	allXPINSVarSpaces.resize(allXPINSVarSpaces.size()+1,script.data);
 	ParseCode(script,script.instructions.instructions);//Run Script
 	//Clean up
 	//EmptyGarbage(*script.data);
-	allVarSpaces.resize(allVarSpaces.size()-1);
+	allXPINSVarSpaces.resize(allXPINSVarSpaces.size()-1);
 	delete script.data;
 	while (script.toDelete.size()>0)
 	{
 		delete script.toDelete.front();
 		script.toDelete.pop_front();
 	}
-}
-void ParseScriptCluster(string directory,vector<XPINSBindings*> bindings)
-{
-	directory+='/';
-	XPINSScriptSpace script=XPINSScriptSpace(directory,"MAIN",bindings);
-	allocVars(script);//Set up scriptVars Space
-	allVarSpaces.resize(allVarSpaces.size()+1);
-	allVarSpaces[allVarSpaces.size()-1]=script.data;
-	ParseCode(script,script.instructions.instructions);//Run Script
-	//Clean up
-	//EmptyGarbage(*script.data);
-	allVarSpaces.resize(allVarSpaces.size()-1);
-	delete script.data;
-	while (script.toDelete.size()>0)
-	{
-		delete script.toDelete.front();
-		script.toDelete.pop_front();
-	}
-}
-void* runScript(XPINSParser::XPINSScriptSpace& rootScript)
-{
-	/*//Parse Arguments
-	 string scriptName=*ParseStrArg(rootScript, ',');
-	 XPINSArray* params=ParseArrayArg(rootScript, ']');
-	 //Execute script like normal
-	 XPINSScriptSpace script=XPINSScriptSpace(rootScript.clusterURL,scriptName,rootScript.bindings);
-	 if(!checkVersion(script))return NULL;//Check Script Version
-	 script.scriptParams=params;
-	 allocVars(script);//Set up scriptVars Space
-	 allVarSpaces.resize(allVarSpaces.size()+1);
-	 allVarSpaces[allVarSpaces.size()-1]=script.data;
-	 ParseCode(script,0,-1);//Run Script
-	 //Clean up
-	 EmptyGarbage(*script.data);
-	 allVarSpaces.resize(allVarSpaces.size()-1);
-	 delete script.data;
-	 while (script.toDelete.size()>0)
-	 {
-		delete script.toDelete.front();
-		script.toDelete.pop_front();
-	 }
-	 return script.returnVal;*/
-	return NULL;
 }
 //This is the actual code parser (makes loops easier). Call ParseCode and it will call this.
-exitReason ParseCode(XPINSScriptSpace& script, vector<Instruction> instructions)
+bool ParseCode(XPINSScriptSpace& script, vector<Instruction> instructions)
 {
 	for (int i=0; i<instructions.size(); ++i) {
 		Instruction instruction=instructions[i];
@@ -502,41 +433,33 @@ exitReason ParseCode(XPINSScriptSpace& script, vector<Instruction> instructions)
 			}break;
 			case IF:
 			case ELSE:
-				if (*(bool*)ParseRawArg(script, instruction.right,BOOLEAN)) {
-					exitReason reason=ParseCode(script, instruction.block);
-					if(reason!=ENDOFBLOCK)return reason;
+				if (*(bool*)ParseRawArg(script, instruction.right,BOOLEAN))
+				{
+					bool didBreak=ParseCode(script, instruction.block);
+					if(didBreak)return true;
 					while (instructions[++i].type==ELSE);
 					--i;
-				}
-				break;
+				}break;
 			case WHILE:
-				while (*(bool*)ParseRawArg(script, instruction.right,BOOLEAN)) {
-					exitReason reason=ParseCode(script, instruction.block);
-					if(reason==SCRIPTRETURN)return SCRIPTRETURN;
-					else if (reason==LOOPBREAK) break;
-				}
-				break;
+				while (*(bool*)ParseRawArg(script, instruction.right,BOOLEAN))
+				{
+					bool didBreak=ParseCode(script, instruction.block);
+					if(didBreak) break;
+				}break;
 			case LOOP:{
 				int numTimes=*(double*)ParseRawArg(script, instruction.right,NUMBER);
-				for (int j=0; j<numTimes; ++j) {
-					exitReason reason=ParseCode(script, instruction.block);
-					if(reason==SCRIPTRETURN)return SCRIPTRETURN;
-					else if (reason==LOOPBREAK) break;
+				for (int j=0; j<numTimes; ++j)
+				{
+					bool didBreak=ParseCode(script, instruction.block);
+					if(didBreak) break;
 				}
 			}break;
 			case BREAK:
-				return LOOPBREAK;
-			case RETURN:
-				//script.returnVal=ParseArg(script, instruction.right);
-				return SCRIPTRETURN;
+				return true;
 		}
 		//Manage Memory
 		script.data->Garbage.combineWithArray(script.data->Trash);
-		if(script.data->Garbage.size()>garbageCapcity)
-		{
-			//cout<<"DUMP "<<++dumpCount<<"\n";
-			//EmptyGarbage(*script.data);
-		}
+		if(script.data->Garbage.size()>XPINSGarbageCapcity) EmptyGarbage(*script.data);
 	}
-	return ENDOFBLOCK;
+	return false;
 }

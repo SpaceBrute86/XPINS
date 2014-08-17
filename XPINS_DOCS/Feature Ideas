@@ -1,6 +1,0 @@
-For functions that Take NUM as first Arg and return NUM, passing in a VEC or MAT will call the function for each value and return a correspoinding structure.
-For example:
-
-SIN(<0,PI/2,PI>)=<0,1,0>
-
-The same would work for POLY->POLY functions where a FIELD is passed.
