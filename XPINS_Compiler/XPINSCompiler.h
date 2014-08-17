@@ -11,19 +11,11 @@
 
 #include <iostream>
 #include <string>
+#include "XPINSInstruction.h"
 using namespace std;
+using namespace XPINSInstructions;
 namespace XPINSCompiler{
 	//Call this to compile an XPINS script
-	bool compileScript(string&);
-
-	//Compile Steps (you normally don't call these)
-	bool checkVersion(string&);
-	bool removeComments(string&);
-	bool replaceConstants(string&);
-	bool renameFunctions(string&);
-	bool renameVars(string&);
-	bool convertDotSyntax(string&);
-	bool checkConstantSyntax(string&);
-	bool cleanUp(string&);
+	InstructionSet compileScript(string);
 }
 #endif /* defined(__XPINS__XPINSCompiler__) */

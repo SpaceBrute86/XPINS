@@ -5,6 +5,7 @@
 #include "XPINS.h"
 #include <math.h>
 #include <fstream>
+#include "XPINSCompiler.h"
 
 using namespace std;
 using namespace XPINSParser;
@@ -49,7 +50,7 @@ XPINSVarSpace::~XPINSVarSpace(){
 }
 XPINSScriptSpace::XPINSScriptSpace(string script,vector<XPINSBindings*> bind)
 {
-	instructions=XPINSInstructions::instructionsForScriptText(script);
+	instructions=XPINSCompiler::compileScript(script);
 	bindings=bind;
 }
 XPINSScriptSpace::XPINSScriptSpace(string cluster,string name,vector<XPINSBindings*> bind)
@@ -61,7 +62,7 @@ XPINSScriptSpace::XPINSScriptSpace(string cluster,string name,vector<XPINSBindin
 	char ch;
 	while (inFile.get(ch))script+=ch;
 	inFile.close();
-	instructions=XPINSInstructions::instructionsForScriptText(script);
+	instructions=XPINSCompiler::compileScript(script);
 	bindings=bind;
 }
 
@@ -76,7 +77,19 @@ XPINSArray parseFunctionArgs(XPINSParser::XPINSScriptSpace &script,vector<Argume
 	}
 	return values;
 }
+Argument subscriptValueForNum(int num)
+{
+	Argument subscript=Argument();
+	subscript.dataType=NUMBER;
+	subscript.type=CONST;
+	subscript.literalValue=new double(num);
+	return subscript;
+}
 void* XPINSParser::ParseRawArg(XPINSScriptSpace& script, Argument arg,  DataType type){ return ParseArg(script, arg, type); }
+void* ParseRawSubScript(XPINSScriptSpace& script, void* inputVal, DataType type, vector<Argument>subscripts){
+	return ParseSubScripts(script, inputVal, type, subscripts);
+}
+
 void*  XPINSParser::ParseArg(XPINSScriptSpace& script, Argument arg,DataType& type,bool ignoreLastArrayIndex)
 {
 	void* baseValue=NULL;
@@ -84,40 +97,97 @@ void*  XPINSParser::ParseArg(XPINSScriptSpace& script, Argument arg,DataType& ty
 	XPINSArray funcArgs=parseFunctionArgs(script, arg.arguments);
 	if (arg.isElemental) {
 		type=funcArgs.typeAtIndex(0);
+		void* input=NULL;
+		void* output=NULL;
+		size_t length=3;
 		switch (type) {
-			case ARRAY:{
-				XPINSArray arr=*funcArgs.arrAtIndex(0);
-				XPINSArray* result=new XPINSArray();
-				result->resize(arr.size());
-				for (int i=0; i<arr.size(); ++i)
+			case VECTOR:
+				input=funcArgs.vecAtIndex(0);
+				output=new Vector();
+				break;
+			case QUATERNION:
+				input=funcArgs.quatAtIndex(0);
+				output=new Quaternion();
+				length=4;
+				break;
+			case MATRIX:
+				input=funcArgs.matAtIndex(0);
+				break;
+			case FIELD:
+				input=funcArgs.fieldAtIndex(0);
+				output=new VectorField();
+				break;
+			case ARRAY:
+				input=funcArgs.arrAtIndex(0);
+				length=((XPINSArray*)input)->size();
+				output=new XPINSArray();
+				((XPINSArray*)output)->resize(length);
+				break;
+		}
+		if (type==ARRAY) {
+			for (int i=0; i<length; ++i)
+			{
+				DataType t=((XPINSArray*)input)->typeAtIndex(i);
+				vector<Argument> subscript=vector<Argument>(1,subscriptValueForNum(i));
+				void* val=ParseRawSubScript(script, input, type, subscript);
+				funcArgs.setItemAtIndex(val, t, 0);
+				switch (arg.type)
 				{
-					DataType t=arr.typeAtIndex(i);
-					void* val=NULL;
-					switch (t)
-					{
-						case BOOLEAN:	val = arr.boolAtIndex(i);break;
-						case NUMBER:	val = arr.numAtIndex(i);break;
-						case VECTOR:	val = arr.vecAtIndex(i);break;
-						case QUATERNION:val = arr.quatAtIndex(i);break;
-						case MATRIX:	val = arr.matAtIndex(i);break;
-						case POLYNOMIAL:val = arr.polyAtIndex(i);break;
-						case FIELD:		val = arr.fieldAtIndex(i);break;
-						case STRING:	val = arr.strAtIndex(i);break;
-						case OBJECT:	val = arr.objAtIndex(i);break;
-						case ARRAY:		val = arr.arrAtIndex(i);break;
-					}
-					funcArgs.setItemAtIndex(val, t, 0);
+					case BIF:	val = ParseBIFArg(arg.dataType,arg.number, funcArgs);break;
+					case FUNC:	val = script.bindings[arg.modNumber]->BindFunction(arg.number,funcArgs);break;
+				}
+				((XPINSArray*)output)->setItemAtIndex(val, arg.dataType, i);
+			}
+		} else if (type==MATRIX) {
+			Matrix* m=(Matrix*)input;
+			size_t rows=m->rows;
+			size_t cols=m->cols;
+			output=new Matrix(rows, cols);
+			for (int r=0; r<rows; ++r)
+			{
+				for (int c=0; c<cols; ++c) {
+					vector<Argument> subscript=vector<Argument>(2);
+					subscript[0]=subscriptValueForNum(r);
+					subscript[1]=subscriptValueForNum(c);
+					void* val=ParseRawSubScript(script, input, MATRIX, subscript);
+					funcArgs.setItemAtIndex(val, NUMBER, 0);
 					switch (arg.type)
 					{
 						case BIF:	val = ParseBIFArg(arg.dataType,arg.number, funcArgs);break;
 						case FUNC:	val = script.bindings[arg.modNumber]->BindFunction(arg.number,funcArgs);break;
 					}
-					result->setItemAtIndex(val, arg.dataType, i);
+					*(double*)ParseRawSubScript(script, output, MATRIX, subscript)=*(double*)val;
 				}
-				baseValue=result;
-			}break;
-			default:break;
+			}
+		} else {
+			for (int i=0; i<length; ++i)
+			{
+				XPINSArray array=*(XPINSArray*)output;
+				vector<Argument> subscript=vector<Argument>(1,subscriptValueForNum(i));
+				void* rightArg=ParseRawSubScript(script, input, type, subscript);
+				DataType t = type==FIELD ? POLYNOMIAL : NUMBER;
+				funcArgs.setItemAtIndex(rightArg, t, 0);
+				switch (arg.type)
+				{
+					case BIF:	rightArg = ParseBIFArg(arg.dataType,arg.number, funcArgs);break;
+					case FUNC:	rightArg = script.bindings[arg.modNumber]->BindFunction(arg.number,funcArgs);break;
+				}
+				void*leftArg=ParseRawSubScript(script, output, type, subscript);
+				switch (t) {
+					case BOOLEAN:	*(bool*)leftArg=*(bool*)rightArg; break;
+					case NUMBER:	*(double*)leftArg=*(double*)rightArg;break;
+					case VECTOR:	*(Vector*)leftArg=*(Vector*)rightArg;break;
+					case QUATERNION:*(Quaternion*)leftArg=*(Quaternion*)rightArg;break;
+					case MATRIX:	*(Matrix*)leftArg=*(Matrix*)rightArg;break;
+					case POLYNOMIAL:*(Polynomial*)leftArg=*(Polynomial*)rightArg;break;
+					case FIELD:		*(VectorField*)leftArg=*(VectorField*)rightArg;break;
+					case STRING:	*(string*)leftArg=*(string*)rightArg;break;
+					case OBJECT:	*(void**)leftArg=*(void**)rightArg;break;
+					case ARRAY:		*(XPINSArray*)leftArg=*(XPINSArray*)rightArg;break;
+				}
+			}
 		}
+		baseValue=output;
 		script.data->Trash.resize(script.data->Trash.size()+1);
 		script.data->Trash.setItemAtIndex(baseValue, type, script.data->Trash.size()-1);
 	}
@@ -294,6 +364,7 @@ void* ParseBIFArg(DataType type,int number,XPINSArray arguments)
 		case MATRIX:	return new Matrix(XPINSBuiltIn::ParseMatBIF(number,arguments));
 		case POLYNOMIAL:return new Polynomial(XPINSBuiltIn::ParsePolyBIF(number,arguments));
 		case FIELD:		return new VectorField(XPINSBuiltIn::ParseVecBIF(number,arguments));
+		case VOID:		XPINSBuiltIn::ParseVoidBIF(number,arguments);
 		default:return NULL;
 	}
 }
@@ -427,55 +498,7 @@ exitReason ParseCode(XPINSScriptSpace& script, vector<Instruction> instructions)
 				}
 			}break;
 			case VOIDFUNC:{
-				Argument function=instruction.right;
-				XPINSArray funcArgs=parseFunctionArgs(script, function.arguments);
-				if (function.isElemental) {
-					switch (funcArgs.typeAtIndex(0)) {
-						case ARRAY:{
-							XPINSArray arr=*funcArgs.arrAtIndex(0);
-							for (int i=0; i<arr.size(); ++i)
-							{
-								void* val=NULL;
-								switch (arr.typeAtIndex(i))
-								{
-									case BOOLEAN:	val = arr.boolAtIndex(i);break;
-									case NUMBER:	val = arr.numAtIndex(i);break;
-									case VECTOR:	val = arr.vecAtIndex(i);break;
-									case QUATERNION:val = arr.quatAtIndex(i);break;
-									case MATRIX:	val = arr.matAtIndex(i);break;
-									case POLYNOMIAL:val = arr.polyAtIndex(i);break;
-									case FIELD:		val = arr.fieldAtIndex(i);break;
-									case STRING:	val = arr.strAtIndex(i);break;
-									case OBJECT:	val = arr.objAtIndex(i);break;
-									case ARRAY:		val = arr.arrAtIndex(i);break;
-								}
-								funcArgs.setItemAtIndex(val, arr.typeAtIndex(i), 0);
-								switch (function.type)
-								{
-									case BIF:	val = ParseBIFArg(VOID,function.number, funcArgs);break;
-									case FUNC:	val = script.bindings[function.modNumber]->BindFunction(function.number,funcArgs);break;
-								}
-							}
-						}break;
-						default:break;
-					}
-				}
-				else {
-					switch (function.type) {
-						case FUNC:	script.bindings[function.modNumber]->BindFunction(function.number, funcArgs); break;
-						case BIF:	XPINSBuiltIn::ParseVoidBIF(function.number, funcArgs); break;
-						case EXP:
-							switch (function.dataType){
-								case BOOLEAN:	XPINSBuiltIn::ParseBoolExp((opCode)function.modNumber,function.number!=0,funcArgs); break;
-								case NUMBER:	XPINSBuiltIn::ParseNumExp((opCode)function.modNumber,function.number!=0,funcArgs); break;
-								case VECTOR:	XPINSBuiltIn::ParseVecExp((opCode)function.modNumber,function.number!=0,funcArgs); break;
-								case QUATERNION:XPINSBuiltIn::ParseQuatExp((opCode)function.modNumber,function.number!=0,funcArgs); break;
-								case MATRIX:	XPINSBuiltIn::ParseMatExp((opCode)function.modNumber,function.number!=0,funcArgs); break;
-								case POLYNOMIAL:XPINSBuiltIn::ParsePolyExp((opCode)function.modNumber,function.number!=0,funcArgs); break;
-								case FIELD:	XPINSBuiltIn::ParseFieldExp((opCode)function.modNumber,function.number!=0,funcArgs); break;
-							}break;
-					}
-				}
+				ParseRawArg(script, instruction.right, VOID);
 			}break;
 			case IF:
 			case ELSE:

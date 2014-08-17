@@ -125,6 +125,16 @@ Further, if a function only has one paramter, the parentheses may be excluded. F
 MATRIX.DETERMINANT
 Dot syntax is not recommended for functions whose first parameter is of type NUM or BOOl.
 
+ELEMENTAL SYNTAX:
+Sometimes it is desirable to call a function with the components of a complex variable (such as a Matrix or an array). While it is possible to manually iterate over each element, XPINS provides a convenient mechanism for performing such an action:
+COMPLEXDATA->FUNCTION_NAME(PARMATER2,...)
+For example, if we want to find the square root several numbers, we could all of the calculations in one line of code using a matrix or an array:
+@ARR results = {1,4,9,16,25,36,49,64,81,100}->SQRT()//Will return {1,2,3,4,5,6,7,8,9,10}
+
+Like Dot syntax, if the function only has one paramter, the parentheses may be excluded. For example:
+MATRIX->SQRT
+
+
 EXPRESSIONS:
 In C++, there are expressions and operators that make it very easy to perform simple calculations. In XPINS, there are functions for addition, subtraction, etc, but those are harder to use (and take up more space). XPINS has expressions that allow mathematical calculations to performded easier. Here is an example expression:
 ?B(Var1<Var2)?

@@ -6,6 +6,9 @@
 //
 //
 
+#ifndef __XPINS__XPINSInstructions__
+#define __XPINS__XPINSInstructions__
+
 #include <iostream>
 #include <vector>
 
@@ -71,19 +74,5 @@ namespace XPINSInstructions {
 		vector<Instruction> instructions;
 		vector<int> varSizes;
 	};
-	InstructionSet instructionsForScriptText(string scriptText);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+#endif

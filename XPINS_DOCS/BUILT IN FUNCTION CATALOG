@@ -12,11 +12,11 @@ PRINT(STR)
 	Dot syntax reccommended: YES, with parentheses
 
 PRINTF(STR,...)
-Available in XPINS Parser: 0.12.0
-Description: Displays a formatted string
-Arguments: the format string and the arguments for the format string
-Return: NONE
-Dot syntax reccommended: NO
+	Available in XPINS Parser: 0.12.0
+	Description: Displays a formatted string
+	Arguments: the format string and the arguments for the format string
+	Return: NONE
+	Dot syntax reccommended: NO
 
 
 ARRAY FUNCTIONS
