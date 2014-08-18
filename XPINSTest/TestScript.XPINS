@@ -1,7 +1,7 @@
 /*
 PURPOSE: This script tests a variety of features in XPINS to make sure that XPINS itself is not broken
 */
-@XPINS 0.12
+@XPINS 1.0
 
 @CONST
 	HelloWorld="HELLO WORLD!\n"

@@ -15,8 +15,8 @@
 using namespace std;
 using namespace XPINSInstructions;
 
-const int kMajor=0;
-const int kMinor=12;
+const int kMajor=1;
+const int kMinor=0;
 
 
 namespace XPINSCompileStringTools

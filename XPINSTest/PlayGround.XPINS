@@ -1,7 +1,7 @@
 /*
 PURPOSE: Play around with XPINS and try different stuff
 */
-@XPINS[1.0]
+@XPINS 1.0
 @CONST
 @END
 @FUNC

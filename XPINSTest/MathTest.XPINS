@@ -1,7 +1,7 @@
 /*
 PURPOSE: This is sort of like PlayGround.XPINS but geared towards testing and Experimenting with the Math Library
 */
-@XPINS[0.12]
+@XPINS 0.12
 @CONST
 @END
 @FUNC

@@ -1,7 +1,7 @@
 /*
 PURPOSE: Time different parts of the script to measure the Performance overhead of XPINS
 */
-@XPINS[0.12]
+@XPINS 0.12
 @CONST
 @END
 @FUNC

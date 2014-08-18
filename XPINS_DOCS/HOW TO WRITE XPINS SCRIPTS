@@ -22,8 +22,7 @@ Characters in a string Constant are case sensitive (e.g. "Hello World" is not th
 
 VERSION COMPATIBILITY STATEMENTS:
 The first part of every XPINS file are two version compatibility statements. The first version compatibility statement states which version of the XPINS compiler the script is designed for, and the second one states which version of the XPINS parser the script is desgined for. The Compiler statement is always the first line of an XPINS file, and the Parser compabitiblity statement is the second. A set of Compatibility statements would look like this:
-@COMPILER[0.7]
-@PARSER[0.12]
+@XPINS 1.0
 Only the first two components of the version numbers are used for compatibility statements, even though the version numbers for the compiler and the parser each have three components. This is because the third number is used for bug/performance fixes and therefore does effect the availability of functions or language features. In order to be compatible with a certain verison of the compiler or parser, the script's Major version number must match that of the software and the Minor version number must be less than or equal to that of the software. For example, a script that states a compiler version number of 1.2 will be compatible with all versions of the compiler from 1.2.0 until 2.0.0.
 
 
